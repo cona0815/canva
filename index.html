@@ -1,0 +1,40 @@
+<!doctype html>
+<!-- Cona 老師的 Canva 課程入口 v1.0 2026-10-20 -->
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cona 老師的 Canva 教室</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Huninn&family=Noto+Sans+TC:wght@400;700&display=swap">
+<style>
+:root{--bg:#eef6fb;--paper:#fff;--ink:#1d3347;--muted:#5b7183;--sky:#1f7fbf;--sun:#ffc531;--line:#c9dbe7}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1c27;--paper:#172a39;--ink:#e7f1f8;--muted:#9bb2c3;--sky:#5fb6ee;--sun:#ffd25a;--line:#2a4558;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans TC",system-ui,"Microsoft JhengHei",sans-serif;font-size:18px;line-height:1.7}
+.wrap{max-width:820px;margin:0 auto;padding:28px 16px 60px}
+h1{font-family:"Huninn","Noto Sans TC",sans-serif;font-weight:400;font-size:clamp(30px,6vw,44px);margin:0 0 4px}
+.sub{color:var(--muted);margin:0 0 24px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+a.card{display:grid;gap:6px;background:var(--paper);border:2px solid var(--line);border-radius:18px;padding:18px 20px;color:var(--ink);text-decoration:none}
+a.card:hover,a.card:focus-visible{border-color:var(--sky);outline:none}
+.tag{justify-self:start;background:var(--sun);color:#3b2c00;border-radius:999px;padding:0 12px;font-size:14px;font-weight:700}
+.card h2{font-family:"Huninn","Noto Sans TC",sans-serif;font-weight:400;font-size:24px;margin:0;color:var(--sky)}
+.card p{margin:0;color:var(--muted);font-size:16px}
+footer{margin-top:32px;color:var(--muted);font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Cona 老師的 Canva 教室</h1>
+  <p class="sub">大橋國小資訊課・Canva 專案教學</p>
+  <div class="grid">
+    <a class="card" href="topic-explore/">
+      <span class="tag">五年級</span>
+      <h2>我的主題大探索</h2>
+      <p>用自己找的四張圖，配上 AI 幫忙寫的標題和文案，做出會動的介紹簡報。</p>
+    </a>
+  </div>
+  <footer>v1.0 · 2026-10-20</footer>
+</div>
+</body>
+</html>
