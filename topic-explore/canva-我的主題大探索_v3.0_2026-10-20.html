@@ -1,0 +1,826 @@
+<!-- 五年級 Canva「我的主題大探索」教學網站 v3.0 2026-10-20 · Cona 老師的資訊教室
+     v3.0：運動明星、偶像、作品角色、動物四大組選項再擴充（含更多角色名單與團體）
+     v2.9：移除 8-3 每張圖寫文案卡片（文案改用 8-1 的 A／B 指令）
+     v2.8：主題／標題規劃整區移入第 8 步（8-1 選主題 → 8-2 放標題 → 8-3 每張圖寫文案）；上方新增 1～10 步快速連結；第 2 步改為確認圖片
+     v2.7：第 8 步改為每張圖點選「這張圖在做什麼」（或自己打），指令自動填好不用改括號
+     v2.6：改為「學生已找好圖」流程：移除找圖步驟與上方看圖取標題框；第 8 步改為看圖提問（第 N 張圖片是（　）＋標題＋50字文案）
+     v2.5：類別擴充為 31 類（新增臺灣運動選手、鳥類、植物花朵、節日、樂器、職業、科學家與發明家），各類主題與角色再加量
+     v2.4：類別擴充為 24 類（不含遊戲類），直播主只內建「有感筆電」，動物／美食加選項，玩具移除遊戲機
+     v2.3：團體主題選「1 個主角」時只出現一格，提示詞改以該主角為主（我的主角是「Martin」（CORTIS，韓團））
+     v2.2：流程改為 1 類別 → 2 主題（按鈕）→ 3 幾個主角（自動判斷）→ 4 主角名字；換類別會清空主題與主角
+     v2.1：主角改成點名字按鈕選取；主題比對不分大小寫（babymonster＝BABYMONSTER）
+     v2.0：內建名詞庫（足球明星、韓團成員、動畫／漫畫角色、貓狗蛇龜、玩具、超跑、美食），主題與主角欄可下拉選或自己打；先選類別再選主角
+     v1.9：選「好幾個主角」時出現「主角是誰」四格，名字自動帶入所有 AI 提示詞
+     v1.8：標題建議改為一組，選單一改就自動填入四個標題
+     v1.7：移除因材網／文思精靈，AI 一律使用 Google AI 模式
+     v1.6：所有 AI 提示詞加上「上網查最新、最正確的名詞與數字」
+     v1.5：AI 指令要求寫出具體名字／歌名／數字；空泛標題改具體（代表歌曲→最紅的一首歌等）；新增「文案太空」提醒
+     v1.4：AI 提問改用 Google AI 模式，一次問出標題＋50字文案（A 標題+文案／B 只寫文案），文案統一 50 字內
+     v1.3：標題產生器改為下拉選單（10 類 × 1 個／好幾個主角 × 三組四標題，多主角可改用名字）
+     v1.2：新增「已經找好圖了？從圖片取標題」流程與看圖取標題的文思精靈指令
+     v1.1：新增「四個分頁標題」規劃區（成員型／面向型＋標題公式），找圖與文思精靈指令改由標題自動產生 -->
+<title>我的主題大探索</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Huninn&family=Noto+Sans+TC:wght@400;500;700&family=Baloo+2:wght@600;800&display=swap">
+<style>
+/* 版面概念：一本「探索家護照」——先填好四格標題，每一步是一頁蓋章欄，做完就蓋上印章 */
+:root{
+  --bg:#eef6fb; --paper:#ffffff; --ink:#1d3347; --muted:#5b7183;
+  --sky:#1f7fbf; --sky-soft:#d7ecf8; --sun:#ffc531; --sun-soft:#fff3cf;
+  --stamp:#e2553b; --ok:#2f9e5b; --ok-soft:#dcf3e5; --line:#c9dbe7;
+  --f-display:"Huninn","Noto Sans TC",system-ui,sans-serif;
+  --f-body:"Noto Sans TC",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;
+  --f-num:"Baloo 2","Huninn",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1c27; --paper:#172a39; --ink:#e7f1f8; --muted:#9bb2c3;
+  --sky:#5fb6ee; --sky-soft:#1b3a52; --sun:#ffd25a; --sun-soft:#3a3218;
+  --stamp:#ff7a5f; --ok:#5fd18d; --ok-soft:#173a28; --line:#2a4558; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1c27; --paper:#172a39; --ink:#e7f1f8; --muted:#9bb2c3;
+  --sky:#5fb6ee; --sky-soft:#1b3a52; --sun:#ffd25a; --sun-soft:#3a3218;
+  --stamp:#ff7a5f; --ok:#5fd18d; --ok-soft:#173a28; --line:#2a4558; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:18px;line-height:1.75}
+.wrap{max-width:860px;margin:0 auto;padding-inline:16px;padding-block:20px 60px}
+h1,h2,h3{font-family:var(--f-display);font-weight:400;text-wrap:balance;margin:0}
+a{color:var(--sky)}
+:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+
+.hero{background:var(--sky);color:#fff;border-radius:22px;padding:26px 24px;display:grid;gap:14px;position:relative;overflow:hidden}
+.hero::after{content:"";position:absolute;right:-40px;top:-40px;width:170px;height:170px;border:10px dashed rgba(255,255,255,.25);border-radius:50%}
+.eyebrow{font-size:14px;letter-spacing:.12em;opacity:.9}
+.hero h1{font-size:clamp(32px,6vw,48px);line-height:1.2}
+.hero p{margin:0;max-width:34em}
+.hero-btns{display:flex;flex-wrap:wrap;gap:10px;position:relative;z-index:1}
+.btn{display:inline-flex;align-items:center;gap:8px;border:0;border-radius:999px;padding:10px 20px;font:inherit;font-size:17px;font-weight:700;cursor:pointer;text-decoration:none}
+.btn-sun{background:var(--sun);color:#3b2c00}
+.btn-ghost{background:rgba(255,255,255,.18);color:#fff;border:2px solid rgba(255,255,255,.6)}
+.btn-sky{background:var(--sky);color:#fff}
+.btn-sm{padding:6px 14px;font-size:15px}
+
+.progress{flex-wrap:wrap;position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:12px;display:flex;align-items:center;gap:12px}
+.bar{flex:1;height:14px;background:var(--line);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--ok);border-radius:99px;transition:width .4s}
+.count{font-family:var(--f-num);font-weight:800;font-size:20px;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* plan */
+.plan{margin-top:18px;background:var(--paper);border:3px solid var(--sky);border-radius:18px;padding:20px;display:grid;gap:14px}
+.plan h2{font-size:26px}
+.plan h3{font-size:20px}
+.plan label{font-weight:700}
+.txt{font:inherit;font-size:19px;padding:9px 14px;border:2px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);width:100%;min-width:0}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:2px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:4px 14px;font:inherit;font-size:16px;cursor:pointer}
+.chip:hover{border-color:var(--sky)}
+.chip[aria-pressed="true"]{background:var(--sky);border-color:var(--sky);color:#fff}
+.hint{color:var(--muted);font-size:15px;margin:0}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mode{border:2px solid var(--line);border-radius:14px;padding:12px 14px;background:var(--bg);cursor:pointer;text-align:left;font:inherit;color:var(--ink);display:grid;gap:4px}
+.mode b{font-family:var(--f-display);font-weight:400;font-size:20px}
+.mode span{font-size:15px;color:var(--muted);line-height:1.55}
+.mode[aria-pressed="true"]{border-color:var(--sky);background:var(--sky-soft)}
+.mode[aria-pressed="true"] b{color:var(--sky)}
+.grid4{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.slot{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:8px;min-width:0}
+.slot .n{width:34px;height:34px;border-radius:50%;background:var(--sun);color:#3b2c00;font-family:var(--f-num);font-weight:800;display:grid;place-items:center}
+.gen{display:grid;gap:10px}
+.q{display:flex;align-items:center;gap:8px;font-weight:700;margin-top:6px}
+.qn{width:28px;height:28px;border-radius:50%;background:var(--sky);color:#fff;font-family:var(--f-num);font-weight:800;display:grid;place-items:center;flex:none}
+.seg{display:flex;flex-wrap:wrap;gap:10px}
+.segbtn{border:2px solid var(--line);background:var(--bg);color:var(--ink);border-radius:12px;padding:8px 22px;font:inherit;font-weight:700;cursor:pointer}
+.segbtn[aria-pressed="true"]{background:var(--sky);border-color:var(--sky);color:#fff}
+.cast{display:grid;gap:8px;background:var(--sky-soft);border-radius:14px;padding:12px 14px}
+.cast label{font-weight:700}
+.selects{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.selects label{display:grid;gap:4px;min-width:0}
+select.txt{cursor:pointer}
+.combos{display:grid;grid-template-columns:1fr;gap:10px}
+.combos.has4{grid-template-columns:repeat(2,1fr)}
+.combo{border:2px solid var(--line);border-radius:14px;padding:10px 14px;background:var(--bg);color:var(--ink);font:inherit;text-align:left;cursor:pointer;display:grid;gap:4px;min-width:0}
+.combo:hover{border-color:var(--sky)}
+.combo .cn{font-family:var(--f-display);font-size:17px;color:var(--sky)}
+.combo ol{margin:0;padding-left:1.3em;font-size:16px;line-height:1.6}
+.combo[aria-pressed="true"]{border-color:var(--sky);background:var(--sky-soft)}
+.combo[aria-pressed="true"] .cn::after{content:" ✔ 已選"}
+.ai-box{background:var(--sun-soft);border-radius:12px;padding:12px 14px;display:grid;gap:6px}
+.ai-box p{margin:0;font-size:16px}
+
+.phase{margin-top:30px;display:flex;align-items:baseline;gap:10px}
+.phase h2{font-size:24px}
+.phase span{color:var(--muted);font-size:15px}
+.steps{list-style:none;padding:0;margin:12px 0 0;display:grid;gap:14px}
+.step{background:var(--paper);border:2px solid var(--line);border-radius:18px;padding:18px 20px;display:grid;grid-template-columns:auto 1fr;gap:6px 16px;position:relative;transition:border-color .3s,background .3s}
+.num{grid-row:1/3;width:48px;height:48px;border-radius:50%;background:var(--sky-soft);color:var(--sky);font-family:var(--f-num);font-weight:800;font-size:24px;display:grid;place-items:center}
+.step h3{font-size:22px;align-self:center}
+.body{grid-column:2;min-width:0}
+.body p{margin:4px 0}
+.body ol,.body ul{margin:6px 0;padding-left:1.3em}
+.body li{margin:2px 0}
+.warn{background:var(--sun-soft);border-radius:12px;padding:8px 12px;margin:8px 0;font-size:16px}
+.warn b{color:var(--stamp)}
+.key{display:inline-block;border:2px solid var(--line);border-bottom-width:4px;border-radius:8px;padding:0 8px;font-family:var(--f-num);font-size:15px;background:var(--bg);line-height:1.5}
+.code{background:var(--bg);border:2px dashed var(--line);border-radius:12px;padding:10px 14px;font-size:18px;font-weight:700;margin:8px 0;word-break:break-all}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:8px}
+.plist{list-style:none;padding:0;margin:8px 0;display:grid;gap:8px}
+.plist li{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;background:var(--bg);border:2px dashed var(--line);border-radius:12px;padding:8px 12px}
+.plist .ptxt{font-weight:700;font-size:17px;min-width:0;word-break:break-all}
+.pcards{display:grid;gap:12px;margin:8px 0}
+.pcard{background:var(--bg);border:2px dashed var(--line);border-radius:14px;padding:12px 14px;display:grid;gap:8px;min-width:0}
+.pcard .ptitle{font-family:var(--f-display);font-size:19px;color:var(--sky)}
+.pcard .chips .chip{font-size:15px;padding:2px 12px}
+.pcard .ptxt{font-weight:700;font-size:16px;line-height:1.7;word-break:break-all}
+.stepnav{flex-basis:100%;display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:thin}
+.stepnav a{flex:none;display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;border:2px solid var(--line);background:var(--paper);color:var(--ink);text-decoration:none;font-size:14px;white-space:nowrap}
+.stepnav a b{font-family:var(--f-num);color:var(--sky)}
+.stepnav a:hover{border-color:var(--sky)}
+.stepnav a.ok{background:var(--ok-soft);border-color:var(--ok)}
+.stepnav a.ok b{color:var(--ok)}
+.step{scroll-margin-top:110px}
+.step .plan{margin:4px 0 6px;border-width:2px;padding:16px}
+.step .plan h2{font-size:22px}
+h4.sub{font-family:var(--f-display);font-weight:400;font-size:20px;color:var(--sky);margin:14px 0 4px}
+.tags{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.tag{background:var(--sky-soft);color:var(--sky);border-radius:8px;padding:2px 12px;font-weight:700}
+.done{margin-top:10px;display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-weight:700;color:var(--muted);user-select:none}
+.done input{width:22px;height:22px;accent-color:var(--ok)}
+.step.is-done{border-color:var(--ok);background:var(--ok-soft)}
+.step.is-done .num{background:var(--ok);color:#fff}
+.step.is-done .done{color:var(--ok)}
+.seal{position:absolute;right:16px;top:12px;font-family:var(--f-display);color:var(--stamp);border:3px solid var(--stamp);border-radius:10px;padding:0 10px;transform:rotate(-12deg);font-size:18px;opacity:0;transition:opacity .25s,transform .25s}
+.step.is-done .seal{opacity:.85;transform:rotate(-8deg)}
+
+.final{margin-top:30px;background:var(--paper);border:3px solid var(--sun);border-radius:18px;padding:20px}
+.final h2{font-size:24px;margin-bottom:6px}
+.final ul{margin:0;padding-left:1.2em}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 18px;border-radius:99px;font-weight:700;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+footer{margin-top:30px;color:var(--muted);font-size:14px;text-align:center}
+@media (max-width:560px){
+  body{font-size:17px}
+  .modes,.grid4,.selects,.combos,.combos.has4{grid-template-columns:1fr}
+  .step{grid-template-columns:1fr;padding:16px}
+  .num{grid-row:auto;width:40px;height:40px;font-size:20px}
+  .body{grid-column:1}
+  .plist li{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="hero">
+    <div class="eyebrow">五年級資訊課 · Canva 簡報</div>
+    <h1>我的主題大探索</h1>
+    <p>這次你自己當探索家！用你找好的四張圖，配上四個分頁標題和介紹文案，用 Canva 做出一份會動的介紹簡報。</p>
+    <div class="hero-btns">
+      <a class="btn btn-sun" href="https://canva.link/uahf48v0si0g2d3" target="_blank" rel="noopener">開啟老師的模板</a>
+      <a class="btn btn-ghost" href="https://classroom.google.com/" target="_blank" rel="noopener">Google Classroom</a>
+      <a class="btn btn-ghost" href="https://www.google.com/" target="_blank" rel="noopener">Google AI 模式</a>
+    </div>
+  </header>
+
+  <div class="progress" aria-live="polite">
+    <div class="bar"><i id="barFill"></i></div>
+    <div class="count"><span id="doneN">0</span> / <span id="totalN">10</span></div>
+    <nav class="stepnav" aria-label="步驟快速連結"><a href="#step1" data-nav="s1"><b>1</b>登入</a><a href="#step2" data-nav="s2"><b>2</b>圖片</a><a href="#step3" data-nav="s3"><b>3</b>Canva</a><a href="#step4" data-nav="s4"><b>4</b>模板</a><a href="#step5" data-nav="s5"><b>5</b>檔名</a><a href="#step6" data-nav="s6"><b>6</b>上傳</a><a href="#step7" data-nav="s7"><b>7</b>放圖</a><a href="#step8" data-nav="s8"><b>8</b>AI 標題文案</a><a href="#step9" data-nav="s9"><b>9</b>動畫</a><a href="#step10" data-nav="s10"><b>10</b>交件</a></nav>
+  </div>
+
+  <!-- 規劃區 -->
+
+  <div class="phase"><h2>準備</h2><span>登入、找圖片</span></div>
+  <ol class="steps">
+    <li class="step" data-id="s1" id="step1">
+      <div class="num">1</div><h3>登入 Google Classroom</h3><span class="seal">完成</span>
+      <div class="body">
+        <p>先點桌面上的 <b>Classroom 連結</b>，用學校帳號登入。</p>
+        <div class="warn"><b>過關條件：</b>畫面上看到 Google Classroom 的標誌，才算登入成功。</div>
+        <label class="done"><input type="checkbox"> 我看到 Classroom 了</label>
+      </div>
+    </li>
+    <li class="step" data-id="s2" id="step2">
+      <div class="num">2</div><h3>確認四張圖片準備好</h3><span class="seal">完成</span>
+      <div class="body">
+        <p>你找好的四張圖都存在<b>桌面</b>了嗎？</p>
+        <ul>
+          <li>圖片要<b>清楚、夠大</b>，不要有大大的浮水印。</li>
+          <li>檔名改成看得懂的名字，例如「1梅西.jpg」，上傳後才找得到。</li>
+        </ul>
+        <label class="done"><input type="checkbox"> 桌面上有四張圖</label>
+      </div>
+    </li>
+    <li class="step" data-id="s3" id="step3">
+      <div class="num">3</div><h3>登入 Canva</h3><span class="seal">完成</span>
+      <div class="body">
+        <p>Classroom 登入成功後，再點桌面上的 <b>Canva 連結</b>。</p>
+        <label class="done"><input type="checkbox"> 我進到 Canva 了</label>
+      </div>
+    </li>
+  </ol>
+
+  <div class="phase"><h2>製作</h2><span>開模板、放圖、放文字</span></div>
+  <ol class="steps" start="4">
+    <li class="step" data-id="s4" id="step4">
+      <div class="num">4</div><h3>開啟老師的模板</h3><span class="seal">完成</span>
+      <div class="body">
+        <p>點這個連結，打開老師做好的模板：</p>
+        <div class="code">canva.link/uahf48v0si0g2d3</div>
+        <div class="row"><a class="btn btn-sky" href="https://canva.link/uahf48v0si0g2d3" target="_blank" rel="noopener">開啟模板</a></div>
+        <div class="warn"><b>先停一下：</b>打開之後等老師說下一步，再繼續按。</div>
+        <label class="done"><input type="checkbox"> 模板打開了</label>
+      </div>
+    </li>
+    <li class="step" data-id="s5" id="step5">
+      <div class="num">5</div><h3>改檔名、打上班級座號</h3><span class="seal">完成</span>
+      <div class="body">
+        <p>點右上角的檔案名稱，改成「<b>班級座號＋主題</b>」。</p>
+        <div class="code" id="fileName">例：50108可愛的海洋動物</div>
+        <p>封面打上<b>主題名稱</b>和自己的<b>班級座號</b>。封面版型可以自己選一個。</p>
+        <label class="done"><input type="checkbox"> 檔名和封面都改好了</label>
+      </div>
+    </li>
+    <li class="step" data-id="s6" id="step6">
+      <div class="num">6</div><h3>上傳四張圖片</h3><span class="seal">完成</span>
+      <div class="body">
+        <p>左邊選「<b>上傳</b>」→「上傳檔案」，到桌面把四張圖選起來上傳。</p>
+        <p class="hint">按住 <span class="key">Ctrl</span> 再一張一張點，就能一次選四張。</p>
+        <label class="done"><input type="checkbox"> 四張圖都在上傳區了</label>
+      </div>
+    </li>
+    <li class="step" data-id="s7" id="step7">
+      <div class="num">7</div><h3>把圖片放進圓圈、建立群組</h3><span class="seal">完成</span>
+      <div class="body">
+        <ol>
+          <li>把四張圖片<b>拖拉</b>進模板的圓形框裡。</li>
+          <li>用鍵盤 <span class="key">↑</span> <span class="key">↓</span> <span class="key">←</span> <span class="key">→</span> 微調位置。</li>
+          <li>把整個圓<b>框選</b>起來 →「<b>建立群組</b>」。</li>
+          <li>一邊拉一邊調整大小，放到漂亮的位置。</li>
+        </ol>
+        <label class="done"><input type="checkbox"> 圖片放好也群組了</label>
+      </div>
+    </li>
+    <li class="step" data-id="s8" id="step8">
+      <div class="num">8</div><h3>用 Google AI 模式寫標題和文案</h3><span class="seal">完成</span>
+      <div class="body">
+        <section class="plan" aria-labelledby="planH">
+          <h2 id="planH">8-1　選主題，產生四個分頁標題</h2>
+          <p class="hint">看著你已經放進 Canva 的四張圖，照 1～4 題點一點，四個分頁標題就會自動填好。一張圖對一個標題，對不上就改標題。</p>
+
+
+
+          <div class="gen">
+            <div class="q"><span class="qn">1</span><label for="catSel">我的圖片是哪一類？</label></div>
+            <select id="catSel" class="txt"></select>
+
+            <div class="q"><span class="qn">2</span><label for="topicInput">主題是什麼？點一個，沒有的話自己打</label></div>
+            <div class="chips" id="topicChips"></div>
+            <input id="topicInput" class="txt" type="text" placeholder="自己打，例如：BABYMONSTER" maxlength="30" autocomplete="off">
+
+            <div class="q"><span class="qn">3</span><span>主角有幾個？</span></div>
+            <div class="seg" role="group" aria-label="主角有幾個">
+              <button type="button" class="segbtn" data-cnt="one">1 個主角</button>
+              <button type="button" class="segbtn" data-cnt="many">好幾個主角</button>
+            </div>
+
+            <div id="castBox" class="cast" hidden>
+              <div class="q"><span class="qn">4</span><label for="cast0" id="castLabel">主角是誰？點名字，最多四個</label></div>
+              <div class="chips" id="castChips"></div>
+              <div class="grid4" id="castSlots"></div>
+              <p class="hint">點藍色的名字可以取消；沒有的名字直接打在格子裡。名字會自動放進 AI 的問題裡。</p>
+            </div>
+
+            <div class="combos" id="combos"></div>
+          </div>
+
+          <div>
+            <h3>我的四個分頁標題（會自動填好，可以自己改）</h3>
+            <div class="grid4" id="slots"></div>
+            <p class="hint">標題短短的就好，大約 2～8 個字。</p>
+          </div>
+
+          <div class="ai-box">
+            <h3>用 Google AI 模式，一次問出標題＋文案</h3>
+            <ol style="margin:0;padding-left:1.3em;font-size:16px">
+              <li>打開 <a href="https://www.google.com/" target="_blank" rel="noopener">Google</a>，點左上方的「<b>AI 模式</b>」。</li>
+              <li>按下面的「複製這句」，貼到 AI 模式的框框裡，按 <span class="key">Enter</span>。</li>
+              <li>挑四個你最喜歡的，把<b>標題</b>和<b>文案</b>分別貼到 Canva 的每一頁。</li>
+            </ol>
+            <p><b>A. 還沒有標題</b>：標題和文案一起問</p>
+            <div class="code" id="brainPrompt" style="margin:0"></div>
+            <div class="row" style="margin-top:0"><button class="btn btn-sky btn-sm" type="button" data-copy="brainPrompt">複製這句</button></div>
+            <p><b>B. 已經選好四個標題</b>：只請它寫文案</p>
+            <div class="code" id="writePrompt" style="margin:0"></div>
+            <div class="row" style="margin-top:0"><button class="btn btn-sky btn-sm" type="button" data-copy="writePrompt">複製這句</button></div>
+            <div class="warn" style="margin:0"><b>文案太空？</b>如果 AI 只寫「很紅、很厲害」卻沒寫出名字或歌名，就再追問一句：「請寫出真正的歌名（或名字、數字）」。<br><b>AI 也會出錯！</b>名字、年份、數字要再看一次對不對；看不懂的字，改成你自己的話。</div>
+          </div>
+        </section>
+        <h4 class="sub">8-2　把標題放到每一頁</h4>
+        <p>先把模板的範例文字<b>框選 → 複製 → 貼上</b>到每一頁，再把每一頁的標題改成：</p>
+        <div class="tags" id="titleTags"></div>
+        <div class="warn"><b>超級無敵重要：</b>在要換掉的文字上<b>快速點兩下</b>，文字會反白，這時直接<b>貼上</b>，就會取代掉。</div>
+        <p class="hint">讀一讀 AI 寫的內容，覺得怪怪的地方要自己改。</p>
+        <label class="done"><input type="checkbox"> 四頁都有標題和介紹</label>
+      </div>
+    </li>
+    <li class="step" data-id="s9" id="step9">
+      <div class="num">9</div><h3>加上動畫和頁面特效</h3><span class="seal">完成</span>
+      <div class="body">
+        <ul>
+          <li>點選圖片或文字 → 上方「<b>動畫</b>」，選一個你喜歡的。</li>
+          <li>每一頁之間加上<b>頁面轉場特效</b>。</li>
+          <li>可以換成你自己喜歡的圖案或顏色，讓它看起來是「你的」作品。</li>
+        </ul>
+        <label class="done"><input type="checkbox"> 簡報會動了</label>
+      </div>
+    </li>
+  </ol>
+
+  <div class="phase"><h2>交件</h2><span>分享給老師</span></div>
+  <ol class="steps" start="10">
+    <li class="step" data-id="s10" id="step10">
+      <div class="num">10</div><h3>建立公開檢視連結</h3><span class="seal">完成</span>
+      <div class="body">
+        <ol>
+          <li>按右上角「<b>分享</b>」。</li>
+          <li>「存取權」改成「<b>擁有連結的任何人</b>」，權限選「<b>可檢視</b>」。</li>
+          <li>按「<b>複製連結</b>」，貼到老師指定的地方交作業。</li>
+        </ol>
+        <div class="warn"><b>不要選「可編輯」！</b>不然別人可以改你的作品。</div>
+        <label class="done"><input type="checkbox"> 連結交出去了</label>
+      </div>
+    </li>
+  </ol>
+
+  <section class="final" aria-labelledby="finalH">
+    <h2 id="finalH">交件前自己檢查</h2>
+    <ul>
+      <li>檔名是「班級座號＋主題」</li>
+      <li>封面有主題名稱和班級座號</li>
+      <li>四頁都有自己的<b>分頁標題</b></li>
+      <li>四張圖片清楚，跟標題對得上</li>
+      <li>每一頁都有介紹文字，沒有留下範例字</li>
+      <li>有動畫、有頁面特效</li>
+      <li>分享是「可檢視」，不是「可編輯」</li>
+    </ul>
+    <div class="row" style="margin-top:12px">
+      <button class="btn btn-sky" type="button" id="resetAll">清除打勾，重新開始</button>
+    </div>
+  </section>
+
+  <footer>Cona 老師的資訊教室 · 我的主題大探索 v3.0 · 2026-10-20</footer>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function(){
+  /* 標題組合：類別 → 1 個主角 / 好幾個主角 → 三組 × 四個標題 */
+  const DATA={
+    '足球明星':{
+      one:[['他是誰','踢什麼位置','最厲害的比賽','我為什麼喜歡他'],['球員小檔案','成長故事','得過的大獎','招牌絕技'],['基本資料','效力的球隊','最精彩的一場比賽','想對他說的話']],
+      many:[['球星大集合','誰最會進球','他們的球隊','我最喜歡的一位'],['球星介紹','各自的位置','比賽精彩瞬間','球星大比拚'],['世界足球明星','來自哪些國家','得過的大獎','我的夢幻球隊']]},
+    '韓團（男團／女團）':{
+      one:[['偶像是誰','舞台魅力','最紅的一首歌','喜歡他的原因'],['個人小檔案','出道故事','招牌舞步','粉絲怎麼應援'],['基本資料','擅長的才藝','最紅的作品','我想對他說']],
+      many:[['團體介紹','成員介紹','最紅的一首歌','我最喜歡的成員'],['出道故事','團名的意思','舞台特色','粉絲名稱與應援'],['成員小檔案','每個人的專長','最紅的三首歌','推薦入坑曲']]},
+    '車子':{
+      one:[['這是什麼車','外型特色','厲害的性能','我想開它去哪'],['車子小檔案','哪個國家做的','車內長什麼樣','為什麼我喜歡'],['它的名字','最快跑多快','特別的設計','開它的感覺']],
+      many:[['車子大集合','各自的特色','速度大比拚','我最想要的一台'],['我的夢幻車庫','哪個國家做的','外型比一比','我的最愛'],['不同種類的車','各自的用途','厲害的配備','未來想開的車']]},
+    '玩具':{
+      one:[['它是什麼玩具','怎麼玩','好玩在哪裡','我和它的故事'],['玩具小檔案','有哪些配件','特別的玩法','推薦給誰玩'],['它長什麼樣子','誰發明的','玩法教學','為什麼我喜歡']],
+      many:[['我的玩具收藏','每個玩具的玩法','最受歡迎的玩具','我的最愛'],['玩具大集合','適合幾歲玩','好玩指數比一比','推薦給你'],['熱門玩具介紹','它們的特色','怎麼收藏','我想要的下一個']]},
+    '動畫':{
+      one:[['主角是誰','他的能力','最精彩的劇情','我為什麼喜歡他'],['角色小檔案','個性特色','招牌台詞','他的好朋友'],['動畫介紹','故事在講什麼','主角的冒險','推薦你來看']],
+      many:[['動畫介紹','主要角色','精彩劇情','我最喜歡的角色'],['角色大集合','每個人的能力','角色之間的關係','推薦觀看理由'],['故事背景','主角群','反派角色','最感人的一幕']]},
+    '漫畫':{
+      one:[['主角是誰','他的特殊能力','精彩故事','喜歡他的原因'],['角色小檔案','個性和口頭禪','最帥的一幕','他的夥伴'],['漫畫介紹','作者是誰','故事在講什麼','推薦你來看']],
+      many:[['漫畫介紹','主要角色','精彩故事','我最喜歡的角色'],['角色大集合','每個人的絕招','誰最厲害','推薦閱讀理由'],['故事背景','作者介紹','主角群','最好看的一集']]},
+    '動物':{
+      one:[['長什麼樣子','住在哪裡','吃什麼','有趣小知識'],['動物小檔案','特殊本領','生活習慣','怎麼保護牠'],['牠是誰','寶寶怎麼長大','最可愛的地方','我想對牠說']],
+      many:[['動物大集合','牠們住在哪裡','各自的本領','我最喜歡的動物'],['動物介紹','吃什麼大不同','誰最特別','怎麼保護牠們'],['可愛動物','長相比一比','有趣小知識','我最想養的']]},
+    '直播主／YouTuber':{
+      one:[['他是誰','影片在拍什麼','受歡迎的原因','我最喜歡的一集'],['直播主小檔案','頻道特色','招牌口頭禪','想對他說的話'],['基本介紹','怎麼開始當直播主','最紅的影片','我從他身上學到']],
+      many:[['直播主介紹','各自的頻道內容','誰最受歡迎','我最常看的一位'],['網路紅人大集合','頻道特色比一比','最紅的一支影片','我的最愛'],['直播主團隊','成員介紹','合作的影片','推薦給你看']]},
+    '美食':{
+      one:[['長什麼樣子','用什麼做的','哪裡吃得到','好吃在哪裡'],['美食小檔案','由來故事','怎麼吃最好吃','推薦給你'],['它是什麼食物','主要材料','製作過程','我的吃後心得']],
+      many:[['美食大集合','每道菜的特色','哪裡吃得到','我最想吃的'],['各地美食','材料比一比','好吃排行榜','推薦給你'],['美食介紹','由來故事','怎麼做的','我的最愛']]},
+    '其他':{
+      one:[['它是什麼','有什麼特色','有趣小知識','我為什麼喜歡'],['基本介紹','由來故事','最厲害的地方','推薦給你'],['小檔案','外型特色','特別的地方','我想對它說']],
+      many:[['成員大集合','各自的特色','大家比一比','我最喜歡的一個'],['總介紹','有哪些成員','誰最特別','推薦給你'],['認識他們','不同的地方','有趣小知識','我的最愛']]}
+  };
+
+  const KEY='canva-topic-v1';
+  let state={topic:'',cat:'足球明星',cnt:'one',pick:'',titles:['','','',''],cast:['','','',''],pics:['','','',''],done:{}};
+  try{const s=JSON.parse(localStorage.getItem(KEY)||'null'); if(s) state=Object.assign(state,s);}catch(e){}
+  if(!Array.isArray(state.titles)||state.titles.length!==4) state.titles=['','','',''];
+  if(!Array.isArray(state.cast)||state.cast.length!==4) state.cast=['','','',''];
+  if(!Array.isArray(state.pics)||state.pics.length!==4) state.pics=['','','',''];
+  const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(state))}catch(e){}};
+  const $=id=>document.getElementById(id);
+  const toast=$('toast');
+  function flash(msg){toast.textContent=msg;toast.classList.add('show');clearTimeout(flash.t);flash.t=setTimeout(()=>toast.classList.remove('show'),1600);}
+
+  /* 四格標題輸入 */
+  const slots=$('slots'); const inputs=[];
+  for(let i=0;i<4;i++){
+    const w=document.createElement('label');w.className='slot';w.htmlFor='title'+i;
+    const n=document.createElement('span');n.className='n';n.textContent=i+1;
+    const inp=document.createElement('input');inp.className='txt';inp.id='title'+i;inp.maxLength=16;
+    inp.addEventListener('input',()=>{state.titles[i]=inp.value;save();renderAll();});
+    w.append(n,inp);slots.append(w);inputs.push(inp);
+  }
+
+  /* 內建名詞庫（2026-10 整理）：topics＝主題選單；cast＝該主題的主角；pool＝沒有對應時的主角選單 */
+  const KDOG=['柴犬','柯基','黃金獵犬','拉布拉多','博美','貴賓狗','哈士奇','法國鬥牛犬','臘腸狗','邊境牧羊犬'];
+  const KCAT=['橘貓','布偶貓','英國短毛貓','美國短毛貓','曼赤肯貓','蘇格蘭摺耳貓','無毛貓','黑貓','三花貓'];
+  const KSNAKE=['球蟒','玉米蛇','王蛇','眼鏡蛇','綠樹蟒','網紋蟒'];
+  const KTURTLE=['巴西龜','蘇卡達象龜','綠蠵龜','豹紋陸龜','赫曼陸龜','鱷龜','加拉巴哥象龜'];
+  const ANI_CAST={
+    '鬼滅之刃':['竈門炭治郎','竈門禰豆子','我妻善逸','嘴平伊之助','富岡義勇','胡蝶忍'],
+    '名偵探柯南':['江戶川柯南','毛利蘭','灰原哀','怪盜基德','毛利小五郎'],
+    '寶可夢':['皮卡丘','伊布','噴火龍','耿鬼','卡比獸','莉可'],
+    '間諜家家酒':['安妮亞','洛伊德','約兒','彭德'],
+    '航海王（海賊王）':['魯夫','索隆','娜美','香吉士','喬巴','騙人布'],
+    '咒術迴戰':['虎杖悠仁','伏黑惠','釘崎野薔薇','五條悟','宿儺'],
+    '蠟筆小新':['野原新之助','野原美冴','野原廣志','野原向日葵','小白'],
+    '哆啦A夢':['哆啦A夢','大雄','靜香','胖虎','小夫'],
+    '葬送的芙莉蓮':['芙莉蓮','費倫','修塔爾克','欣梅爾'],
+    '排球少年':['日向翔陽','影山飛雄','月島螢','西谷夕'],
+    '我的英雄學院':['綠谷出久','爆豪勝己','轟焦凍','歐爾麥特'],
+    '藍色監獄':['潔世一','蜂樂迴','凪誠士郎','糸師凜'],
+    '鏈鋸人':['淀治','波奇塔','瑪奇瑪','帕瓦'],
+    '膽大黨':['綾瀨桃','高倉健','白鳥愛羅'],
+    '怪獸8號':['日比野卡夫卡','亞白米娜','市川雷諾'],
+    '坂本日常':['坂本太郎','朝倉新','陸少糖'],
+    '藥師少女的獨語':['貓貓','壬氏','高順'],
+    'Kpop 獵魔女團':['魯米','米拉','柔伊','吉努'],
+    '動物方城市':['茱蒂','尼克','閃電','豹子頭'],
+    '火影忍者':['漩渦鳴人','宇智波佐助','春野櫻','旗木卡卡西'],
+    '進擊的巨人':['艾連','米卡莎','阿爾敏','里維']
+  };
+  const MANGA=['航海王（海賊王）','鬼滅之刃','咒術迴戰','間諜家家酒','名偵探柯南','哆啦A夢','膽大黨','藍色監獄','排球少年','鏈鋸人','葬送的芙莉蓮','坂本日常','怪獸8號','我的英雄學院','火影忍者','進擊的巨人','藥師少女的獨語'];
+  const KPOP_CAST={
+    'BABYMONSTER':['Ruka','Pharita','Asa','Ahyeon','Rami','Rora','Chiquita'],
+    'BLACKPINK':['Jisoo','Jennie','Rosé','Lisa'],
+    'IVE':['安宥真','秋天','直井怜','張員瑛','Liz','李瑞'],
+    'aespa':['Karina','Giselle','Winter','Ningning'],
+    'LE SSERAFIM':['金采源','宮脇咲良','許允真','中村一葉','洪恩採'],
+    'TWICE':['娜璉','定延','Momo','Sana','志效','Mina','多賢','彩瑛','子瑜'],
+    'RESCENE':['Woni','Liv','Minami','May','Zena'],
+    'ILLIT':['Yunah','Minju','Moka','Wonhee','Iroha'],
+    'Hearts2Hearts':['Jiwoo','Carmen','Yuha','Stella','Juun','A-na','Ian','Ye-on'],
+    'KiiiKiii':['Jiyu','Leesol','Sui','Haum','Kya'],
+    '(G)I-DLE':['美延','Minnie','小娟','宋雨琦','葉舒華'],
+    'BTS':['RM','Jin','SUGA','j-hope','Jimin','V','Jung Kook'],
+    'Stray Kids':['Bang Chan','Lee Know','Changbin','Hyunjin','Han','Felix','Seungmin','I.N'],
+    'SEVENTEEN':['S.Coups','Jeonghan','Joshua','Jun','Hoshi','Wonwoo','Woozi','DK','Mingyu','The8','Seungkwan','Vernon','Dino'],
+    'TXT':['Soobin','Yeonjun','Beomgyu','Taehyun','Hueningkai'],
+    'ATEEZ':['Hongjoong','Seonghwa','Yunho','Yeosang','San','Mingi','Wooyoung','Jongho'],
+    'CORTIS':['Martin','James','Juhoon','Seonghyeon','Keonho'],
+    'ENHYPEN':[], 'RIIZE':[], 'BOYNEXTDOOR':[], 'TWS':[], 'Red Velvet':[]
+  };
+  const STARS=['梅西','C羅','姆巴佩','哈蘭德','亞馬爾','維尼修斯','貝林厄姆','凱恩','登貝萊','薩拉赫','奧利塞','羅德里','佩德里','萊斯','哈基米','維蒂尼亞','勞塔羅','克瓦拉茨赫利亞','B費','孫興慜'];
+  const CARS=['法拉利 SF90','法拉利 F80','藍寶堅尼 Revuelto','藍寶堅尼 Temerario','保時捷 911','布加迪 Chiron','布加迪 Tourbillon','麥拉倫 W1','柯尼塞格 Jesko','帕加尼 Utopia','Rimac Nevera','奧斯頓馬丁 Valkyrie','福特 GT','小米 SU7 Ultra'];
+  const TOYS=['樂高','Labubu','寶可夢卡牌','戰鬥陀螺 X','魔術方塊','鋼彈模型','芭比娃娃','遙控車','Tomica 小汽車','扭蛋','角落小夥伴','三麗鷗','拼豆','史萊姆','黏土','積木'];
+  const FOODS=['珍珠奶茶','牛肉麵','小籠包','雞排','臭豆腐','蚵仔煎','鹽酥雞','芒果冰','壽司','拉麵','披薩','漢堡'];
+  const LIB={
+    '足球明星':{topics:['世界足球明星','阿根廷國家隊','皇家馬德里','巴塞隆納','巴黎聖日耳曼','曼城','利物浦'].concat(STARS),pool:STARS},
+    '韓團（男團／女團）':{topics:Object.keys(KPOP_CAST),cast:KPOP_CAST},
+    '車子':{topics:['超跑大集合'].concat(CARS),pool:CARS},
+    '玩具':{topics:['我的玩具收藏'].concat(TOYS),pool:TOYS},
+    '動畫':{topics:Object.keys(ANI_CAST),cast:ANI_CAST,pool:Object.keys(ANI_CAST)},
+    '漫畫':{topics:MANGA,cast:ANI_CAST,pool:MANGA},
+    '動物':{topics:['可愛的狗狗','可愛的貓咪','蛇','烏龜','我喜歡的寵物'].concat(KDOG,KCAT,KSNAKE,KTURTLE),
+      cast:{'可愛的狗狗':KDOG,'可愛的貓咪':KCAT,'蛇':KSNAKE,'烏龜':KTURTLE},pool:KDOG.concat(KCAT,KSNAKE,KTURTLE)},
+    '美食':{topics:['臺灣美食','夜市小吃','日本料理'].concat(FOODS),pool:FOODS}
+  };
+  /* ===== v2.4 擴充類別（不含遊戲類） ===== */
+  Object.assign(DATA,{
+    '籃球明星':{one:[['他是誰','打什麼位置','最厲害的紀錄','我為什麼喜歡他']],many:[['球星大集合','他們的球隊','誰的紀錄最強','我最喜歡的一位']]},
+    '棒球明星':{one:[['他是誰','守什麼位置','最精彩的比賽','我為什麼喜歡他']],many:[['球隊介紹','重要球員','最精彩的比賽','我最喜歡的球員']]},
+    '華語歌手':{one:[['歌手是誰','出道故事','最紅的一首歌','喜歡他的原因']],many:[['歌手大集合','各自的代表歌','得過的大獎','我最喜歡的一位']]},
+    '電影':{one:[['電影介紹','主角是誰','最精彩的一幕','推薦你來看']],many:[['電影介紹','主要角色','精彩劇情','我最喜歡的角色']]},
+    '超級英雄':{one:[['英雄是誰','他的超能力','最精彩的戰鬥','我想向他學習']],many:[['英雄大集合','每個人的超能力','一起打敗的壞人','我最喜歡的英雄']]},
+    '可愛角色':{one:[['他是誰','長什麼樣子','有趣的故事','喜歡他的原因']],many:[['角色大集合','每個角色的特色','他們的好朋友','我最喜歡的角色']]},
+    '交通工具':{one:[['它是什麼','怎麼動起來','最快跑多快','我想搭它去哪']],many:[['交通工具大集合','各自的用途','速度比一比','我最想搭的']]},
+    '海洋生物':{one:[['長什麼樣子','住在海裡哪裡','吃什麼','有趣小知識']],many:[['海洋生物大集合','牠們住在哪裡','各自的本領','怎麼保護海洋']]},
+    '恐龍':{one:[['長什麼樣子','生活在什麼時候','吃什麼','厲害的本領']],many:[['恐龍大集合','誰最大隻','吃肉還是吃草','我最喜歡的恐龍']]},
+    '昆蟲':{one:[['長什麼樣子','住在哪裡','怎麼長大','有趣小知識']],many:[['昆蟲大集合','長相比一比','各自的本領','我最喜歡的昆蟲']]},
+    '太空':{one:[['它是什麼','有多大多遠','特別的地方','有趣小知識']],many:[['太空大集合','大小比一比','各自的特色','我最想去的']]},
+    '世界景點':{one:[['在哪裡','歷史故事','必看亮點','我想去的原因']],many:[['世界景點大集合','在哪個國家','各自的特色','我最想去的']]},
+    '臺灣景點':{one:[['在哪裡','歷史故事','必看亮點','我想去的原因']],many:[['臺灣景點大集合','在哪個縣市','各自的特色','我最想去的']]},
+    '運動項目':{one:[['怎麼玩','需要的裝備','有名的選手','好玩在哪裡']],many:[['運動大集合','各自的玩法','有名的選手','我最喜歡的運動']]}
+  });
+  const ORDER=['足球明星','籃球明星','棒球明星','臺灣運動選手','韓團（男團／女團）','華語歌手','直播主／YouTuber','動畫','漫畫','電影','超級英雄','可愛角色','玩具','車子','交通工具','動物','海洋生物','恐龍','昆蟲','鳥類','植物花朵','太空','世界景點','臺灣景點','美食','節日','樂器','職業','科學家與發明家','運動項目','其他'];
+  const NBA=['詹姆斯','柯瑞','杜蘭特','約基奇','唐西奇','文班亞馬','亞歷山大','字母哥','愛德華茲','塔圖姆'];
+  const BASE=['大谷翔平','山本由伸','賈吉','陳傑憲','林家正','林昱珉','古林睿煬','張奕','林安可','江坤宇','潘傑楷','曾頌恩'];
+  const SING=['周杰倫','蔡依林','林俊傑','鄧紫棋','張惠妹','田馥甄','盧廣仲','告五人','五月天','艾薇'];
+  const HERO=['蜘蛛人','鋼鐵人','美國隊長','雷神索爾','黑豹','綠巨人浩克','黑寡婦','奇異博士','蝙蝠俠','超人','神力女超人','閃電俠'];
+  const MOVIE_CAST={'玩具總動員':['胡迪','巴斯光年','翠絲','抱抱龍'],'冰雪奇緣':['艾莎','安娜','雪寶','克斯托夫'],'哈利波特':['哈利','妙麗','榮恩','鄧不利多'],'腦筋急轉彎':['樂樂','憂憂','怒怒','焦焦'],'小小兵':['凱文','史都華','鮑伯','格魯'],'功夫熊貓':['阿波','師父','悍嬌虎'],'海洋奇緣':['莫娜','毛伊'],'侏儸紀世界':['暴龍','迅猛龍小藍','歐文'],'星際大戰':['路克','尤達大師','黑武士','R2-D2'],'動物方城市':['茱蒂','尼克','閃電','豹子頭']};
+  const CUTE_CAST={'三麗鷗':['Hello Kitty','美樂蒂','酷洛米','大耳狗','布丁狗'],'迪士尼角色':['米奇','米妮','唐老鴨','高飛','史迪奇'],'角落小夥伴':['白熊','企鵝','炸豬排','貓','蜥蜴'],'史努比與好朋友':['史努比','查理布朗','糊塗塌客'],'蛋黃哥':['蛋黃哥'],'拉拉熊':['拉拉熊','小白熊','小雞']};
+  const VEH=['高鐵','台鐵','捷運','新幹線','飛機','熱氣球','潛水艇','火箭','消防車','救護車','怪手','郵輪'];
+  const SEA=['海豚','虎鯨','藍鯨','鯨鯊','大白鯊','海龜','章魚','小丑魚','水母','海馬','企鵝','海獺'];
+  const DINO=['暴龍','三角龍','劍龍','腕龍','迅猛龍','甲龍','棘龍','翼龍','蛇頸龍'];
+  const BUG=['獨角仙','鍬形蟲','螳螂','蝴蝶','螢火蟲','蜜蜂','瓢蟲','蜻蜓'];
+  const SPACE=['太陽','月球','地球','火星','木星','土星','黑洞','國際太空站'];
+  const PLANETS=['水星','金星','地球','火星','木星','土星','天王星','海王星'];
+  const WORLD=['艾菲爾鐵塔','埃及金字塔','萬里長城','自由女神像','雪梨歌劇院','富士山','羅馬競技場','比薩斜塔','泰姬瑪哈陵','東京迪士尼'];
+  const TW=['台北101','日月潭','阿里山','墾丁','太魯閣','九份','高美濕地','赤崁樓','安平古堡','奇美博物館'];
+  const TAINAN=['赤崁樓','安平古堡','奇美博物館','臺南孔廟','億載金城','四草綠色隧道'];
+  const SPORT=['棒球','籃球','足球','羽球','桌球','游泳','跆拳道','滑板','體操','排球'];
+  CUTE_CAST['角落小夥伴']=['白熊','企鵝','炸豬排','貓','蜥蜴'];
+  Object.assign(LIB,{
+    '籃球明星':{topics:['NBA 球星大集合','勇士隊','湖人隊'].concat(NBA),pool:NBA},
+    '棒球明星':{topics:['中華隊','道奇隊'].concat(BASE),cast:{'中華隊':['陳傑憲','林家正','林昱珉','古林睿煬','張奕','林安可','江坤宇','潘傑楷'],'道奇隊':['大谷翔平','山本由伸']},pool:BASE},
+    '華語歌手':{topics:['華語歌手大集合'].concat(SING),cast:{'五月天':['阿信','怪獸','石頭','瑪莎','冠佑']},pool:SING},
+    '直播主／YouTuber':{topics:['有感筆電']},
+    '電影':{topics:Object.keys(MOVIE_CAST),cast:MOVIE_CAST,pool:Object.keys(MOVIE_CAST)},
+    '超級英雄':{topics:['復仇者聯盟','正義聯盟'].concat(HERO),cast:{'復仇者聯盟':['鋼鐵人','美國隊長','雷神索爾','綠巨人浩克','黑寡婦','蜘蛛人'],'正義聯盟':['超人','蝙蝠俠','神力女超人','閃電俠']},pool:HERO},
+    '可愛角色':{topics:Object.keys(CUTE_CAST),cast:CUTE_CAST},
+    '交通工具':{topics:['交通工具大集合'].concat(VEH),pool:VEH},
+    '海洋生物':{topics:['海洋生物大集合'].concat(SEA),pool:SEA},
+    '恐龍':{topics:['恐龍大集合'].concat(DINO),pool:DINO},
+    '昆蟲':{topics:['昆蟲大集合'].concat(BUG),pool:BUG},
+    '太空':{topics:['太陽系行星'].concat(SPACE),cast:{'太陽系行星':PLANETS},pool:SPACE},
+    '世界景點':{topics:['世界景點大集合'].concat(WORLD),pool:WORLD},
+    '臺灣景點':{topics:['臺灣景點大集合','臺南景點'].concat(TW),cast:{'臺南景點':TAINAN},pool:TW},
+    '運動項目':{topics:['我喜歡的運動'].concat(SPORT),pool:SPORT}
+  });
+  /* 動物、美食擴充 */
+  ['兔子','倉鼠','鸚鵡','刺蝟','貓熊','無尾熊','水豚','長頸鹿','獅子','北極熊'].forEach(x=>LIB['動物'].topics.push(x));
+  LIB['動物'].topics.splice(5,0,'動物園明星');LIB['動物'].cast['動物園明星']=['貓熊','無尾熊','長頸鹿','獅子','北極熊','水豚'];
+  ['甜點大集合','鬆餅','蛋糕','冰淇淋','布丁','雞蛋糕'].forEach(x=>LIB['美食'].topics.push(x));
+
+  const GROUPS_EXTRA={};
+  /* ===== v2.5 再擴充 ===== */
+  Object.assign(DATA,{
+    '臺灣運動選手':{one:[['他是誰','練什麼運動','最重要的比賽','我想向他學習']],many:[['選手大集合','各自的運動','得過的獎牌','我最佩服的一位']]},
+    '鳥類':{one:[['長什麼樣子','住在哪裡','吃什麼','有趣小知識']],many:[['鳥類大集合','牠們住在哪裡','各自的本領','怎麼保護牠們']]},
+    '植物花朵':{one:[['長什麼樣子','生長在哪裡','怎麼照顧','有趣小知識']],many:[['植物大集合','長相比一比','開花的季節','我最喜歡的植物']]},
+    '節日':{one:[['是什麼節日','由來故事','怎麼慶祝','我最喜歡的地方']],many:[['節日大集合','在哪一個月','怎麼慶祝','我最喜歡的節日']]},
+    '樂器':{one:[['它是什麼樂器','怎麼發出聲音','有名的演奏家','我想學它的原因']],many:[['樂器大集合','怎麼發出聲音','聲音比一比','我最想學的樂器']]},
+    '職業':{one:[['這個工作是什麼','每天做什麼','需要的能力','我想當它的原因']],many:[['職業大集合','各自的工作內容','需要的能力','我長大想做的']]},
+    '科學家與發明家':{one:[['他是誰','最重要的發明','發明的故事','我想向他學習']],many:[['科學家大集合','各自的發明','改變了什麼','我最佩服的一位']]}
+  });
+  const OLY=['林郁婷','李洋','王齊麟','戴資穎','郭婞淳','楊勇緯','李智凱','林昀儒','周天成','鄭怡靜','莊智淵','楊俊瀚'];
+  const BIRD=['黑面琵鷺','臺灣藍鵲','帝雉','綠繡眼','白鷺鷥','貓頭鷹','老鷹','鸚鵡','孔雀','企鵝','蜂鳥','啄木鳥'];
+  const PLANT=['向日葵','玫瑰','櫻花','鬱金香','蓮花','油桐花','仙人掌','捕蠅草','竹子','蒲公英','含羞草','猴麵包樹'];
+  const FEST=['春節','元宵節','清明節','端午節','中秋節','兒童節','母親節','父親節','教師節','萬聖節','聖誕節'];
+  const INST=['鋼琴','小提琴','吉他','爵士鼓','直笛','長笛','薩克斯風','烏克麗麗','二胡','古箏','豎琴','小號'];
+  const JOB=['醫生','護理師','警察','消防員','老師','太空人','廚師','工程師','機師','獸醫','運動員','設計師','科學家'];
+  const SCI=['愛迪生','愛因斯坦','牛頓','居禮夫人','萊特兄弟','達文西','伽利略','尼古拉・特斯拉','霍金','貝爾','諾貝爾','賈伯斯'];
+  Object.assign(LIB,{
+    '臺灣運動選手':{topics:['臺灣奧運選手大集合','羽球雙打 麟洋配'].concat(OLY),cast:{'羽球雙打 麟洋配':['李洋','王齊麟']},pool:OLY},
+    '鳥類':{topics:['鳥類大集合','臺灣的鳥'].concat(BIRD),cast:{'臺灣的鳥':['黑面琵鷺','臺灣藍鵲','帝雉','綠繡眼']},pool:BIRD},
+    '植物花朵':{topics:['植物大集合'].concat(PLANT),pool:PLANT},
+    '節日':{topics:['節日大集合','臺灣傳統節日'].concat(FEST),cast:{'臺灣傳統節日':['春節','元宵節','端午節','中秋節']},pool:FEST},
+    '樂器':{topics:['樂器大集合'].concat(INST),pool:INST},
+    '職業':{topics:['職業大集合'].concat(JOB),pool:JOB},
+    '科學家與發明家':{topics:['科學家大集合'].concat(SCI),pool:SCI}
+  });
+  function addTo(cat,arr,cast){const L=LIB[cat];arr.forEach(x=>{if(!L.topics.includes(x))L.topics.push(x);if(L.pool&&!L.pool.includes(x))L.pool.push(x);});
+    if(cast){L.cast=L.cast||{};Object.keys(cast).forEach(k=>{L.cast[k]=cast[k];if(!L.topics.includes(k))L.topics.splice(1,0,k);});}}
+  addTo('足球明星',['帕爾默','薩卡','穆西亞拉','維爾茨','福登','內馬爾','莫德里奇','范戴克','德布勞內','阿爾瓦雷斯','拜仁慕尼黑','曼聯','阿森納','巴西國家隊','法國國家隊','日本國家隊']);
+  addTo('籃球明星',['喬丹','柯比','歐尼爾','林書豪','哈登','莫蘭特','布倫森','塞爾提克隊','雷霆隊']);
+  addTo('棒球明星',['鈴木一朗','達比修有','村上宗隆','佐佐木朗希','王建民','陳偉殷','林子偉','鄧愷威','鄭宗哲','日本武士隊','統一獅','中信兄弟','樂天桃猿']);
+  addTo('韓團（男團／女團）',['NewJeans','ITZY','NMIXX','KISS OF LIFE','Kep1er','BIGBANG','EXO','NCT 127','ZEROBASEONE','TREASURE','IU']);
+  addTo('華語歌手',['孫燕姿','王心凌','韋禮安','周興哲','李榮浩','楊丞琳','八三夭','茄子蛋','美秀集團','魏如萱']);
+  addTo('動畫',[],{'七龍珠':['孫悟空','貝吉塔','比克','孫悟飯'],'獵人':['小傑','奇犽','酷拉皮卡','雷歐力'],'我們這一家':['花媽','花爸','橘子','柚子'],'櫻桃小丸子':['小丸子','小玉','爺爺','花輪'],'烏龍派出所':['兩津勘吉','秋本麗子','中川圭一'],'汪汪隊立大功':['萊德','阿奇','毛毛','天天'],'妖怪手錶':['吉胖喵','天野景太','威斯帕'],'庫洛魔法使':['木之本櫻','小可','大道寺知世','李小狼']});
+  addTo('漫畫',['七龍珠','獵人','灌籃高手','烏龍派出所','櫻桃小丸子','我們這一家']);
+  LIB['漫畫'].cast=Object.assign({},LIB['漫畫'].cast,{'灌籃高手':['櫻木花道','流川楓','赤木剛憲','三井壽','宮城良田']});
+  addTo('電影',[],{'龍貓':['龍貓','小月','小梅','貓公車'],'神隱少女':['千尋','白龍','無臉男','湯婆婆'],'獅子王':['辛巴','木法沙','丁滿','彭彭'],'怪獸電力公司':['毛怪','大眼仔','阿布'],'汽車總動員':['閃電麥坤','拖線','莎莉'],'海底總動員':['尼莫','多莉','馬林'],'超人特攻隊':['超能先生','彈力女超人','小倩','小飛'],'可可夜總會':['米高','埃克托'],'魔法滿屋':['米拉貝','露伊莎','布魯諾'],'馴龍高手':['小嗝嗝','無牙','亞絲翠']});
+  addTo('超級英雄',['驚奇隊長','蟻人','星爵','格魯特','水行俠','超人力霸王','假面騎士'],{'星際異攻隊':['星爵','格魯特','火箭浣熊','葛摩拉']});
+  addTo('可愛角色',[],{'吉伊卡哇':['吉伊卡哇','小八','兔兔','栗子饅頭'],'小熊維尼':['維尼','跳跳虎','小豬','屹耳'],'海綿寶寶':['海綿寶寶','派大星','章魚哥','蟹老闆'],'嚕嚕米':['嚕嚕米','小不點','阿金'],'米飛兔':['米飛兔','波利熊'],'THE MONSTERS':['Labubu','Zimomo','Tycoco']});
+  addTo('玩具',['磁力片','拼圖','變形金剛','溜溜球','無人機','機器人','毛絨娃娃','森林家族','泡泡瑪特盲盒','水槍','遙控飛機']);
+  addTo('車子',['法拉利 296','保時捷 Taycan','藍寶堅尼 Urus','賓士 G-Class','BMW M4','特斯拉 Cybertruck','特斯拉 Model Y','Toyota GR Supra','日產 GT-R','福特野馬','雪佛蘭 Corvette','勞斯萊斯 Spectre','吉普牧馬人','電動車大集合','越野車大集合']);
+  addTo('交通工具',['直升機','磁浮列車','雙層巴士','帆船','腳踏車','垃圾車','太空梭','阿里山小火車','纜車','摩托車']);
+  addTo('動物',['老虎','大象','狐狸','浣熊','小貓熊','樹懶','台灣黑熊','石虎','穿山甲','狐獴','袋鼠','斑馬'],{'臺灣特有動物':['台灣黑熊','石虎','穿山甲','臺灣藍鵲','櫻花鉤吻鮭','帝雉']});
+  addTo('海洋生物',['魟魚','海星','寄居蟹','抹香鯨','翻車魚','儒艮','河豚','螃蟹','海葵','珊瑚']);
+  addTo('恐龍',['異特龍','梁龍','厚頭龍','副櫛龍','禽龍','偷蛋龍','南方巨獸龍','滄龍']);
+  addTo('昆蟲',['蟬','螞蟻','蟋蟀','竹節蟲','金龜子','蠶寶寶','枯葉蝶','皇蛾','鳳蝶']);
+  addTo('太空',['水星','金星','天王星','海王星','冥王星','銀河系','彗星','流星雨','太空人','韋伯太空望遠鏡','火星探測車'],{'太空探險':['阿波羅11號','國際太空站','韋伯太空望遠鏡','火星探測車']});
+  addTo('世界景點',['大峽谷','聖母峰','尼加拉瀑布','馬丘比丘','吳哥窟','大笨鐘','聖家堂','哈里發塔','東京晴空塔','首爾景福宮','環球影城'],{'日本景點':['富士山','東京晴空塔','清水寺','大阪城','東京迪士尼']});
+  addTo('臺灣景點',['故宮博物院','野柳女王頭','清境農場','綠島','蘭嶼','合歡山','駁二藝術特區','澎湖跨海大橋','鹿港老街','安平樹屋'],{'臺北景點':['台北101','故宮博物院','中正紀念堂','西門町','貓空纜車']});
+  addTo('美食',['滷肉飯','擔仔麵','碗粿','肉圓','虱目魚粥','牛肉湯','刈包','豆花','鳳梨酥','咖哩飯','韓式炸雞','義大利麵'],{'臺南小吃':['擔仔麵','碗粿','牛肉湯','虱目魚粥','棺材板','蝦捲']});
+  addTo('運動項目',['網球','高爾夫','田徑','舉重','拳擊','柔道','攀岩','衝浪','直排輪','跳繩','扯鈴']);
+  Object.assign(GROUPS_EXTRA,{'臺灣運動選手':['臺灣奧運選手大集合'],'鳥類':['鳥類大集合'],'植物花朵':['植物大集合'],'節日':['節日大集合'],'樂器':['樂器大集合'],'職業':['職業大集合'],'科學家與發明家':['科學家大集合'],'車子':['電動車大集合','越野車大集合'],'足球明星':['拜仁慕尼黑','曼聯','阿森納','巴西國家隊','法國國家隊','日本國家隊'],'籃球明星':['塞爾提克隊','雷霆隊'],'棒球明星':['日本武士隊','統一獅','中信兄弟','樂天桃猿']});
+
+  /* ===== v3.0 再擴充：運動明星、偶像、作品角色、動物 ===== */
+  addTo('足球明星',['萊萬多夫斯基','格列茲曼','本澤馬','拉菲尼亞','庫巴西','若昂・內維斯','努諾・門德斯','庫爾圖瓦','久保建英','三笘薰','貝克漢','席丹','小羅納度','巴西羅納度','比利','馬拉度納','切爾西','尤文圖斯','AC 米蘭','國際米蘭','多特蒙德','葡萄牙國家隊','西班牙國家隊','英格蘭國家隊']);
+  addTo('籃球明星',['魔術強森','鄧肯','諾威斯基','姚明','八村塁','河村勇輝','布克','米契爾','哈利伯頓','班切羅','公鹿隊','金塊隊','獨行俠隊','馬刺隊','尼克隊','熱火隊']);
+  addTo('棒球明星',['鈴木誠也','菊池雄星','今永昇太','索托','貝茲','弗里曼','小葛雷諾','斯基恩斯','王柏融','張育成','吳念庭','李灝宇','徐若熙','孫易磊','郭泓志','彭政閔','林智勝','洋基隊','富邦悍將','味全龍','台鋼雄鷹']);
+  addTo('臺灣運動選手',['盧彥勳','謝淑薇','曾雅妮','潘政琮','唐嘉鴻','羅嘉翎','黃筱雯','雷千瑩','湯智鈞','紀政','楊傳廣','陳詩欣','朱木炎']);
+  addTo('韓團（男團／女團）',['少女時代','Super Junior','SHINee','2NE1','MAMAMOO','Apink','OH MY GIRL','STAYC','NCT DREAM','THE BOYZ','MONSTA X','izna','MEOVV','ALLDAY PROJECT','Jennie','Lisa','Rosé']);
+  addTo('華語歌手',['蕭敬騰','林宥嘉','吳青峰','徐佳瑩','A-Lin','蔡健雅','張學友','伍佰','陶喆','宇宙人','理想混蛋','動力火車','范瑋琪'],{'動力火車':['尤秋興','顏志琳']});
+  addTo('動畫',['灌籃高手'],{'鋼之鍊金術師':['愛德華','阿爾馮斯','溫莉','羅伊・馬斯坦古'],'美少女戰士':['月野兔','水野亞美','火野麗','木野真琴','愛野美奈子'],'迷宮飯':['萊歐斯','瑪露希爾','奇爾查克','森希'],'天竺鼠車車':['馬鈴薯','阿比','泰迪','西羅摩','巧克力'],'擅長捉弄的高木同學':['高木同學','西片'],'小魔女 DoReMi':['春風DoReMi','藤原羽月','妹尾愛子']});
+  LIB['動畫'].cast['灌籃高手']=['櫻木花道','流川楓','赤木剛憲','三井壽','宮城良田'];
+  addTo('漫畫',['鋼之鍊金術師','美少女戰士','迷宮飯','擅長捉弄的高木同學','科學實驗王','尋寶記'],{'棋靈王':['進藤光','藤原佐為','塔矢亮'],'烏龍院':['大師兄','小師弟','長眉大師父'],'老夫子':['老夫子','大番薯','秦先生']});
+  Object.assign(LIB['漫畫'].cast,{'鋼之鍊金術師':LIB['動畫'].cast['鋼之鍊金術師'],'美少女戰士':LIB['動畫'].cast['美少女戰士'],'迷宮飯':LIB['動畫'].cast['迷宮飯'],'擅長捉弄的高木同學':LIB['動畫'].cast['擅長捉弄的高木同學']});
+  addTo('電影',[],{'魔女宅急便':['琪琪','吉吉','蜻蜓'],'霍爾的移動城堡':['蘇菲','霍爾','卡西法'],'天空之城':['巴魯','希達'],'蜘蛛人：新宇宙':['邁爾斯','格溫','彼得・帕克'],'史瑞克':['史瑞克','驢子','費歐娜公主','鞋貓劍客'],'冰原歷險記':['曼尼','希德','迪亞哥','斯克萊特'],'荒野機器人':['蘿茲','亮亮','狐狸菲克'],'星際寶貝':['莉蘿','史迪奇'],'小美人魚':['愛麗兒','小比目魚','賽巴斯汀'],'阿拉丁':['阿拉丁','茉莉公主','神燈精靈'],'天外奇蹟':['卡爾爺爺','小羅','逗逗'],'料理鼠王':['小米','小林'],'瓦力':['瓦力','伊芙']});
+  addTo('超級英雄',['金鋼狼','鷹眼','尚氣','原子小金剛','無敵鐵金剛'],{'X戰警':['金鋼狼','X教授','暴風女','獨眼龍'],'驚奇四超人':['驚奇先生','隱形女','霹靂火','石頭人']});
+  addTo('可愛角色',[],{'LINE FRIENDS':['熊大','兔兔','莎莉','饅頭人'],'卡娜赫拉的小動物':['P助','粉紅兔兔'],'佩佩豬':['佩佩豬','喬治','豬爸爸','豬媽媽'],'麵包超人':['麵包超人','細菌人','果醬爺爺'],'企鵝家族':['Pingu','Pinga']});
+  addTo('動物',['狼','河馬','犀牛','猩猩','獵豹','駱駝','羊駝','松鼠','天竺鼠','守宮','變色龍','鱷魚','青蛙','雪納瑞','吉娃娃','台灣犬','薩摩耶','秋田犬','比熊犬','德國牧羊犬','暹羅貓','波斯貓','緬因貓','俄羅斯藍貓'],
+    {'爬蟲類':['守宮','變色龍','鱷魚','球蟒','鬣蜥'],'非洲草原動物':['獅子','長頸鹿','斑馬','大象','犀牛','獵豹']});
+  ['雪納瑞','吉娃娃','台灣犬','薩摩耶','秋田犬','比熊犬','德國牧羊犬'].forEach(x=>{if(!KDOG.includes(x))KDOG.push(x);});
+  ['暹羅貓','波斯貓','緬因貓','俄羅斯藍貓'].forEach(x=>{if(!KCAT.includes(x))KCAT.push(x);});
+  Object.assign(GROUPS_EXTRA,{'足球明星':(GROUPS_EXTRA['足球明星']||[]).concat(['切爾西','尤文圖斯','AC 米蘭','國際米蘭','多特蒙德','葡萄牙國家隊','西班牙國家隊','英格蘭國家隊']),
+    '籃球明星':(GROUPS_EXTRA['籃球明星']||[]).concat(['公鹿隊','金塊隊','獨行俠隊','馬刺隊','尼克隊','熱火隊']),
+    '棒球明星':(GROUPS_EXTRA['棒球明星']||[]).concat(['洋基隊','富邦悍將','味全龍','台鋼雄鷹'])});
+
+  const norm=x=>String(x||'').toLowerCase().replace(/[\s()（）・·\-]/g,'');
+  function castKey(){const L=LIB[state.cat];if(!L||!L.cast)return null;const t=norm(state.topic);if(!t)return null;
+    return Object.keys(L.cast).find(k=>norm(k)===t)||Object.keys(L.cast).find(k=>norm(k).includes(t)||t.includes(norm(k)))||null;}
+  function castFor(){const L=LIB[state.cat];if(!L)return [];const k=castKey();const c=k&&L.cast[k];return (c&&c.length)?c:(L.pool||[]);}
+  function renderCastChips(){
+    const box=$('castChips');box.innerHTML='';
+    const list=castFor();
+    if(!list.length){const p=document.createElement('p');p.className='hint';p.textContent='這個主題沒有內建名字，請自己打上主角的名字。';box.append(p);return;}
+    list.forEach(n=>{
+      const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=n;
+      const on=state.cnt==='many'?state.cast.some(x=>x.trim()===n):state.cast[0].trim()===n;b.setAttribute('aria-pressed',on);
+      b.addEventListener('click',()=>{
+        if(state.cnt!=='many'){state.cast=[state.cast[0].trim()===n?'':n,'','',''];save();syncInputs();renderAll();return;}
+        const i=state.cast.findIndex(x=>x.trim()===n);
+        if(i>=0){state.cast[i]='';}
+        else{const e=state.cast.findIndex(x=>!x.trim());if(e<0){flash('四格滿了，先點一個已選的名字取消');return;}state.cast[e]=n;}
+        save();syncInputs();renderAll();
+      });
+      box.append(b);
+    });
+  }
+  function refreshLists(){
+    const L=LIB[state.cat]||{topics:[]};
+    const tb=$('topicChips');tb.innerHTML='';
+    (L.topics||[]).forEach(t=>{
+      const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=t;
+      b.setAttribute('aria-pressed',norm(t)===norm(state.topic));
+      b.addEventListener('click',()=>setTopic(t));tb.append(b);
+    });
+    if(!(L.topics||[]).length){const p=document.createElement('p');p.className='hint';p.textContent='這一類沒有內建主題，請直接在下面打。';tb.append(p);}
+    document.querySelectorAll('.segbtn').forEach(b=>b.setAttribute('aria-pressed',b.dataset.cnt===state.cnt));
+    renderCastChips();
+  }
+  function autoCast(){
+    if(state.cnt!=='many'||state.cast.some(x=>x.trim())) return;
+    const L=LIB[state.cat];const k=castKey();const c=k&&L.cast[k];
+    if(c&&c.length){state.cast=c.slice(0,4).concat(['','','','']).slice(0,4);save();syncInputs();}
+  }
+
+  /* 主角名字（好幾個主角時顯示） */
+  const castInputs=[];
+  for(let i=0;i<4;i++){
+    const inp=document.createElement('input');inp.className='txt';inp.id='cast'+i;inp.maxLength=20;
+    inp.placeholder='主角 '+(i+1)+' 的名字';inp.autocomplete='off';inp.setAttribute('aria-label','主角 '+(i+1)+' 的名字');
+    inp.addEventListener('input',()=>{state.cast[i]=inp.value;save();renderAll();});
+    $('castSlots').append(inp);castInputs.push(inp);
+  }
+
+  /* 下拉選單 */
+  const catSel=$('catSel');
+  if(!DATA[state.cat]) state.cat='足球明星';
+  if(state.cnt!=='one'&&state.cnt!=='many') state.cnt='one';
+  ORDER.filter(k=>DATA[k]).forEach(k=>{const o=document.createElement('option');o.value=k;o.textContent=k;catSel.append(o);});
+  function fillFromMenu(){state.titles=combosFor().slice();save();autoCast();syncInputs();renderAll();flash('標題填好了，可以自己改！');}
+  const EMPTY4=()=>['','','',''];
+  const GROUPS={'足球明星':['世界足球明星','阿根廷國家隊','皇家馬德里','巴塞隆納','巴黎聖日耳曼','曼城','利物浦'],'車子':['超跑大集合'],'玩具':['我的玩具收藏'],'動物':['我喜歡的寵物'],'美食':['臺灣美食','夜市小吃','日本料理','甜點大集合'],'籃球明星':['NBA 球星大集合','勇士隊','湖人隊'],'華語歌手':['華語歌手大集合','五月天'],'交通工具':['交通工具大集合'],'海洋生物':['海洋生物大集合'],'恐龍':['恐龍大集合'],'昆蟲':['昆蟲大集合'],'世界景點':['世界景點大集合'],'臺灣景點':['臺灣景點大集合'],'運動項目':['我喜歡的運動']};
+  function isKnown(t){const L=LIB[state.cat];return !!L&&(L.topics||[]).some(x=>norm(x)===norm(t));}
+  function isGroup(t){return castKey()!==null||(GROUPS[state.cat]||[]).concat(GROUPS_EXTRA[state.cat]||[]).some(x=>norm(x)===norm(t));}
+  /* 1 選類別：清空主題與主角 */
+  catSel.addEventListener('change',()=>{state.cat=catSel.value;state.topic='';state.cast=EMPTY4();state.cnt='one';state.titles=combosFor().slice();save();syncInputs();renderAll();});
+  /* 2 選主題：自動判斷幾個主角、清空並帶入主角 */
+  function setTopic(t){
+    state.topic=t;state.cast=EMPTY4();
+    if(isKnown(t)) state.cnt=isGroup(t)?'many':'one';
+    state.titles=combosFor().slice();save();autoCast();syncInputs();renderAll();
+  }
+  /* 3 選幾個主角 */
+  document.querySelectorAll('.segbtn').forEach(b=>b.addEventListener('click',()=>{
+    state.cnt=b.dataset.cnt;if(state.cnt==='one')state.cast=[state.cast[0]||'','','',''];
+    state.titles=combosFor().slice();save();autoCast();syncInputs();renderAll();
+  }));
+  function combosFor(){return DATA[state.cat][state.cnt][0];}
+
+  function renderCombos(set){
+    const box=$('combos');box.innerHTML='';
+    const card=document.createElement('div');card.className='combo';card.style.cursor='default';
+    const cn=document.createElement('span');cn.className='cn';cn.textContent='建議的四個標題：'+state.cat+'・'+(state.cnt==='many'?'好幾個主角':'1 個主角');
+    const ol=document.createElement('ol');set.forEach(t=>{const li=document.createElement('li');li.textContent=t;ol.append(li);});
+    const btn=document.createElement('button');btn.type='button';btn.className='btn btn-sky btn-sm';btn.style.justifySelf='start';btn.textContent='重新填入這組';
+    btn.addEventListener('click',fillFromMenu);
+    card.append(cn,ol,btn);box.append(card);
+  }
+
+  const topicInput=$('topicInput');
+  let lastKey=null;
+  topicInput.addEventListener('input',()=>{
+    state.topic=topicInput.value;
+    const k=castKey();
+    if(k!==lastKey){lastKey=k;if(k){state.cast=EMPTY4();state.cnt='many';state.titles=combosFor().slice();save();autoCast();syncInputs();topicInput.value=state.topic;}}
+    save();renderAll();
+  });
+
+  function syncInputs(){castInputs.forEach((inp,i)=>inp.value=state.cast[i]||'');topicInput.value=state.topic;catSel.value=state.cat;inputs.forEach((inp,i)=>inp.value=state.titles[i]||'');}
+
+  function topicOr(d){return state.topic.trim()||d;}
+  function titleOr(i){return (state.titles[i]||'').trim();}
+
+  function copyRow(list,text){
+    const li=document.createElement('li');
+    const t=document.createElement('span');t.className='ptxt';t.textContent=text;
+    const b=document.createElement('button');b.type='button';b.className='btn btn-sky btn-sm';b.textContent='複製';
+    b.addEventListener('click',()=>copyText(text,t));
+    li.append(t,b);list.append(li);
+  }
+
+  function renderAll(){
+    refreshLists();
+    const topic=topicOr('你的主題');
+    const sets=combosFor();
+    const ph=sets.map(t=>'例：'+t);
+    inputs.forEach((inp,i)=>inp.placeholder=ph[i]);
+    renderCombos(sets);
+
+    const many=state.cnt==='many';
+    const showCast=many||(!!state.topic.trim()&&isGroup(state.topic));
+    $('castBox').hidden=!showCast;
+    castInputs.forEach((inp,i)=>inp.hidden=!many&&i>0);
+    $('castLabel').textContent=many?'主角是誰？點名字，最多四個':'你要介紹哪一位？點一個名字（沒有就自己打）';
+    const lead=(!many&&showCast&&state.cast[0].trim())?state.cast[0].trim():'';
+    const subj=lead||topic;
+    const intro=lead?`我的主角是「${lead}」（${topic}，${state.cat}）。`:many?`我的主題是「${topic}」（${state.cat}）。`:`我的主角是「${topic}」（${state.cat}）。`;
+    const castList=many?state.cast.map(x=>x.trim()).filter(Boolean):[];
+    const castNote=castList.length?`主角有：${castList.join('、')}。`:'';
+    $('brainPrompt').textContent=`${intro}${castNote}請幫我想 6 個適合國小五年級簡報的分頁標題，每個標題 8 個字以內；每個標題下面再寫一段 50 字以內的介紹文案，用五年級看得懂的話。請用「標題：」「文案：」的格式列出。每段文案一定要寫出真實的名字、歌名、作品名、年份或數字等具體例子，不要只用形容詞；遇到「我最喜歡」「想對他說」這類標題，請留一個（　）讓我自己填。請先上網查最新、最正確的資料，名字、歌名、作品名、人數、年份、紀錄等名詞和數字都要用最新的正確資料。`;
+    $('fileName').textContent='例：50108'+topic;
+
+    const titles=[0,1,2,3].map(i=>titleOr(i)||ph[i].replace('例：',''));
+    if($('nameEg')) $('nameEg').textContent=titles[0];
+    $('writePrompt').textContent=`${intro}${castNote}請幫這四個簡報分頁標題，各寫一段 50 字以內的介紹文案，用國小五年級看得懂的話：1.${titles[0]} 2.${titles[1]} 3.${titles[2]} 4.${titles[3]}。請用「標題：」「文案：」的格式列出。每段文案一定要寫出真實的名字、歌名、作品名、年份或數字等具體例子，不要只用形容詞；遇到「我最喜歡」「想對他說」這類標題，請留一個（　）讓我自己填。請先上網查最新、最正確的資料，名字、歌名、作品名、人數、年份、紀錄等名詞和數字都要用最新的正確資料。`;
+
+    /* 找圖關鍵字 */
+    const sl=$('searchList')||document.createElement('ul');sl.innerHTML='';
+    titles.forEach((t,i)=>copyRow(sl, `${i+1}${t}.jpg`));
+
+    /* 標題 tags */
+    const tg=$('titleTags');tg.innerHTML='';
+    titles.forEach((t,i)=>{const s=document.createElement('span');s.className='tag';s.textContent=(i+1)+'. '+t;tg.append(s);});
+
+    /* Google AI 模式指令：看圖片 */
+
+  }
+
+  /* 第 8 步：每張圖「在做什麼」 */
+  const PICDESC=[
+    [['足球明星','籃球明星','棒球明星','臺灣運動選手'],['在比賽中','拿著獎盃','慶祝得分','和隊友合照','穿著球衣的特寫','小時候的照片']],
+    [['韓團（男團／女團）','華語歌手','直播主／YouTuber'],['在舞台上表演','團體合照','個人特寫','拿著麥克風唱歌','在拍影片','專輯封面']],
+    [['動畫','漫畫','電影','超級英雄','可愛角色'],['主角的特寫','角色合照','戰鬥的畫面','開心地笑','海報或封面','最感人的一幕']],
+    [['玩具','車子','交通工具'],['整體外觀','內部構造','正在使用中','不同顏色款式','包裝盒','跟人比大小']],
+    [['動物','海洋生物','恐龍','昆蟲','鳥類','植物花朵'],['全身照','正在吃東西','住的地方','寶寶或小時候','臉部特寫','正在活動']],
+    [['太空','世界景點','臺灣景點'],['遠看全景','近看特色','晚上的樣子','有人在玩','地圖位置','以前的老照片']],
+    [['美食'],['整盤的樣子','正在製作','店家招牌','切開的樣子','搭配的飲料','有人在吃']]
+  ];
+  function descFor(){const f=PICDESC.find(x=>x[0].includes(state.cat));return f?f[1]:['整體照片','正在使用中','特寫','有人在做','以前的老照片','合照'];}
+  const picCards=[];
+  function updatePicCards(titles,intro,castNote,subj){
+    const list=descFor();
+    picCards.forEach((c,i)=>{
+      c.tt.textContent='第 '+(i+1)+' 張圖：'+titles[i];
+      if(document.activeElement!==c.inp) c.inp.value=state.pics[i]||'';
+      c.chips.innerHTML='';
+      list.forEach(d=>{const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=d;
+        b.setAttribute('aria-pressed',(state.pics[i]||'').trim()===d);
+        b.addEventListener('click',()=>{state.pics[i]=(state.pics[i]||'').trim()===d?'':d;c.inp.value=state.pics[i];save();renderAll();});
+        c.chips.append(b);});
+      const d=(state.pics[i]||'').trim();
+      c.txt.textContent=`${intro}${castNote}我的第 ${i+1} 張圖片是「${d||'（還沒選：這張圖在做什麼）'}」，這一頁的標題是「${titles[i]}」。請用五年級看得懂的話，寫一段 50 字以內、跟這張圖片有關的「${subj}」介紹文案，一定要寫出真實的名字、歌名或數字，不要只用形容詞。請先上網查最新、最正確的資料，名字、歌名、作品名、人數、年份、紀錄等名詞和數字都要用最新的正確資料。`;
+    });
+  }
+
+  function copyText(text,node){
+    const fallback=()=>{const r=document.createRange();r.selectNodeContents(node);const sel=getSelection();sel.removeAllRanges();sel.addRange(r);flash('已選取，按 Ctrl+C 複製');};
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(()=>flash('複製好了！'),fallback);}else fallback();
+  }
+  document.querySelectorAll('[data-copy]').forEach(b=>b.addEventListener('click',()=>{const n=$(b.dataset.copy);copyText(n.textContent,n);}));
+
+  /* 步驟打勾 */
+  const steps=[...document.querySelectorAll('.step')];
+  $('totalN').textContent=steps.length;
+  function renderProgress(){
+    let n=0;
+    steps.forEach(s=>{const d=!!state.done[s.dataset.id];s.classList.toggle('is-done',d);s.querySelector('input').checked=d;if(d)n++;});
+    $('doneN').textContent=n;$('barFill').style.width=(n/steps.length*100)+'%';
+    document.querySelectorAll('[data-nav]').forEach(a=>a.classList.toggle('ok',!!state.done[a.dataset.nav]));
+  }
+  steps.forEach(s=>{
+    const cb=s.querySelector('input');cb.id='cb-'+s.dataset.id;
+    cb.addEventListener('change',()=>{
+      state.done[s.dataset.id]=cb.checked;save();renderProgress();
+      const n=Object.values(state.done).filter(Boolean).length;
+      if(cb.checked&&n===steps.length) flash('全部完成！你是主題探索家！');
+      else if(cb.checked) flash('蓋章！');
+    });
+  });
+  $('resetAll').addEventListener('click',()=>{state.done={};save();renderProgress();flash('已清除，重新開始');});
+
+  if(state.titles.every(t=>!t)) state.titles=combosFor().slice();
+  syncInputs();renderAll();renderProgress();
+})();
+</script>
