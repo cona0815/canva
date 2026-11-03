@@ -1,4 +1,5 @@
-<!-- 五年級 Canva「我的主題大探索」教學網站 v3.3 2026-11-03 · Cona 老師的資訊教室
+<!-- 五年級 Canva「我的主題大探索」教學網站 v3.4 2026-11-03 · Cona 老師的資訊教室
+     v3.4：多主角時四個分頁標題自動改成選取的主角名字；AI 提示只保留「已選好四個標題寫文案」一句
      v3.3：選項不再重複——1 類別 → 2 幾個主角 → 3 團體／作品（只列團體）→ 4 主角名字（只列個人）
      v3.2：新增爆笑圖片、臺灣小吃、臺灣火車、日本景點、日本火車電車五類；臺南小吃加量
      v3.1：新增臺南古蹟、臺灣美食、臺南美食、臺南小吃四類；車子新增電動車
@@ -304,16 +305,13 @@ footer{margin-top:30px;color:var(--muted);font-size:14px;text-align:center}
           </div>
 
           <div class="ai-box">
-            <h3>用 Google AI 模式，一次問出標題＋文案</h3>
+            <h3>用 Google AI 模式寫文案</h3>
             <ol style="margin:0;padding-left:1.3em;font-size:16px">
               <li>打開 <a href="https://www.google.com/" target="_blank" rel="noopener">Google</a>，點左上方的「<b>AI 模式</b>」。</li>
               <li>按下面的「複製這句」，貼到 AI 模式的框框裡，按 <span class="key">Enter</span>。</li>
-              <li>挑四個你最喜歡的，把<b>標題</b>和<b>文案</b>分別貼到 Canva 的每一頁。</li>
+              <li>AI 會照四個標題各寫一段，把每一段<b>文案</b>貼到 Canva 對應的那一頁。</li>
             </ol>
-            <p><b>A. 還沒有標題</b>：標題和文案一起問</p>
-            <div class="code" id="brainPrompt" style="margin:0"></div>
-            <div class="row" style="margin-top:0"><button class="btn btn-sky btn-sm" type="button" data-copy="brainPrompt">複製這句</button></div>
-            <p><b>B. 已經選好四個標題</b>：只請它寫文案</p>
+            <p>這句已經放好你的主角和四個標題，直接複製：</p>
             <div class="code" id="writePrompt" style="margin:0"></div>
             <div class="row" style="margin-top:0"><button class="btn btn-sky btn-sm" type="button" data-copy="writePrompt">複製這句</button></div>
             <div class="warn" style="margin:0"><b>文案太空？</b>如果 AI 只寫「很紅、很厲害」卻沒寫出名字或歌名，就再追問一句：「請寫出真正的歌名（或名字、數字）」。<br><b>AI 也會出錯！</b>名字、年份、數字要再看一次對不對；看不懂的字，改成你自己的話。</div>
@@ -372,7 +370,7 @@ footer{margin-top:30px;color:var(--muted);font-size:14px;text-align:center}
     </div>
   </section>
 
-  <footer>Cona 老師的資訊教室 · 我的主題大探索 v3.3 · 2026-11-03</footer>
+  <footer>Cona 老師的資訊教室 · 我的主題大探索 v3.4 · 2026-11-03</footer>
 </div>
 <div class="toast" id="toast" role="status"></div>
 
@@ -757,12 +755,13 @@ footer{margin-top:30px;color:var(--muted);font-size:14px;text-align:center}
     state.cnt=b.dataset.cnt;if(state.cnt==='one')state.cast=[state.cast[0]||'','','',''];
     state.titles=combosFor().slice();save();autoCast();syncInputs();renderAll();
   }));
-  function combosFor(){return DATA[state.cat][state.cnt][0];}
+  function combosFor(){const base=DATA[state.cat][state.cnt][0];if(state.cnt==='many'){const c=state.cast.map(x=>(x||'').trim());if(c.some(Boolean))return c.map((x,i)=>x||base[i]);}return base;}
+  let lastCastSig=null;
 
   function renderCombos(set){
     const box=$('combos');box.innerHTML='';
     const card=document.createElement('div');card.className='combo';card.style.cursor='default';
-    const cn=document.createElement('span');cn.className='cn';cn.textContent='建議的四個標題：'+state.cat+'・'+(state.cnt==='many'?'好幾個主角':'1 個主角');
+    const cn=document.createElement('span');cn.className='cn';cn.textContent=(state.cnt==='many'&&state.cast.some(x=>x.trim()))?'建議的四個標題：用你選的主角當標題':'建議的四個標題：'+state.cat+'・'+(state.cnt==='many'?'好幾個主角':'1 個主角');
     const ol=document.createElement('ol');set.forEach(t=>{const li=document.createElement('li');li.textContent=t;ol.append(li);});
     const btn=document.createElement('button');btn.type='button';btn.className='btn btn-sky btn-sm';btn.style.justifySelf='start';btn.textContent='重新填入這組';
     btn.addEventListener('click',fillFromMenu);
@@ -809,9 +808,11 @@ footer{margin-top:30px;color:var(--muted);font-size:14px;text-align:center}
     const intro=lead?`我的主角是「${lead}」（${state.topic.trim()?state.topic.trim()+'，':''}${state.cat}）。`:many?`我的主題是「${subj}」（${state.cat}）。`:`我的主角是「${subj}」（${state.cat}）。`;
     const castList=many?state.cast.map(x=>x.trim()).filter(Boolean):[];
     const castNote=castList.length?`主角有：${castList.join('、')}。`:'';
-    $('brainPrompt').textContent=`${intro}${castNote}請幫我想 6 個適合國小五年級簡報的分頁標題，每個標題 8 個字以內；每個標題下面再寫一段 50 字以內的介紹文案，用五年級看得懂的話。請用「標題：」「文案：」的格式列出。每段文案一定要寫出真實的名字、歌名、作品名、年份或數字等具體例子，不要只用形容詞；遇到「我最喜歡」「想對他說」這類標題，請留一個（　）讓我自己填。請先上網查最新、最正確的資料，名字、歌名、作品名、人數、年份、紀錄等名詞和數字都要用最新的正確資料。`;
+    if($('brainPrompt')) $('brainPrompt').textContent=`${intro}${castNote}請幫我想 6 個適合國小五年級簡報的分頁標題，每個標題 8 個字以內；每個標題下面再寫一段 50 字以內的介紹文案，用五年級看得懂的話。請用「標題：」「文案：」的格式列出。每段文案一定要寫出真實的名字、歌名、作品名、年份或數字等具體例子，不要只用形容詞；遇到「我最喜歡」「想對他說」這類標題，請留一個（　）讓我自己填。請先上網查最新、最正確的資料，名字、歌名、作品名、人數、年份、紀錄等名詞和數字都要用最新的正確資料。`;
     $('fileName').textContent='例：50108'+topic;
 
+    const sig=state.cnt+'|'+state.cast.join('|');
+    if(sig!==lastCastSig){if(lastCastSig!==null&&state.cnt==='many'){state.titles=combosFor().slice();save();inputs.forEach((inp,i)=>{if(document.activeElement!==inp)inp.value=state.titles[i]||'';});}lastCastSig=sig;}
     const titles=[0,1,2,3].map(i=>titleOr(i)||ph[i].replace('例：',''));
     if($('nameEg')) $('nameEg').textContent=titles[0];
     $('writePrompt').textContent=`${intro}${castNote}請幫這四個簡報分頁標題，各寫一段 50 字以內的介紹文案，用國小五年級看得懂的話：1.${titles[0]} 2.${titles[1]} 3.${titles[2]} 4.${titles[3]}。請用「標題：」「文案：」的格式列出。每段文案一定要寫出真實的名字、歌名、作品名、年份或數字等具體例子，不要只用形容詞；遇到「我最喜歡」「想對他說」這類標題，請留一個（　）讓我自己填。請先上網查最新、最正確的資料，名字、歌名、作品名、人數、年份、紀錄等名詞和數字都要用最新的正確資料。`;
