@@ -1,4 +1,5 @@
-<!-- 五年級 Canva「我的主題大探索」教學網站 v3.2 2026-11-03 · Cona 老師的資訊教室
+<!-- 五年級 Canva「我的主題大探索」教學網站 v3.3 2026-11-03 · Cona 老師的資訊教室
+     v3.3：選項不再重複——1 類別 → 2 幾個主角 → 3 團體／作品（只列團體）→ 4 主角名字（只列個人）
      v3.2：新增爆笑圖片、臺灣小吃、臺灣火車、日本景點、日本火車電車五類；臺南小吃加量
      v3.1：新增臺南古蹟、臺灣美食、臺南美食、臺南小吃四類；車子新增電動車
      v3.0：運動明星、偶像、作品角色、動物四大組選項再擴充（含更多角色名單與團體）
@@ -274,18 +275,20 @@ footer{margin-top:30px;color:var(--muted);font-size:14px;text-align:center}
             <div class="q"><span class="qn">1</span><label for="catSel">我的圖片是哪一類？</label></div>
             <select id="catSel" class="txt"></select>
 
-            <div class="q"><span class="qn">2</span><label for="topicInput">主題是什麼？點一個，沒有的話自己打</label></div>
-            <div class="chips" id="topicChips"></div>
-            <input id="topicInput" class="txt" type="text" placeholder="自己打，例如：BABYMONSTER" maxlength="30" autocomplete="off">
-
-            <div class="q"><span class="qn">3</span><span>主角有幾個？</span></div>
+            <div class="q"><span class="qn">2</span><span>圖片裡的主角有幾個？</span></div>
             <div class="seg" role="group" aria-label="主角有幾個">
               <button type="button" class="segbtn" data-cnt="one">1 個主角</button>
               <button type="button" class="segbtn" data-cnt="many">好幾個主角</button>
             </div>
 
-            <div id="castBox" class="cast" hidden>
-              <div class="q"><span class="qn">4</span><label for="cast0" id="castLabel">主角是誰？點名字，最多四個</label></div>
+            <div id="groupBox">
+              <div class="q"><span class="qn" id="qnTopic">3</span><label for="topicInput" id="topicLabel">是哪一團、哪一部作品？</label></div>
+              <div class="chips" id="topicChips"></div>
+              <input id="topicInput" class="txt" type="text" placeholder="沒有的話自己打" maxlength="30" autocomplete="off">
+            </div>
+
+            <div id="castBox" class="cast">
+              <div class="q"><span class="qn" id="qnCast">4</span><label for="cast0" id="castLabel">主角是誰？點名字，最多四個</label></div>
               <div class="chips" id="castChips"></div>
               <div class="grid4" id="castSlots"></div>
               <p class="hint">點藍色的名字可以取消；沒有的名字直接打在格子裡。名字會自動放進 AI 的問題裡。</p>
@@ -369,7 +372,7 @@ footer{margin-top:30px;color:var(--muted);font-size:14px;text-align:center}
     </div>
   </section>
 
-  <footer>Cona 老師的資訊教室 · 我的主題大探索 v3.2 · 2026-11-03</footer>
+  <footer>Cona 老師的資訊教室 · 我的主題大探索 v3.3 · 2026-11-03</footer>
 </div>
 <div class="toast" id="toast" role="status"></div>
 
@@ -678,11 +681,14 @@ footer{margin-top:30px;color:var(--muted);font-size:14px;text-align:center}
   const norm=x=>String(x||'').toLowerCase().replace(/[\s()（）・·\-]/g,'');
   function castKey(){const L=LIB[state.cat];if(!L||!L.cast)return null;const t=norm(state.topic);if(!t)return null;
     return Object.keys(L.cast).find(k=>norm(k)===t)||Object.keys(L.cast).find(k=>norm(k).includes(t)||t.includes(norm(k)))||null;}
-  function castFor(){const L=LIB[state.cat];if(!L)return [];const k=castKey();const c=k&&L.cast[k];return (c&&c.length)?c:(L.pool||[]);}
+  const WORKCATS=['動畫','漫畫','電影','可愛角色'];
+  function needsGroup(){const L=LIB[state.cat];return !L||!L.pool||WORKCATS.includes(state.cat);}
+  function isGroupName(t){const L=LIB[state.cat];return !!(L&&L.cast&&L.cast[t])||(GROUPS[state.cat]||[]).concat(GROUPS_EXTRA[state.cat]||[]).includes(t);}
+  function castFor(){const L=LIB[state.cat];if(!L)return [];const k=castKey();const c=k&&L.cast[k];if(c&&c.length)return c;return needsGroup()?[]:(L.pool||[]);}
   function renderCastChips(){
     const box=$('castChips');box.innerHTML='';
     const list=castFor();
-    if(!list.length){const p=document.createElement('p');p.className='hint';p.textContent='這個主題沒有內建名字，請自己打上主角的名字。';box.append(p);return;}
+    if(!list.length){const p=document.createElement('p');p.className='hint';p.textContent=(needsGroup()&&!castKey())?'先在第 3 題點一個，這裡就會出現名字；沒有的話直接打在格子裡。':'這個主題沒有內建名字，請直接打在格子裡。';box.append(p);return;}
     list.forEach(n=>{
       const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=n;
       const on=state.cnt==='many'?state.cast.some(x=>x.trim()===n):state.cast[0].trim()===n;b.setAttribute('aria-pressed',on);
@@ -699,12 +705,18 @@ footer{margin-top:30px;color:var(--muted);font-size:14px;text-align:center}
   function refreshLists(){
     const L=LIB[state.cat]||{topics:[]};
     const tb=$('topicChips');tb.innerHTML='';
-    (L.topics||[]).forEach(t=>{
+    const needG=needsGroup();
+    const showG=needG||state.cnt==='many';
+    $('groupBox').hidden=!showG;
+    $('qnCast').textContent=showG?'4':'3';
+    $('topicLabel').textContent=needG?'是哪一團、哪一部作品？點一個，沒有就自己打':'要介紹一整隊、一整團或一整類嗎？點一個（可以不選）';
+    const tlist=needG?(L.topics||[]):(L.topics||[]).filter(isGroupName);
+    tlist.forEach(t=>{
       const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=t;
       b.setAttribute('aria-pressed',norm(t)===norm(state.topic));
       b.addEventListener('click',()=>setTopic(t));tb.append(b);
     });
-    if(!(L.topics||[]).length){const p=document.createElement('p');p.className='hint';p.textContent='這一類沒有內建主題，請直接在下面打。';tb.append(p);}
+    if(!tlist.length){const p=document.createElement('p');p.className='hint';p.textContent='這一類沒有內建選項，需要的話直接在下面打。';tb.append(p);}
     document.querySelectorAll('.segbtn').forEach(b=>b.setAttribute('aria-pressed',b.dataset.cnt===state.cnt));
     renderCastChips();
   }
@@ -738,7 +750,6 @@ footer{margin-top:30px;color:var(--muted);font-size:14px;text-align:center}
   /* 2 選主題：自動判斷幾個主角、清空並帶入主角 */
   function setTopic(t){
     state.topic=t;state.cast=EMPTY4();
-    if(isKnown(t)) state.cnt=isGroup(t)?'many':'one';
     state.titles=combosFor().slice();save();autoCast();syncInputs();renderAll();
   }
   /* 3 選幾個主角 */
@@ -763,7 +774,7 @@ footer{margin-top:30px;color:var(--muted);font-size:14px;text-align:center}
   topicInput.addEventListener('input',()=>{
     state.topic=topicInput.value;
     const k=castKey();
-    if(k!==lastKey){lastKey=k;if(k){state.cast=EMPTY4();state.cnt='many';state.titles=combosFor().slice();save();autoCast();syncInputs();topicInput.value=state.topic;}}
+    if(k!==lastKey){lastKey=k;if(k){state.cast=EMPTY4();save();autoCast();syncInputs();topicInput.value=state.topic;}}
     save();renderAll();
   });
 
@@ -782,20 +793,20 @@ footer{margin-top:30px;color:var(--muted);font-size:14px;text-align:center}
 
   function renderAll(){
     refreshLists();
-    const topic=topicOr('你的主題');
+    let topic=state.topic.trim();
     const sets=combosFor();
     const ph=sets.map(t=>'例：'+t);
     inputs.forEach((inp,i)=>inp.placeholder=ph[i]);
     renderCombos(sets);
 
     const many=state.cnt==='many';
-    const showCast=many||(!!state.topic.trim()&&isGroup(state.topic));
-    $('castBox').hidden=!showCast;
+    const showCast=true;
     castInputs.forEach((inp,i)=>inp.hidden=!many&&i>0);
-    $('castLabel').textContent=many?'主角是誰？點名字，最多四個':'你要介紹哪一位？點一個名字（沒有就自己打）';
-    const lead=(!many&&showCast&&state.cast[0].trim())?state.cast[0].trim():'';
-    const subj=lead||topic;
-    const intro=lead?`我的主角是「${lead}」（${topic}，${state.cat}）。`:many?`我的主題是「${topic}」（${state.cat}）。`:`我的主角是「${topic}」（${state.cat}）。`;
+    $('castLabel').textContent=many?'主角是誰？點名字，最多四個':'主角是誰？點一個名字（沒有就自己打）';
+    const lead=(!many&&state.cast[0].trim())?state.cast[0].trim():'';
+    const subj=lead||topic||(many?'我喜歡的'+state.cat:'你的主角');
+    if(!topic) topic=subj;
+    const intro=lead?`我的主角是「${lead}」（${state.topic.trim()?state.topic.trim()+'，':''}${state.cat}）。`:many?`我的主題是「${subj}」（${state.cat}）。`:`我的主角是「${subj}」（${state.cat}）。`;
     const castList=many?state.cast.map(x=>x.trim()).filter(Boolean):[];
     const castNote=castList.length?`主角有：${castList.join('、')}。`:'';
     $('brainPrompt').textContent=`${intro}${castNote}請幫我想 6 個適合國小五年級簡報的分頁標題，每個標題 8 個字以內；每個標題下面再寫一段 50 字以內的介紹文案，用五年級看得懂的話。請用「標題：」「文案：」的格式列出。每段文案一定要寫出真實的名字、歌名、作品名、年份或數字等具體例子，不要只用形容詞；遇到「我最喜歡」「想對他說」這類標題，請留一個（　）讓我自己填。請先上網查最新、最正確的資料，名字、歌名、作品名、人數、年份、紀錄等名詞和數字都要用最新的正確資料。`;
