@@ -1,4 +1,5 @@
-<!-- 五年級 Canva「我的主題大探索」教學網站 v3.4 2026-11-03 · Cona 老師的資訊教室
+<!-- 五年級 Canva「我的主題大探索」教學網站 v3.5 2026-11-03 · Cona 老師的資訊教室
+     v3.5：AI 提示改為只輸出完整文案，不留（　）讓學生填
      v3.4：多主角時四個分頁標題自動改成選取的主角名字；AI 提示只保留「已選好四個標題寫文案」一句
      v3.3：選項不再重複——1 類別 → 2 幾個主角 → 3 團體／作品（只列團體）→ 4 主角名字（只列個人）
      v3.2：新增爆笑圖片、臺灣小吃、臺灣火車、日本景點、日本火車電車五類；臺南小吃加量
@@ -370,7 +371,7 @@ footer{margin-top:30px;color:var(--muted);font-size:14px;text-align:center}
     </div>
   </section>
 
-  <footer>Cona 老師的資訊教室 · 我的主題大探索 v3.4 · 2026-11-03</footer>
+  <footer>Cona 老師的資訊教室 · 我的主題大探索 v3.5 · 2026-11-03</footer>
 </div>
 <div class="toast" id="toast" role="status"></div>
 
@@ -808,14 +809,14 @@ footer{margin-top:30px;color:var(--muted);font-size:14px;text-align:center}
     const intro=lead?`我的主角是「${lead}」（${state.topic.trim()?state.topic.trim()+'，':''}${state.cat}）。`:many?`我的主題是「${subj}」（${state.cat}）。`:`我的主角是「${subj}」（${state.cat}）。`;
     const castList=many?state.cast.map(x=>x.trim()).filter(Boolean):[];
     const castNote=castList.length?`主角有：${castList.join('、')}。`:'';
-    if($('brainPrompt')) $('brainPrompt').textContent=`${intro}${castNote}請幫我想 6 個適合國小五年級簡報的分頁標題，每個標題 8 個字以內；每個標題下面再寫一段 50 字以內的介紹文案，用五年級看得懂的話。請用「標題：」「文案：」的格式列出。每段文案一定要寫出真實的名字、歌名、作品名、年份或數字等具體例子，不要只用形容詞；遇到「我最喜歡」「想對他說」這類標題，請留一個（　）讓我自己填。請先上網查最新、最正確的資料，名字、歌名、作品名、人數、年份、紀錄等名詞和數字都要用最新的正確資料。`;
+    if($('brainPrompt')) $('brainPrompt').textContent=`${intro}${castNote}請幫我想 6 個適合國小五年級簡報的分頁標題，每個標題 8 個字以內；每個標題下面再寫一段 50 字以內的介紹文案，用五年級看得懂的話。請用「標題：」「文案：」的格式列出。每段文案一定要寫出真實的名字、歌名、作品名、年份或數字等具體例子，不要只用形容詞；每一段都要寫成完整的文案，不要留空格或括號讓我填；最後只要列出標題和文案，不要其他說明或問題。請先上網查最新、最正確的資料，名字、歌名、作品名、人數、年份、紀錄等名詞和數字都要用最新的正確資料。`;
     $('fileName').textContent='例：50108'+topic;
 
     const sig=state.cnt+'|'+state.cast.join('|');
     if(sig!==lastCastSig){if(lastCastSig!==null&&state.cnt==='many'){state.titles=combosFor().slice();save();inputs.forEach((inp,i)=>{if(document.activeElement!==inp)inp.value=state.titles[i]||'';});}lastCastSig=sig;}
     const titles=[0,1,2,3].map(i=>titleOr(i)||ph[i].replace('例：',''));
     if($('nameEg')) $('nameEg').textContent=titles[0];
-    $('writePrompt').textContent=`${intro}${castNote}請幫這四個簡報分頁標題，各寫一段 50 字以內的介紹文案，用國小五年級看得懂的話：1.${titles[0]} 2.${titles[1]} 3.${titles[2]} 4.${titles[3]}。請用「標題：」「文案：」的格式列出。每段文案一定要寫出真實的名字、歌名、作品名、年份或數字等具體例子，不要只用形容詞；遇到「我最喜歡」「想對他說」這類標題，請留一個（　）讓我自己填。請先上網查最新、最正確的資料，名字、歌名、作品名、人數、年份、紀錄等名詞和數字都要用最新的正確資料。`;
+    $('writePrompt').textContent=`${intro}${castNote}請幫這四個簡報分頁標題，各寫一段 50 字以內的介紹文案，用國小五年級看得懂的話：1.${titles[0]} 2.${titles[1]} 3.${titles[2]} 4.${titles[3]}。請用「標題：」「文案：」的格式列出。每段文案一定要寫出真實的名字、歌名、作品名、年份或數字等具體例子，不要只用形容詞；每一段都要寫成完整的文案，不要留空格或括號讓我填；最後只要列出標題和文案，不要其他說明或問題。請先上網查最新、最正確的資料，名字、歌名、作品名、人數、年份、紀錄等名詞和數字都要用最新的正確資料。`;
 
     /* 找圖關鍵字 */
     const sl=$('searchList')||document.createElement('ul');sl.innerHTML='';
