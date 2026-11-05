@@ -1,4 +1,5 @@
-<!-- 五年級 Canva「我的主題大探索」教學網站 v3.7 2026-11-05 · Cona 老師的資訊教室
+<!-- 五年級 Canva「我的主題大探索」教學網站 v3.8 2026-11-05 · Cona 老師的資訊教室
+     v3.8：第 1 題改為「四張都是同一個主角／四張是不同的主角」；不同主角時每張圖各自選類別與名字，可跨領域
      v3.7：每一類都加通用主題（★黃色按鈕，只介紹共同特點）；爆笑圖片加「看不懂的梗圖」，提示先上傳圖片給 AI 看
      v3.6：動物新增「可愛小貓」（通用主題，標題與 AI 文案只介紹小貓共同特點，不介紹特定的貓）
      v3.5：AI 提示改為只輸出完整文案，不留（　）讓學生填
@@ -136,6 +137,13 @@ select.txt{cursor:pointer}
 .chip.gen{background:var(--sun-soft);border-color:var(--sun);font-weight:700}
 .chip.gen::before{content:"★ ";color:var(--stamp)}
 .chip.gen[aria-pressed="true"]{background:var(--sky);border-color:var(--sky);color:#fff}
+.mcards{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mcard{background:var(--sky-soft);border-radius:14px;padding:12px;display:grid;gap:8px;min-width:0;align-content:start}
+.mhead{font-family:var(--f-display);font-size:19px;color:var(--sky)}
+.mcard .chips{max-height:190px;overflow:auto}
+.mcard .chip{font-size:15px;padding:2px 12px}
+.chip.back{background:var(--paper);font-weight:700}
+@media (max-width:560px){.mcards{grid-template-columns:1fr}}
 .pcards{display:grid;gap:12px;margin:8px 0}
 .pcard{background:var(--bg);border:2px dashed var(--line);border-radius:14px;padding:12px 14px;display:grid;gap:8px;min-width:0}
 .pcard .ptitle{font-family:var(--f-display);font-size:19px;color:var(--sky)}
@@ -279,26 +287,33 @@ footer{margin-top:30px;color:var(--muted);font-size:14px;text-align:center}
 
 
           <div class="gen">
-            <div class="q"><span class="qn">1</span><label for="catSel">我的圖片是哪一類？</label></div>
-            <select id="catSel" class="txt"></select>
-
-            <div class="q"><span class="qn">2</span><span>圖片裡的主角有幾個？</span></div>
+            <div class="q"><span class="qn">1</span><span>四張圖的主角是誰？</span></div>
             <div class="seg" role="group" aria-label="主角有幾個">
-              <button type="button" class="segbtn" data-cnt="one">1 個主角</button>
-              <button type="button" class="segbtn" data-cnt="many">好幾個主角</button>
+              <button type="button" class="segbtn" data-cnt="one">四張都是同一個主角</button>
+              <button type="button" class="segbtn" data-cnt="many">四張是不同的主角</button>
             </div>
 
-            <div id="groupBox">
-              <div class="q"><span class="qn" id="qnTopic">3</span><label for="topicInput" id="topicLabel">是哪一團、哪一部作品？</label></div>
-              <div class="chips" id="topicChips"></div>
-              <input id="topicInput" class="txt" type="text" placeholder="沒有的話自己打" maxlength="30" autocomplete="off">
+            <div id="oneBox">
+              <div class="q"><span class="qn">2</span><label for="catSel">我的圖片是哪一類？</label></div>
+              <select id="catSel" class="txt"></select>
+
+              <div id="groupBox">
+                <div class="q"><span class="qn" id="qnTopic">3</span><label for="topicInput" id="topicLabel">是哪一團、哪一部作品？</label></div>
+                <div class="chips" id="topicChips"></div>
+                <input id="topicInput" class="txt" type="text" placeholder="沒有的話自己打" maxlength="30" autocomplete="off">
+              </div>
+
+              <div id="castBox" class="cast">
+                <div class="q"><span class="qn" id="qnCast">4</span><label for="cast0" id="castLabel">主角是誰？點名字，最多四個</label></div>
+                <div class="chips" id="castChips"></div>
+                <div class="grid4" id="castSlots"></div>
+                <p class="hint">★ 黃色按鈕是「不知道圖片是誰也能用」的通用主題。點藍色的名字可以取消；沒有的名字直接打在格子裡。</p>
+              </div>
             </div>
 
-            <div id="castBox" class="cast">
-              <div class="q"><span class="qn" id="qnCast">4</span><label for="cast0" id="castLabel">主角是誰？點名字，最多四個</label></div>
-              <div class="chips" id="castChips"></div>
-              <div class="grid4" id="castSlots"></div>
-              <p class="hint">★ 黃色按鈕是「不知道圖片是誰也能用」的通用主題。點藍色的名字可以取消；沒有的名字直接打在格子裡。</p>
+            <div id="multiBox" hidden>
+              <p class="hint">每一張圖各選一次：先選類別，再點名字。四個主角可以來自不同類別，例如 梅西＋皮卡丘＋柴犬＋珍珠奶茶。選好第 1 張的類別，後面幾張會自動帶入同一類，不一樣再換。</p>
+              <div class="mcards" id="mcards"></div>
             </div>
 
             <div class="combos" id="combos"></div>
@@ -377,7 +392,7 @@ footer{margin-top:30px;color:var(--muted);font-size:14px;text-align:center}
     </div>
   </section>
 
-  <footer>Cona 老師的資訊教室 · 我的主題大探索 v3.7 · 2026-11-05</footer>
+  <footer>Cona 老師的資訊教室 · 我的主題大探索 v3.8 · 2026-11-05</footer>
 </div>
 <div class="toast" id="toast" role="status"></div>
 
@@ -688,7 +703,7 @@ footer{margin-top:30px;color:var(--muted);font-size:14px;text-align:center}
   if(!LIB['動物'].topics.includes('可愛小貓')) LIB['動物'].topics.push('可愛小貓');
   const SPECIAL={'動物|可愛小貓':{titles:['小貓長什麼樣子','小貓喜歡做什麼','小貓怎麼長大','怎麼照顧小貓'],
     note:'請介紹一般小貓共同的特點，不要介紹某一隻有名的貓，也不要介紹某一個品種；可以用真實的數字，例如小貓幾週大會張開眼睛。'}};
-  function specialKey(){const k=[state.cnt!=='many'?state.cast[0]:'',state.topic].map(x=>(x||'').trim()).find(x=>SPECIAL[state.cat+'|'+x]);return k?state.cat+'|'+k:'';}
+  function specialKey(){if(state.cnt==='many')return '';const k=[state.cnt!=='many'?state.cast[0]:'',state.topic].map(x=>(x||'').trim()).find(x=>SPECIAL[state.cat+'|'+x]);return k?state.cat+'|'+k:'';}
 
   /* ===== v3.7 每一類都有「通用主題」（黃色按鈕）：只介紹共同特點；梗圖可上傳讓 AI 看 ===== */
   const GEN=[
@@ -823,13 +838,13 @@ footer{margin-top:30px;color:var(--muted);font-size:14px;text-align:center}
     state.cnt=b.dataset.cnt;if(state.cnt==='one')state.cast=[state.cast[0]||'','','',''];
     state.titles=combosFor().slice();save();autoCast();syncInputs();renderAll();
   }));
-  function combosFor(){const sk=specialKey();if(sk)return SPECIAL[sk].titles;const base=DATA[state.cat][state.cnt][0];if(state.cnt==='many'){const c=state.cast.map(x=>(x||'').trim());if(c.some(Boolean))return c.map((x,i)=>x||base[i]);}return base;}
+  function combosFor(){if(state.cnt==='many')return state.multi.map((m,i)=>(m.name||'').trim()||('第 '+(i+1)+' 個主角'));const sk=specialKey();if(sk)return SPECIAL[sk].titles;const base=DATA[state.cat][state.cnt][0];if(state.cnt==='many'){const c=state.cast.map(x=>(x||'').trim());if(c.some(Boolean))return c.map((x,i)=>x||base[i]);}return base;}
   let lastCastSig=null,lastSk='';
 
   function renderCombos(set){
     const box=$('combos');box.innerHTML='';
     const card=document.createElement('div');card.className='combo';card.style.cursor='default';
-    const cn=document.createElement('span');cn.className='cn';cn.textContent=(state.cnt==='many'&&state.cast.some(x=>x.trim()))?'建議的四個標題：用你選的主角當標題':'建議的四個標題：'+state.cat+'・'+(state.cnt==='many'?'好幾個主角':'1 個主角');
+    const cn=document.createElement('span');cn.className='cn';cn.textContent=(state.cnt==='many')?'建議的四個標題：用你選的主角當標題':'建議的四個標題：'+state.cat+'・'+(state.cnt==='many'?'好幾個主角':'1 個主角');
     const ol=document.createElement('ol');set.forEach(t=>{const li=document.createElement('li');li.textContent=t;ol.append(li);});
     const btn=document.createElement('button');btn.type='button';btn.className='btn btn-sky btn-sm';btn.style.justifySelf='start';btn.textContent='重新填入這組';
     btn.addEventListener('click',fillFromMenu);
@@ -858,16 +873,59 @@ footer{margin-top:30px;color:var(--muted);font-size:14px;text-align:center}
     li.append(t,b);list.append(li);
   }
 
+  /* ===== v3.8 四張是不同的主角：每張圖各選類別與名字 ===== */
+  if(!Array.isArray(state.multi)||state.multi.length!==4) state.multi=[0,1,2,3].map(()=>({cat:'',grp:'',name:''}));
+  const mcards=[];
+  (function buildM(){
+    const box=$('mcards');
+    for(let i=0;i<4;i++){
+      const card=document.createElement('div');card.className='mcard';
+      const h=document.createElement('div');h.className='mhead';h.textContent='第 '+(i+1)+' 張圖';
+      const sel=document.createElement('select');sel.className='txt';sel.id='mcat'+i;sel.setAttribute('aria-label','第 '+(i+1)+' 張圖的類別');
+      const o0=document.createElement('option');o0.value='';o0.textContent='選類別…';sel.append(o0);
+      ORDER.filter(k=>DATA[k]).forEach(k=>{const o=document.createElement('option');o.value=k;o.textContent=k;sel.append(o);});
+      const chips=document.createElement('div');chips.className='chips';
+      const inp=document.createElement('input');inp.className='txt';inp.id='mname'+i;inp.placeholder='沒有的話自己打名字';inp.maxLength=30;inp.autocomplete='off';
+      inp.setAttribute('aria-label','第 '+(i+1)+' 張圖的主角名字');
+      sel.addEventListener('change',()=>{const m=state.multi[i];m.cat=sel.value;m.grp='';m.name='';
+        for(let j=i+1;j<4;j++){const n=state.multi[j];if(!n.cat&&!n.name.trim())n.cat=m.cat;}
+        save();renderAll();});
+      inp.addEventListener('input',()=>{state.multi[i].name=inp.value;save();renderAll();});
+      card.append(h,sel,chips,inp);box.append(card);mcards.push({sel,chips,inp});
+    }
+  })();
+  function mNeedG(cat){const L=LIB[cat];return !L||!L.pool||WC.includes(cat);}
+  function renderMulti(){
+    state.multi.forEach((m,i)=>{
+      const c=mcards[i];c.sel.value=m.cat;if(document.activeElement!==c.inp)c.inp.value=m.name;
+      c.chips.innerHTML='';
+      const L=LIB[m.cat];if(!m.cat||!L)return;
+      const add=(label,on,fn,cls)=>{const b=document.createElement('button');b.type='button';b.className='chip'+(cls?' '+cls:'');b.textContent=label;b.setAttribute('aria-pressed',on);b.addEventListener('click',fn);c.chips.append(b);};
+      const pick=n=>{m.name=m.name.trim()===n?'':n;save();renderAll();};
+      if(mNeedG(m.cat)&&!m.grp){
+        (L.topics||[]).forEach(t=>{const gen=!!SPECIAL[m.cat+'|'+t];add(t,m.name.trim()===t,gen?()=>pick(t):()=>{m.grp=t;save();renderAll();},gen?'gen':'');});
+      }else if(m.grp){
+        add('← 換一個',false,()=>{m.grp='';save();renderAll();},'back');
+        add(m.grp+'（整個介紹）',m.name.trim()===m.grp,()=>pick(m.grp));
+        ((L.cast&&L.cast[m.grp])||[]).forEach(n=>add(n,m.name.trim()===n,()=>pick(n)));
+      }else{
+        (L.pool||[]).forEach(n=>add(n,m.name.trim()===n,()=>pick(n),SPECIAL[m.cat+'|'+n]?'gen':''));
+      }
+    });
+  }
+
   function renderAll(){
     refreshLists();
+    const many=state.cnt==='many';
+    $('oneBox').hidden=many;$('multiBox').hidden=!many;if(many)renderMulti();
     let topic=state.topic.trim();
     const sets=combosFor();
     const ph=sets.map(t=>'例：'+t);
     inputs.forEach((inp,i)=>inp.placeholder=ph[i]);
     renderCombos(sets);
 
-    const many=state.cnt==='many';
     const showCast=true;
+    if(many&&!state.topic.trim()) topic='我的最愛大集合';
     castInputs.forEach((inp,i)=>inp.hidden=!many&&i>0);
     $('castLabel').textContent=many?'主角是誰？點名字，最多四個':'主角是誰？點一個名字（沒有就自己打）';
     const lead=(!many&&state.cast[0].trim())?state.cast[0].trim():'';
@@ -876,16 +934,21 @@ footer{margin-top:30px;color:var(--muted);font-size:14px;text-align:center}
     const intro=lead?`我的主角是「${lead}」（${state.topic.trim()?state.topic.trim()+'，':''}${state.cat}）。`:many?`我的主題是「${subj}」（${state.cat}）。`:`我的主角是「${subj}」（${state.cat}）。`;
     const castList=many?state.cast.map(x=>x.trim()).filter(Boolean):[];
     if($('uploadTip')) $('uploadTip').hidden=!(specialKey()&&SPECIAL[specialKey()].upload);
+    let introM='',noteM='';
+    if(many){const items=state.multi.map((m,i)=>{const n=m.name.trim();return n?`${i+1}.${n}（${m.grp&&m.grp!==n?m.grp+'，':''}${m.cat||'自選'}）`:'';}).filter(Boolean);
+      introM=`我的簡報要介紹四個不同的主角：${items.join(' ')||'（還沒選）'}。`;
+      noteM=state.multi.map((m,i)=>{const n=m.name.trim();const sp=SPECIAL[m.cat+'|'+n];return sp?`第 ${i+1} 個「${n}」：${sp.note}`:'';}).join('');
+      if($('uploadTip')) $('uploadTip').hidden=!state.multi.some(m=>(SPECIAL[m.cat+'|'+m.name.trim()]||{}).upload);}
     const castNote=(castList.length?`主角有：${castList.join('、')}。`:'')+(specialKey()?SPECIAL[specialKey()].note:'');
-    if($('brainPrompt')) $('brainPrompt').textContent=`${intro}${castNote}請幫我想 6 個適合國小五年級簡報的分頁標題，每個標題 8 個字以內；每個標題下面再寫一段 50 字以內的介紹文案，用五年級看得懂的話。請用「標題：」「文案：」的格式列出。每段文案一定要寫出真實的名字、歌名、作品名、年份或數字等具體例子，不要只用形容詞；每一段都要寫成完整的文案，不要留空格或括號讓我填；最後只要列出標題和文案，不要其他說明或問題。請先上網查最新、最正確的資料，名字、歌名、作品名、人數、年份、紀錄等名詞和數字都要用最新的正確資料。`;
+    if($('brainPrompt')) $('brainPrompt').textContent=`${many?introM:intro}${many?noteM:castNote}請幫我想 6 個適合國小五年級簡報的分頁標題，每個標題 8 個字以內；每個標題下面再寫一段 50 字以內的介紹文案，用五年級看得懂的話。請用「標題：」「文案：」的格式列出。每段文案一定要寫出真實的名字、歌名、作品名、年份或數字等具體例子，不要只用形容詞；每一段都要寫成完整的文案，不要留空格或括號讓我填；最後只要列出標題和文案，不要其他說明或問題。請先上網查最新、最正確的資料，名字、歌名、作品名、人數、年份、紀錄等名詞和數字都要用最新的正確資料。`;
     $('fileName').textContent='例：50108'+topic;
 
     const sk=specialKey();
-    const sig=state.cnt+'|'+state.cast.join('|')+'|'+sk;
+    const sig=state.cnt+'|'+state.cast.join('|')+'|'+sk+'|'+state.multi.map(m=>m.name).join('|');
     if(sig!==lastCastSig){if(lastCastSig!==null&&(state.cnt==='many'||sk!==lastSk)){state.titles=combosFor().slice();save();inputs.forEach((inp,i)=>{if(document.activeElement!==inp)inp.value=state.titles[i]||'';});}lastCastSig=sig;lastSk=sk;}
     const titles=[0,1,2,3].map(i=>titleOr(i)||ph[i].replace('例：',''));
     if($('nameEg')) $('nameEg').textContent=titles[0];
-    $('writePrompt').textContent=`${intro}${castNote}請幫這四個簡報分頁標題，各寫一段 50 字以內的介紹文案，用國小五年級看得懂的話：1.${titles[0]} 2.${titles[1]} 3.${titles[2]} 4.${titles[3]}。請用「標題：」「文案：」的格式列出。每段文案一定要寫出真實的名字、歌名、作品名、年份或數字等具體例子，不要只用形容詞；每一段都要寫成完整的文案，不要留空格或括號讓我填；最後只要列出標題和文案，不要其他說明或問題。請先上網查最新、最正確的資料，名字、歌名、作品名、人數、年份、紀錄等名詞和數字都要用最新的正確資料。`;
+    $('writePrompt').textContent=`${many?introM:intro}${many?noteM:castNote}請幫這四個簡報分頁標題，各寫一段 50 字以內的介紹文案，用國小五年級看得懂的話：1.${titles[0]} 2.${titles[1]} 3.${titles[2]} 4.${titles[3]}。請用「標題：」「文案：」的格式列出。每段文案一定要寫出真實的名字、歌名、作品名、年份或數字等具體例子，不要只用形容詞；每一段都要寫成完整的文案，不要留空格或括號讓我填；最後只要列出標題和文案，不要其他說明或問題。請先上網查最新、最正確的資料，名字、歌名、作品名、人數、年份、紀錄等名詞和數字都要用最新的正確資料。`;
 
     /* 找圖關鍵字 */
     const sl=$('searchList')||document.createElement('ul');sl.innerHTML='';
