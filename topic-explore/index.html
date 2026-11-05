@@ -1,4 +1,5 @@
-<!-- 五年級 Canva「我的主題大探索」教學網站 v3.9 2026-11-05 · Cona 老師的資訊教室
+<!-- 五年級 Canva「我的主題大探索」教學網站 v4.0 2026-11-05 · Cona 老師的資訊教室
+     v4.0：通用主題（可愛小貓／小狗等）只介紹它本身，不扯卡通、歌曲、故事書；四張選同一個主角時自動當成同一主角處理
      v3.9：文案改為 80 字內；要求純文字不加連結；提示 Ctrl+Shift+V 純文字貼上
      v3.8：第 1 題改為「四張都是同一個主角／四張是不同的主角」；不同主角時每張圖各自選類別與名字，可跨領域
      v3.7：每一類都加通用主題（★黃色按鈕，只介紹共同特點）；爆笑圖片加「看不懂的梗圖」，提示先上傳圖片給 AI 看
@@ -393,7 +394,7 @@ footer{margin-top:30px;color:var(--muted);font-size:14px;text-align:center}
     </div>
   </section>
 
-  <footer>Cona 老師的資訊教室 · 我的主題大探索 v3.9 · 2026-11-05</footer>
+  <footer>Cona 老師的資訊教室 · 我的主題大探索 v4.0 · 2026-11-05</footer>
 </div>
 <div class="toast" id="toast" role="status"></div>
 
@@ -703,7 +704,7 @@ footer{margin-top:30px;color:var(--muted);font-size:14px;text-align:center}
   LIB['動物'].pool.unshift('可愛小貓');
   if(!LIB['動物'].topics.includes('可愛小貓')) LIB['動物'].topics.push('可愛小貓');
   const SPECIAL={'動物|可愛小貓':{titles:['小貓長什麼樣子','小貓喜歡做什麼','小貓怎麼長大','怎麼照顧小貓'],
-    note:'請介紹一般小貓共同的特點，不要介紹某一隻有名的貓，也不要介紹某一個品種；可以用真實的數字，例如小貓幾週大會張開眼睛。'}};
+    note:'只介紹真實小貓這種動物本身的特點（外表、喜歡做的事、怎麼長大、怎麼照顧），不要提到卡通角色、歌曲、故事書、有名的貓，也不要介紹某一個品種；可以用真實的數字，例如小貓大約幾天會張開眼睛。'}};
   function specialKey(){if(state.cnt==='many')return '';const k=[state.cnt!=='many'?state.cast[0]:'',state.topic].map(x=>(x||'').trim()).find(x=>SPECIAL[state.cat+'|'+x]);return k?state.cat+'|'+k:'';}
 
   /* ===== v3.7 每一類都有「通用主題」（黃色按鈕）：只介紹共同特點；梗圖可上傳讓 AI 看 ===== */
@@ -755,7 +756,8 @@ footer{margin-top:30px;color:var(--muted);font-size:14px;text-align:center}
     else{L.topics=L.topics.filter(x=>x!==name);L.topics.unshift(name);}
     SPECIAL[cat+'|'+name]=entry;
   }
-  GEN.forEach(([cat,name,noun,titles])=>addGeneric(cat,name,{titles,note:`請介紹一般${noun}共同的特點，不要介紹某一位、某一個特定的${noun}；可以用真實的數字或例子。`}));
+  GEN.forEach(([cat,name,noun,titles])=>addGeneric(cat,name,{titles,note:`只介紹一般${noun}本身共同的特點，不要介紹某一位、某一個特定的${noun}，也不要扯到卡通、歌曲、故事書或其他不相關的東西；可以用真實的數字或例子。`}));
+  SPECIAL['動物|可愛小狗'].note='只介紹真實小狗這種動物本身的特點（外表、喜歡做的事、怎麼長大、怎麼照顧），不要提到卡通角色、歌曲、故事書、有名的狗，也不要介紹某一個品種；可以用真實的數字，例如小狗大約幾天會張開眼睛。';
   addGeneric('爆笑圖片','看不懂的梗圖',{upload:true,titles:['這張梗圖在說什麼','梗是從哪裡來的','為什麼大家覺得好笑','我想配的一句話'],
     note:'我上傳了一張梗圖，但看不懂。請先看圖，告訴我圖裡是誰或是什麼、這個梗是從哪裡來的，再照下面四個標題寫文案；內容要適合國小學生。'});
 
@@ -839,7 +841,8 @@ footer{margin-top:30px;color:var(--muted);font-size:14px;text-align:center}
     state.cnt=b.dataset.cnt;if(state.cnt==='one')state.cast=[state.cast[0]||'','','',''];
     state.titles=combosFor().slice();save();autoCast();syncInputs();renderAll();
   }));
-  function combosFor(){if(state.cnt==='many')return state.multi.map((m,i)=>(m.name||'').trim()||('第 '+(i+1)+' 個主角'));const sk=specialKey();if(sk)return SPECIAL[sk].titles;const base=DATA[state.cat][state.cnt][0];if(state.cnt==='many'){const c=state.cast.map(x=>(x||'').trim());if(c.some(Boolean))return c.map((x,i)=>x||base[i]);}return base;}
+  function sameMulti(){const f=state.multi.filter(m=>m.name.trim());if(f.length<2)return null;const n=f[0].name.trim();return f.every(m=>m.name.trim()===n)?f[0]:null;}
+  function combosFor(){if(state.cnt==='many'){const sm=sameMulti();if(sm){const sp=SPECIAL[sm.cat+'|'+sm.name.trim()];return sp?sp.titles:(DATA[sm.cat]||DATA['其他']).one[0];}return state.multi.map((m,i)=>(m.name||'').trim()||('第 '+(i+1)+' 個主角'));}const sk=specialKey();if(sk)return SPECIAL[sk].titles;const base=DATA[state.cat][state.cnt][0];if(state.cnt==='many'){const c=state.cast.map(x=>(x||'').trim());if(c.some(Boolean))return c.map((x,i)=>x||base[i]);}return base;}
   let lastCastSig=null,lastSk='';
 
   function renderCombos(set){
@@ -938,7 +941,9 @@ footer{margin-top:30px;color:var(--muted);font-size:14px;text-align:center}
     let introM='',noteM='';
     if(many){const items=state.multi.map((m,i)=>{const n=m.name.trim();return n?`${i+1}.${n}（${m.grp&&m.grp!==n?m.grp+'，':''}${m.cat||'自選'}）`:'';}).filter(Boolean);
       introM=`我的簡報要介紹四個不同的主角：${items.join(' ')||'（還沒選）'}。`;
+      const sm=sameMulti();if(sm){const n=sm.name.trim();introM=`我的主角是「${n}」（${sm.grp&&sm.grp!==n?sm.grp+'，':''}${sm.cat||'自選'}），四張圖都是${n}。`;}
       noteM=state.multi.map((m,i)=>{const n=m.name.trim();const sp=SPECIAL[m.cat+'|'+n];return sp?`第 ${i+1} 個「${n}」：${sp.note}`:'';}).join('');
+      if(sameMulti()){const sm=sameMulti();const sp=SPECIAL[sm.cat+'|'+sm.name.trim()];noteM=sp?sp.note:'';}
       if($('uploadTip')) $('uploadTip').hidden=!state.multi.some(m=>(SPECIAL[m.cat+'|'+m.name.trim()]||{}).upload);}
     const castNote=(castList.length?`主角有：${castList.join('、')}。`:'')+(specialKey()?SPECIAL[specialKey()].note:'');
     if($('brainPrompt')) $('brainPrompt').textContent=`${many?introM:intro}${many?noteM:castNote}請幫我想 6 個適合國小五年級簡報的分頁標題，每個標題 8 個字以內；每個標題下面再寫一段 80 字以內的介紹文案，用五年級看得懂的話。請用「標題：」「文案：」的格式列出。每段文案一定要寫出真實的名字、歌名、作品名、年份或數字等具體例子，不要只用形容詞；每一段都要寫成完整的文案，不要留空格或括號讓我填；最後只要列出標題和文案，不要其他說明或問題。文案用純文字，不要加任何連結、網址、來源標註、底線或粗體。請先上網查最新、最正確的資料，名字、歌名、作品名、人數、年份、紀錄等名詞和數字都要用最新的正確資料。`;
@@ -950,6 +955,7 @@ footer{margin-top:30px;color:var(--muted);font-size:14px;text-align:center}
     const titles=[0,1,2,3].map(i=>titleOr(i)||ph[i].replace('例：',''));
     if($('nameEg')) $('nameEg').textContent=titles[0];
     $('writePrompt').textContent=`${many?introM:intro}${many?noteM:castNote}請幫這四個簡報分頁標題，各寫一段 80 字以內的介紹文案，用國小五年級看得懂的話：1.${titles[0]} 2.${titles[1]} 3.${titles[2]} 4.${titles[3]}。請用「標題：」「文案：」的格式列出。每段文案一定要寫出真實的名字、歌名、作品名、年份或數字等具體例子，不要只用形容詞；每一段都要寫成完整的文案，不要留空格或括號讓我填；最後只要列出標題和文案，不要其他說明或問題。文案用純文字，不要加任何連結、網址、來源標註、底線或粗體。請先上網查最新、最正確的資料，名字、歌名、作品名、人數、年份、紀錄等名詞和數字都要用最新的正確資料。`;
+    {const sm=many?sameMulti():null;const gen=(!many&&specialKey())||(sm&&SPECIAL[sm.cat+'|'+sm.name.trim()]);if(gen)$('writePrompt').textContent=$('writePrompt').textContent.replace('每段文案一定要寫出真實的名字、歌名、作品名、年份或數字等具體例子，不要只用形容詞；','每段文案要寫出它本身真實的特點和數字，不要只用形容詞；').replace('請先上網查最新、最正確的資料，名字、歌名、作品名、人數、年份、紀錄等名詞和數字都要用最新的正確資料。','請先上網查正確的資料，數字要正確。');}
 
     /* 找圖關鍵字 */
     const sl=$('searchList')||document.createElement('ul');sl.innerHTML='';
