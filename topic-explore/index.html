@@ -1,4 +1,5 @@
-<!-- 五年級 Canva「我的主題大探索」教學網站 v3.8 2026-11-05 · Cona 老師的資訊教室
+<!-- 五年級 Canva「我的主題大探索」教學網站 v3.9 2026-11-05 · Cona 老師的資訊教室
+     v3.9：文案改為 80 字內；要求純文字不加連結；提示 Ctrl+Shift+V 純文字貼上
      v3.8：第 1 題改為「四張都是同一個主角／四張是不同的主角」；不同主角時每張圖各自選類別與名字，可跨領域
      v3.7：每一類都加通用主題（★黃色按鈕，只介紹共同特點）；爆笑圖片加「看不懂的梗圖」，提示先上傳圖片給 AI 看
      v3.6：動物新增「可愛小貓」（通用主題，標題與 AI 文案只介紹小貓共同特點，不介紹特定的貓）
@@ -336,7 +337,7 @@ footer{margin-top:30px;color:var(--muted);font-size:14px;text-align:center}
             <p>這句已經放好你的主角和四個標題，直接複製：</p>
             <div class="code" id="writePrompt" style="margin:0"></div>
             <div class="row" style="margin-top:0"><button class="btn btn-sky btn-sm" type="button" data-copy="writePrompt">複製這句</button></div>
-            <div class="warn" style="margin:0"><b>文案太空？</b>如果 AI 只寫「很紅、很厲害」卻沒寫出名字或歌名，就再追問一句：「請寫出真正的歌名（或名字、數字）」。<br><b>AI 也會出錯！</b>名字、年份、數字要再看一次對不對；看不懂的字，改成你自己的話。</div>
+            <div class="warn" style="margin:0"><b>貼到 Canva 有藍字或底線？</b>改用 <span class="key">Ctrl</span>＋<span class="key">Shift</span>＋<span class="key">V</span> 貼上，就會變成純文字。<br><b>文案太空？</b>如果 AI 只寫「很紅、很厲害」卻沒寫出名字或歌名，就再追問一句：「請寫出真正的歌名（或名字、數字）」。<br><b>AI 也會出錯！</b>名字、年份、數字要再看一次對不對；看不懂的字，改成你自己的話。</div>
           </div>
         </section>
         <h4 class="sub">8-2　把標題放到每一頁</h4>
@@ -392,7 +393,7 @@ footer{margin-top:30px;color:var(--muted);font-size:14px;text-align:center}
     </div>
   </section>
 
-  <footer>Cona 老師的資訊教室 · 我的主題大探索 v3.8 · 2026-11-05</footer>
+  <footer>Cona 老師的資訊教室 · 我的主題大探索 v3.9 · 2026-11-05</footer>
 </div>
 <div class="toast" id="toast" role="status"></div>
 
@@ -940,7 +941,7 @@ footer{margin-top:30px;color:var(--muted);font-size:14px;text-align:center}
       noteM=state.multi.map((m,i)=>{const n=m.name.trim();const sp=SPECIAL[m.cat+'|'+n];return sp?`第 ${i+1} 個「${n}」：${sp.note}`:'';}).join('');
       if($('uploadTip')) $('uploadTip').hidden=!state.multi.some(m=>(SPECIAL[m.cat+'|'+m.name.trim()]||{}).upload);}
     const castNote=(castList.length?`主角有：${castList.join('、')}。`:'')+(specialKey()?SPECIAL[specialKey()].note:'');
-    if($('brainPrompt')) $('brainPrompt').textContent=`${many?introM:intro}${many?noteM:castNote}請幫我想 6 個適合國小五年級簡報的分頁標題，每個標題 8 個字以內；每個標題下面再寫一段 50 字以內的介紹文案，用五年級看得懂的話。請用「標題：」「文案：」的格式列出。每段文案一定要寫出真實的名字、歌名、作品名、年份或數字等具體例子，不要只用形容詞；每一段都要寫成完整的文案，不要留空格或括號讓我填；最後只要列出標題和文案，不要其他說明或問題。請先上網查最新、最正確的資料，名字、歌名、作品名、人數、年份、紀錄等名詞和數字都要用最新的正確資料。`;
+    if($('brainPrompt')) $('brainPrompt').textContent=`${many?introM:intro}${many?noteM:castNote}請幫我想 6 個適合國小五年級簡報的分頁標題，每個標題 8 個字以內；每個標題下面再寫一段 80 字以內的介紹文案，用五年級看得懂的話。請用「標題：」「文案：」的格式列出。每段文案一定要寫出真實的名字、歌名、作品名、年份或數字等具體例子，不要只用形容詞；每一段都要寫成完整的文案，不要留空格或括號讓我填；最後只要列出標題和文案，不要其他說明或問題。文案用純文字，不要加任何連結、網址、來源標註、底線或粗體。請先上網查最新、最正確的資料，名字、歌名、作品名、人數、年份、紀錄等名詞和數字都要用最新的正確資料。`;
     $('fileName').textContent='例：50108'+topic;
 
     const sk=specialKey();
@@ -948,7 +949,7 @@ footer{margin-top:30px;color:var(--muted);font-size:14px;text-align:center}
     if(sig!==lastCastSig){if(lastCastSig!==null&&(state.cnt==='many'||sk!==lastSk)){state.titles=combosFor().slice();save();inputs.forEach((inp,i)=>{if(document.activeElement!==inp)inp.value=state.titles[i]||'';});}lastCastSig=sig;lastSk=sk;}
     const titles=[0,1,2,3].map(i=>titleOr(i)||ph[i].replace('例：',''));
     if($('nameEg')) $('nameEg').textContent=titles[0];
-    $('writePrompt').textContent=`${many?introM:intro}${many?noteM:castNote}請幫這四個簡報分頁標題，各寫一段 50 字以內的介紹文案，用國小五年級看得懂的話：1.${titles[0]} 2.${titles[1]} 3.${titles[2]} 4.${titles[3]}。請用「標題：」「文案：」的格式列出。每段文案一定要寫出真實的名字、歌名、作品名、年份或數字等具體例子，不要只用形容詞；每一段都要寫成完整的文案，不要留空格或括號讓我填；最後只要列出標題和文案，不要其他說明或問題。請先上網查最新、最正確的資料，名字、歌名、作品名、人數、年份、紀錄等名詞和數字都要用最新的正確資料。`;
+    $('writePrompt').textContent=`${many?introM:intro}${many?noteM:castNote}請幫這四個簡報分頁標題，各寫一段 80 字以內的介紹文案，用國小五年級看得懂的話：1.${titles[0]} 2.${titles[1]} 3.${titles[2]} 4.${titles[3]}。請用「標題：」「文案：」的格式列出。每段文案一定要寫出真實的名字、歌名、作品名、年份或數字等具體例子，不要只用形容詞；每一段都要寫成完整的文案，不要留空格或括號讓我填；最後只要列出標題和文案，不要其他說明或問題。文案用純文字，不要加任何連結、網址、來源標註、底線或粗體。請先上網查最新、最正確的資料，名字、歌名、作品名、人數、年份、紀錄等名詞和數字都要用最新的正確資料。`;
 
     /* 找圖關鍵字 */
     const sl=$('searchList')||document.createElement('ul');sl.innerHTML='';
@@ -985,7 +986,7 @@ footer{margin-top:30px;color:var(--muted);font-size:14px;text-align:center}
         b.addEventListener('click',()=>{state.pics[i]=(state.pics[i]||'').trim()===d?'':d;c.inp.value=state.pics[i];save();renderAll();});
         c.chips.append(b);});
       const d=(state.pics[i]||'').trim();
-      c.txt.textContent=`${intro}${castNote}我的第 ${i+1} 張圖片是「${d||'（還沒選：這張圖在做什麼）'}」，這一頁的標題是「${titles[i]}」。請用五年級看得懂的話，寫一段 50 字以內、跟這張圖片有關的「${subj}」介紹文案，一定要寫出真實的名字、歌名或數字，不要只用形容詞。請先上網查最新、最正確的資料，名字、歌名、作品名、人數、年份、紀錄等名詞和數字都要用最新的正確資料。`;
+      c.txt.textContent=`${intro}${castNote}我的第 ${i+1} 張圖片是「${d||'（還沒選：這張圖在做什麼）'}」，這一頁的標題是「${titles[i]}」。請用五年級看得懂的話，寫一段 80 字以內、跟這張圖片有關的「${subj}」介紹文案，一定要寫出真實的名字、歌名或數字，不要只用形容詞。請先上網查最新、最正確的資料，名字、歌名、作品名、人數、年份、紀錄等名詞和數字都要用最新的正確資料。`;
     });
   }
 
