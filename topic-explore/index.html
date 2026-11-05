@@ -1,4 +1,5 @@
-<!-- 五年級 Canva「我的主題大探索」教學網站 v3.6 2026-11-05 · Cona 老師的資訊教室
+<!-- 五年級 Canva「我的主題大探索」教學網站 v3.7 2026-11-05 · Cona 老師的資訊教室
+     v3.7：每一類都加通用主題（★黃色按鈕，只介紹共同特點）；爆笑圖片加「看不懂的梗圖」，提示先上傳圖片給 AI 看
      v3.6：動物新增「可愛小貓」（通用主題，標題與 AI 文案只介紹小貓共同特點，不介紹特定的貓）
      v3.5：AI 提示改為只輸出完整文案，不留（　）讓學生填
      v3.4：多主角時四個分頁標題自動改成選取的主角名字；AI 提示只保留「已選好四個標題寫文案」一句
@@ -132,6 +133,9 @@ select.txt{cursor:pointer}
 .plist{list-style:none;padding:0;margin:8px 0;display:grid;gap:8px}
 .plist li{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;background:var(--bg);border:2px dashed var(--line);border-radius:12px;padding:8px 12px}
 .plist .ptxt{font-weight:700;font-size:17px;min-width:0;word-break:break-all}
+.chip.gen{background:var(--sun-soft);border-color:var(--sun);font-weight:700}
+.chip.gen::before{content:"★ ";color:var(--stamp)}
+.chip.gen[aria-pressed="true"]{background:var(--sky);border-color:var(--sky);color:#fff}
 .pcards{display:grid;gap:12px;margin:8px 0}
 .pcard{background:var(--bg);border:2px dashed var(--line);border-radius:14px;padding:12px 14px;display:grid;gap:8px;min-width:0}
 .pcard .ptitle{font-family:var(--f-display);font-size:19px;color:var(--sky)}
@@ -294,7 +298,7 @@ footer{margin-top:30px;color:var(--muted);font-size:14px;text-align:center}
               <div class="q"><span class="qn" id="qnCast">4</span><label for="cast0" id="castLabel">主角是誰？點名字，最多四個</label></div>
               <div class="chips" id="castChips"></div>
               <div class="grid4" id="castSlots"></div>
-              <p class="hint">點藍色的名字可以取消；沒有的名字直接打在格子裡。名字會自動放進 AI 的問題裡。</p>
+              <p class="hint">★ 黃色按鈕是「不知道圖片是誰也能用」的通用主題。點藍色的名字可以取消；沒有的名字直接打在格子裡。</p>
             </div>
 
             <div class="combos" id="combos"></div>
@@ -313,6 +317,7 @@ footer{margin-top:30px;color:var(--muted);font-size:14px;text-align:center}
               <li>按下面的「複製這句」，貼到 AI 模式的框框裡，按 <span class="key">Enter</span>。</li>
               <li>AI 會照四個標題各寫一段，把每一段<b>文案</b>貼到 Canva 對應的那一頁。</li>
             </ol>
+            <div class="warn" id="uploadTip" style="margin:0" hidden><b>先上傳圖片！</b>在 Google AI 模式的輸入框按「＋」（或相機圖示），把你的梗圖傳上去，再貼上下面這句。</div>
             <p>這句已經放好你的主角和四個標題，直接複製：</p>
             <div class="code" id="writePrompt" style="margin:0"></div>
             <div class="row" style="margin-top:0"><button class="btn btn-sky btn-sm" type="button" data-copy="writePrompt">複製這句</button></div>
@@ -372,7 +377,7 @@ footer{margin-top:30px;color:var(--muted);font-size:14px;text-align:center}
     </div>
   </section>
 
-  <footer>Cona 老師的資訊教室 · 我的主題大探索 v3.6 · 2026-11-05</footer>
+  <footer>Cona 老師的資訊教室 · 我的主題大探索 v3.7 · 2026-11-05</footer>
 </div>
 <div class="toast" id="toast" role="status"></div>
 
@@ -681,9 +686,62 @@ footer{margin-top:30px;color:var(--muted);font-size:14px;text-align:center}
   /* ===== v3.6 可愛小貓（通用主題：只介紹小貓共同特點，不介紹特定的貓） ===== */
   LIB['動物'].pool.unshift('可愛小貓');
   if(!LIB['動物'].topics.includes('可愛小貓')) LIB['動物'].topics.push('可愛小貓');
-  const SPECIAL={'可愛小貓':{titles:['小貓長什麼樣子','小貓喜歡做什麼','小貓怎麼長大','怎麼照顧小貓'],
+  const SPECIAL={'動物|可愛小貓':{titles:['小貓長什麼樣子','小貓喜歡做什麼','小貓怎麼長大','怎麼照顧小貓'],
     note:'請介紹一般小貓共同的特點，不要介紹某一隻有名的貓，也不要介紹某一個品種；可以用真實的數字，例如小貓幾週大會張開眼睛。'}};
-  function specialKey(){const k=[state.cnt!=='many'?state.cast[0]:'',state.topic].map(x=>(x||'').trim()).find(x=>SPECIAL[x]);return k||'';}
+  function specialKey(){const k=[state.cnt!=='many'?state.cast[0]:'',state.topic].map(x=>(x||'').trim()).find(x=>SPECIAL[state.cat+'|'+x]);return k?state.cat+'|'+k:'';}
+
+  /* ===== v3.7 每一類都有「通用主題」（黃色按鈕）：只介紹共同特點；梗圖可上傳讓 AI 看 ===== */
+  const GEN=[
+    ['足球明星','厲害的足球員','足球員',['足球員要會什麼','每天怎麼練習','足球比賽的規則','我想學他們的地方']],
+    ['籃球明星','厲害的籃球員','籃球員',['籃球員要會什麼','每天怎麼練習','籃球比賽的規則','我想學他們的地方']],
+    ['棒球明星','厲害的棒球員','棒球員',['棒球員要會什麼','每天怎麼練習','棒球比賽的規則','我想學他們的地方']],
+    ['臺灣運動選手','為國爭光的選手','運動選手',['運動員每天做什麼','怎麼參加比賽','需要什麼精神','我想學他們的地方']],
+    ['韓團（男團／女團）','韓國偶像團體','偶像團體',['偶像團體是什麼','偶像怎麼練習','舞台表演的樣子','粉絲怎麼應援']],
+    ['華語歌手','受歡迎的歌手','歌手',['歌手是做什麼的','一首歌怎麼做出來','演唱會的樣子','我想學他們的地方']],
+    ['直播主／YouTuber','直播主','直播主',['直播主是做什麼的','怎麼拍一支影片','需要的器材','上網要注意的事']],
+    ['動畫','日本動畫','動畫',['動畫是怎麼做出來的','動畫裡常見的角色','好看的動畫有什麼','我喜歡動畫的原因']],
+    ['漫畫','漫畫','漫畫',['漫畫是怎麼畫出來的','格子和對話框','漫畫家每天做什麼','我喜歡漫畫的原因']],
+    ['電影','動畫電影','電影',['電影是怎麼做出來的','電影院的樣子','好電影有什麼','我喜歡看電影的原因']],
+    ['超級英雄','超級英雄','超級英雄',['超級英雄是什麼','常見的超能力','英雄的夥伴和對手','我想學的英雄精神']],
+    ['可愛角色','可愛角色','可愛角色',['可愛角色長什麼樣子','為什麼大家喜歡','會出現在哪些地方','我最喜歡的周邊']],
+    ['玩具','好玩的玩具','玩具',['玩具長什麼樣子','怎麼玩','玩的時候要注意','我最喜歡的玩法']],
+    ['車子','帥氣的跑車','跑車',['跑車長什麼樣子','為什麼跑得快','特別的設計','我想開它去哪']],
+    ['交通工具','各種交通工具','交通工具',['交通工具是什麼','陸海空交通工具','搭乘要注意的事','我最想搭的']],
+    ['臺灣火車','臺灣的火車','火車',['火車長什麼樣子','火車怎麼開','坐火車要注意的事','我想坐火車去哪']],
+    ['日本火車電車','日本的電車','電車',['電車長什麼樣子','新幹線有多快','在日本坐電車的規矩','我想坐電車去哪']],
+    ['動物','可愛小狗','小狗',['小狗長什麼樣子','小狗喜歡做什麼','小狗怎麼長大','怎麼照顧小狗']],
+    ['海洋生物','海洋裡的生物','海洋生物',['海洋生物住在哪裡','海洋生物吃什麼','海洋遇到的危機','怎麼保護海洋']],
+    ['恐龍','恐龍','恐龍',['恐龍長什麼樣子','恐龍生活的時代','恐龍為什麼消失','怎麼找到恐龍化石']],
+    ['昆蟲','小昆蟲','昆蟲',['昆蟲長什麼樣子','昆蟲怎麼長大','昆蟲的本領','怎麼觀察昆蟲']],
+    ['鳥類','可愛小鳥','小鳥',['小鳥長什麼樣子','小鳥怎麼飛','小鳥吃什麼','怎麼保護小鳥']],
+    ['植物花朵','美麗的花','花',['花長什麼樣子','花怎麼長大','花和蜜蜂','怎麼照顧花']],
+    ['太空','太空','太空',['太空是什麼','太空人怎麼生活','星星和行星','我想去太空的原因']],
+    ['世界景點','世界旅行','世界景點',['出國要準備什麼','有名的景點','各國不同的文化','我最想去的地方']],
+    ['日本景點','日本旅行','日本景點',['日本在哪裡','有名的景點','日本的文化','我想去日本做什麼']],
+    ['臺灣景點','臺灣旅行','臺灣景點',['臺灣在哪裡','有名的景點','臺灣的特色','我最想去的地方']],
+    ['臺南古蹟','臺南古蹟','臺南古蹟',['古蹟是什麼','臺南的歷史','古蹟的建築特色','怎麼保護古蹟']],
+    ['美食','好吃的美食','美食',['美食長什麼樣子','用什麼做的','怎麼吃最健康','我最喜歡的味道']],
+    ['臺灣美食','臺灣美食','臺灣美食',['臺灣有哪些美食','美食的材料','夜市的樣子','我最想推薦的']],
+    ['臺灣小吃','臺灣小吃','臺灣小吃',['小吃是什麼','夜市的樣子','常用的材料','我最想推薦的']],
+    ['臺南美食','臺南美食','臺南美食',['臺南美食的特色','為什麼吃起來甜甜的','臺南人早餐吃什麼','我最想推薦的']],
+    ['臺南小吃','府城小吃','臺南小吃',['府城是哪裡','小吃的特色','常用的材料','我最想推薦的']],
+    ['節日','節日','節日',['節日是什麼','臺灣有哪些節日','怎麼慶祝','我最喜歡的節日']],
+    ['樂器','樂器','樂器',['樂器是什麼','樂器的種類','怎麼發出聲音','我想學的樂器']],
+    ['職業','各種職業','職業',['什麼是職業','各種職業','需要的能力','我長大想做的']],
+    ['科學家與發明家','發明','發明',['什麼是發明','有名的發明','發明家的精神','我想發明的東西']],
+    ['運動項目','運動','運動',['運動的好處','各種運動','運動要注意的事','我最喜歡的運動']],
+    ['爆笑圖片','搞笑動物','搞笑動物',['動物在做什麼','為什麼好笑','動物的小知識','我想配的一句話']]
+  ];
+  const WC=['動畫','漫畫','電影','可愛角色'];
+  function addGeneric(cat,name,entry){
+    const L=LIB[cat];if(!L)return;
+    if(L.pool&&!WC.includes(cat)){if(!L.pool.includes(name))L.pool.unshift(name);}
+    else{L.topics=L.topics.filter(x=>x!==name);L.topics.unshift(name);}
+    SPECIAL[cat+'|'+name]=entry;
+  }
+  GEN.forEach(([cat,name,noun,titles])=>addGeneric(cat,name,{titles,note:`請介紹一般${noun}共同的特點，不要介紹某一位、某一個特定的${noun}；可以用真實的數字或例子。`}));
+  addGeneric('爆笑圖片','看不懂的梗圖',{upload:true,titles:['這張梗圖在說什麼','梗是從哪裡來的','為什麼大家覺得好笑','我想配的一句話'],
+    note:'我上傳了一張梗圖，但看不懂。請先看圖，告訴我圖裡是誰或是什麼、這個梗是從哪裡來的，再照下面四個標題寫文案；內容要適合國小學生。'});
 
   const norm=x=>String(x||'').toLowerCase().replace(/[\s()（）・·\-]/g,'');
   function castKey(){const L=LIB[state.cat];if(!L||!L.cast)return null;const t=norm(state.topic);if(!t)return null;
@@ -698,6 +756,7 @@ footer{margin-top:30px;color:var(--muted);font-size:14px;text-align:center}
     if(!list.length){const p=document.createElement('p');p.className='hint';p.textContent=(needsGroup()&&!castKey())?'先在第 3 題點一個，這裡就會出現名字；沒有的話直接打在格子裡。':'這個主題沒有內建名字，請直接打在格子裡。';box.append(p);return;}
     list.forEach(n=>{
       const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=n;
+      if(SPECIAL[state.cat+'|'+n])b.classList.add('gen');
       const on=state.cnt==='many'?state.cast.some(x=>x.trim()===n):state.cast[0].trim()===n;b.setAttribute('aria-pressed',on);
       b.addEventListener('click',()=>{
         if(state.cnt!=='many'){state.cast=[state.cast[0].trim()===n?'':n,'','',''];save();syncInputs();renderAll();return;}
@@ -720,7 +779,7 @@ footer{margin-top:30px;color:var(--muted);font-size:14px;text-align:center}
     const tlist=needG?(L.topics||[]):(L.topics||[]).filter(isGroupName);
     tlist.forEach(t=>{
       const b=document.createElement('button');b.type='button';b.className='chip';b.textContent=t;
-      b.setAttribute('aria-pressed',norm(t)===norm(state.topic));
+      b.setAttribute('aria-pressed',norm(t)===norm(state.topic));if(SPECIAL[state.cat+'|'+t])b.classList.add('gen');
       b.addEventListener('click',()=>setTopic(t));tb.append(b);
     });
     if(!tlist.length){const p=document.createElement('p');p.className='hint';p.textContent='這一類沒有內建選項，需要的話直接在下面打。';tb.append(p);}
@@ -816,6 +875,7 @@ footer{margin-top:30px;color:var(--muted);font-size:14px;text-align:center}
     if(!topic) topic=subj;
     const intro=lead?`我的主角是「${lead}」（${state.topic.trim()?state.topic.trim()+'，':''}${state.cat}）。`:many?`我的主題是「${subj}」（${state.cat}）。`:`我的主角是「${subj}」（${state.cat}）。`;
     const castList=many?state.cast.map(x=>x.trim()).filter(Boolean):[];
+    if($('uploadTip')) $('uploadTip').hidden=!(specialKey()&&SPECIAL[specialKey()].upload);
     const castNote=(castList.length?`主角有：${castList.join('、')}。`:'')+(specialKey()?SPECIAL[specialKey()].note:'');
     if($('brainPrompt')) $('brainPrompt').textContent=`${intro}${castNote}請幫我想 6 個適合國小五年級簡報的分頁標題，每個標題 8 個字以內；每個標題下面再寫一段 50 字以內的介紹文案，用五年級看得懂的話。請用「標題：」「文案：」的格式列出。每段文案一定要寫出真實的名字、歌名、作品名、年份或數字等具體例子，不要只用形容詞；每一段都要寫成完整的文案，不要留空格或括號讓我填；最後只要列出標題和文案，不要其他說明或問題。請先上網查最新、最正確的資料，名字、歌名、作品名、人數、年份、紀錄等名詞和數字都要用最新的正確資料。`;
     $('fileName').textContent='例：50108'+topic;
