@@ -522,7 +522,7 @@ def build():
     for k, n, opts in data:
         cats[k] = {'name': n, 'none': k not in ('face', 'eyes', 'mouth', 'top', 'bottom'), 'opts': opts}
     return {'format': 2, 'id': 'sketch', 'name': '手繪線條風', 'author': 'Codex', 'version': '1.0',
-            'date': datetime.date.today().isoformat(), 'base': {'neck': neck, 'ears': ears, 'legs': legs, 'arms': arm},
+            'date': '2026-11-15', 'base': {'neck': neck, 'ears': ears, 'legs': legs, 'arms': arm},
             'poses': POSES, 'expr': expressions(mouth), 'defaults': defaults,
             'view': {'face': '200 150 600 600', 'hair': '100 40 800 800', 'brow': '270 220 460 460',
                      'eyes': '290 270 420 420', 'mouth': '330 400 340 340', 'nose': '340 330 320 320',

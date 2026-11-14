@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """紙娃娃角色產生器 建置程式 v1.0 2026-11-15
 用法（在 avatar-maker 資料夾執行）：python tools/build.py
-1. 重新產生風格包：packs/flat/pack.json（make_flat.py）、packs/chibi/pack.json（make_chibi.py）
+1. 重新產生風格包：flat（make_flat.py）、chibi（make_chibi.py）、sketch（make_sketch.py，Codex 寫的）
 2. 由 src/app.html 產生：
    - index.html                                   上線版（內建扁平圓潤風，其他畫風從 packs/ 載入）
    - 紙娃娃角色產生器_v<版本>_<日期>.html          版本存檔（和 index.html 一樣）
@@ -10,13 +10,13 @@
 """
 import json, os, subprocess, sys
 
-VERSION = '0.3'
+VERSION = '0.4'
 DATE = '2026-11-15'
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.chdir(ROOT)
 py = sys.executable
-for cmd in (['tools/make_flat.py', 'packs/flat/pack.json'], ['tools/make_chibi.py', 'packs/chibi/pack.json']):
+for cmd in (['tools/make_flat.py', 'packs/flat/pack.json'], ['tools/make_chibi.py', 'packs/chibi/pack.json'], ['tools/make_sketch.py', 'packs/sketch/pack.json']):
     subprocess.run([py] + cmd, check=True, env=dict(os.environ, PYTHONIOENCODING='utf-8'))
 
 src = open('src/app.html', encoding='utf-8').read().replace('@@VERSION@@', VERSION).replace('@@DATE@@', DATE)
