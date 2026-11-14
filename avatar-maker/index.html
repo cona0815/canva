@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body style="margin:0">
-<!-- 紙娃娃角色產生器 v0.1 2026-11-15 · Cona 老師的資訊教室
+<!-- 紙娃娃角色產生器 v0.2 2026-11-15 · Cona 老師的資訊教室
+     v0.2：可切換畫風，從 packs/<id>/pack.json 載入風格包（格式見 packs/README.md）
      第 1 階段原型：扁平圓潤風、半身；換色、隨機、復原、說話預覽、PNG／主播包（zip：閉嘴＋張嘴＋眨眼＋說話 GIF）、角色代碼 -->
 <title>紙娃娃角色產生器</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -82,7 +83,8 @@ footer{color:var(--muted);font-size:13px;text-align:center}
 <div class="wrap">
   <header>
     <h1>紙娃娃角色產生器</h1>
-    <p>點一點，組出你自己的虛擬主播。畫風：扁平圓潤風・半身（原型版）</p>
+    <p>點一點，組出你自己的虛擬主播。</p>
+    <label for="styleSel" style="font-weight:700">畫風：<select id="styleSel" class="txt" style="padding:3px 10px"></select></label>
   </header>
 
   <div class="main">
@@ -133,7 +135,7 @@ footer{color:var(--muted);font-size:13px;text-align:center}
   </div>
     </div>
   </div>
-  <footer>Cona 老師的資訊教室 · 紙娃娃角色產生器 v0.1 · 2026-11-15</footer>
+  <footer>Cona 老師的資訊教室 · 紙娃娃角色產生器 v0.2 · 2026-11-15</footer>
 </div>
 <div class="toast" id="toast" role="status"></div>
 
@@ -146,7 +148,7 @@ const EYE_L=410, EYE_R=590, EYE_Y=400;
 const both=(f)=>f(EYE_L)+f(EYE_R);
 const BLINK=both(x=>`<path d="M${x-30} ${EYE_Y+4} Q${x} ${EYE_Y+22} ${x+30} ${EYE_Y+4}" stroke="#2b2b33" stroke-width="12" fill="none" stroke-linecap="round"/>`);
 const BODY=`<path d="M180 1000 Q200 720 500 700 Q800 720 820 1000 Z" fill="{c1}"/>`;
-const PACK={
+let PACK={
  face:{name:'臉型',none:false,opts:[
   {id:'f1',name:'圓臉',svg:`<circle cx="500" cy="430" r="220" fill="{skin}"/>`},
   {id:'f2',name:'鵝蛋臉',svg:`<ellipse cx="500" cy="438" rx="204" ry="234" fill="{skin}"/>`},
@@ -231,8 +233,21 @@ const CLOTH=['#23407a','#e2553b','#ffc531','#2f9e5b','#1f7fbf','#8a5fd3','#ff8fb
 /* 每個分類可以調的顏色 */
 const COLORS={face:[['skin','膚色',SKIN]],hair:[['hairC','髮色',HAIRC]],brow:[['hairC','髮色',HAIRC]],eyes:[['eyeC','眼睛',EYEC]],
   glasses:[['c2','鏡框',CLOTH]],hat:[['hatC','顏色',CLOTH]],top:[['c1','主色',CLOTH],['c2','副色',CLOTH]],hand:[['c2','副色',CLOTH]]};
-const DEFAULT={v:1,style:'flat',name:'小橋',face:'f1',hair:'h1',brow:'b1',eyes:'e1',mouth:'m1',nose:'',deco:'d1',glasses:'',hat:'',top:'t1',hand:'',
-  skin:SKIN[1],hairC:HAIRC[1],eyeC:EYEC[0],c1:CLOTH[0],c2:CLOTH[1],hatC:CLOTH[1],flip:false,bg:'grid'};
+let BASE={neck:`<rect x="456" y="600" width="88" height="116" rx="28" fill="{skin2}"/>`,ears:`<circle cx="282" cy="450" r="36" fill="{skin2}"/><circle cx="718" cy="450" r="36" fill="{skin2}"/>`};
+let PARTDEF={face:'f1',hair:'h1',brow:'b1',eyes:'e1',mouth:'m1',nose:'',deco:'d1',glasses:'',hat:'',top:'t1',hand:''};
+const COMMON={v:1,style:'flat',name:'小橋',skin:SKIN[1],hairC:HAIRC[1],eyeC:EYEC[0],c1:CLOTH[0],c2:CLOTH[1],hatC:CLOTH[1],flip:false,bg:'grid'};
+let DEFAULT=Object.assign({},COMMON,PARTDEF);
+/* 風格包：flat 內建；其他從 packs/<id>/pack.json 載入（格式見 packs/README.md） */
+const STYLES=[{id:'flat',name:'扁平圓潤風'}];
+let FLAT=null;
+function usePack(p){PACK=p.cats;VIEW=p.view||{};BASE=p.base;PARTDEF=p.defaults;DEFAULT=Object.assign({},COMMON,PARTDEF);}
+async function loadStyle(id){
+  if(!FLAT)FLAT={cats:PACK,view:VIEW,base:BASE,defaults:PARTDEF};
+  if(id==='flat'){usePack(FLAT);return true;}
+  try{const r=await fetch('packs/'+encodeURIComponent(id)+'/pack.json',{cache:'no-cache'});if(!r.ok)throw 0;const p=await r.json();
+    if(!p||!p.cats||!p.base||!p.defaults||!ORDER.every(c=>p.cats[c]&&Array.isArray(p.cats[c].opts)))throw 0;usePack(p);return true;}
+  catch(e){usePack(FLAT);return false;}
+}
 
 /* ================= 狀態 ================= */
 const KEY='dq-avatar-v1';
@@ -245,10 +260,12 @@ function sanitize(s){
     ['skin','hairC','eyeC','c1','c2','hatC'].forEach(k=>{if(/^#[0-9a-f]{6}$/i.test(s[k]||''))o[k]=s[k];});
     if(typeof s.name==='string')o.name=s.name.slice(0,10);
     o.flip=!!s.flip; if(['grid','none','sky','news'].includes(s.bg))o.bg=s.bg;
+    if(typeof s.style==='string'&&STYLES.some(x=>x.id===s.style))o.style=s.style;
   }
   return o;
 }
-try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s)state=sanitize(s);}catch(e){}
+let saved=null;try{saved=JSON.parse(localStorage.getItem(KEY)||'null');}catch(e){}
+if(saved)state=sanitize(saved);
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}};
 function commit(patch){history.push(JSON.stringify(state));if(history.length>40)history.shift();Object.assign(state,patch);save();renderAll();}
 const toast=$('toast');
@@ -264,8 +281,7 @@ function inner(s,pose){
   const parts=[
     hair&&hair.back||'',
     g('top'),
-    `<rect x="456" y="600" width="88" height="116" rx="28" fill="{skin2}"/>`,
-    `<circle cx="282" cy="450" r="36" fill="{skin2}"/><circle cx="718" cy="450" r="36" fill="{skin2}"/>`,
+    BASE.neck||'', BASE.ears||'',
     g('face'), g('deco'),
     mouth?(pose.mouth==='open'?mouth.open:mouth.closed):'',
     g('nose'),
@@ -278,7 +294,7 @@ function inner(s,pose){
   return s.flip?`<g transform="translate(1000 0) scale(-1 1)">${body}</g>`:body;
 }
 function svg(s,pose,size,view){return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${view||'0 0 1000 1000'}"${size?` width="${size}" height="${size}"`:''}>${inner(s,pose)}</svg>`;}
-const VIEW={face:'200 150 600 600',brow:'250 200 500 500',eyes:'250 200 500 500',mouth:'250 260 500 500',nose:'250 230 500 500',deco:'230 200 540 540',glasses:'230 160 540 540',hair:'120 60 760 760',hat:'120 10 760 760'};
+let VIEW={face:'200 150 600 600',brow:'250 200 500 500',eyes:'250 200 500 500',mouth:'250 260 500 500',nose:'250 230 500 500',deco:'230 200 540 540',glasses:'230 160 540 540',hair:'120 60 760 760',hat:'120 10 760 760'};
 
 /* ================= 介面 ================= */
 const BG=[['grid','格線'],['none','白色'],['sky','天空'],['news','新聞台']];
@@ -346,7 +362,7 @@ $('bCopyCode').addEventListener('click',()=>{
   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(code).then(()=>flash('角色代碼複製好了！'),fb);else fb();
 });
 $('bLoadCode').addEventListener('click',()=>{
-  try{const s=dec($('codeInput').value);history.push(JSON.stringify(state));state=s;save();renderAll();$('codeInput').value='';flash('角色還原成功！');}
+  try{const t=$('codeInput').value.trim();if(!t.startsWith('DQ1-'))throw 0;const raw=JSON.parse(decodeURIComponent(escape(atob(t.slice(4)))));history=[];const id=STYLES.some(x=>x.id===raw.style)?raw.style:'flat';setStyle(id,raw).then(()=>{$('codeInput').value='';flash('角色還原成功！');});}
   catch(e){flash('這不是正確的角色代碼，請再複製一次');}
 });
 
@@ -426,8 +442,22 @@ $('bPack').addEventListener('click',()=>busy($('bPack'),async()=>{
   download(makeZip(files),fname()+'_主播包.zip');showResults(shown);flash('主播包下載好了，解壓縮後上傳到 Canva');}));
 
 /* 給測試用 */
-window.__avatar={get state(){return state;},svg,enc,dec,PACK,ORDER,buildGif};
-renderAll();
+/* 畫風切換 */
+const styleSel=$('styleSel');
+function fillStyles(){styleSel.innerHTML='';STYLES.forEach(x=>{const o=document.createElement('option');o.value=x.id;o.textContent=x.name;styleSel.append(o);});styleSel.value=state.style;}
+async function setStyle(id,keepParts){
+  const ok=await loadStyle(id);if(!ok){flash('這個畫風載入失敗，先用扁平圓潤風');id='flat';}
+  const next=keepParts?sanitize(Object.assign({},keepParts,{style:id})):Object.assign({},state,PARTDEF,{style:id});
+  state=sanitize(next);state.style=id;save();fillStyles();renderAll();
+}
+styleSel.addEventListener('change',()=>{history=[];setStyle(styleSel.value);});
+window.__avatar={get state(){return state;},svg,enc,dec,get PACK(){return PACK;},get VIEW(){return VIEW;},get BASE(){return BASE;},get PARTDEF(){return PARTDEF;},ORDER,buildGif,setStyle};
+fillStyles();renderAll();
+(async()=>{
+  try{const r=await fetch('packs/index.json',{cache:'no-cache'});if(r.ok){(await r.json()).forEach(x=>{if(x&&x.id&&x.name&&!STYLES.some(y=>y.id===x.id))STYLES.push({id:String(x.id),name:String(x.name)});});}}catch(e){}
+  fillStyles();
+  if(saved&&saved.style&&saved.style!=='flat'&&STYLES.some(x=>x.id===saved.style))await setStyle(saved.style,saved);
+})();
 })();
 </script>
 
