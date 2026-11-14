@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- 怎麼把主播包放進 Canva v1.0 2026-11-15 · Cona 老師的資訊教室
+     紙娃娃角色產生器的教學頁：下載主播包 → 上傳 Canva → 閉嘴墊底、說話 GIF 疊在有聲音的地方 → 文字轉語音 → 下載影片 -->
+<title>主播包放進 Canva</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Huninn&family=Noto+Sans+TC:wght@400;700&display=swap">
+<style>
+:root{--bg:#f3f0fa;--paper:#fff;--ink:#2a2440;--muted:#6c6685;--line:#d9d3ea;--accent:#6b4fd8;--accent-soft:#e8e2fb;--sun:#ffc531;--ok:#2f9e5b;--warn:#e2553b;
+  --f-d:"Huninn","Noto Sans TC",system-ui,sans-serif;--f-b:"Noto Sans TC",system-ui,"Microsoft JhengHei",sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17132a;--paper:#221c3a;--ink:#ece8fb;--muted:#a9a2c6;--line:#3a3260;--accent:#a58cff;--accent-soft:#30275a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#17132a;--paper:#221c3a;--ink:#ece8fb;--muted:#a9a2c6;--line:#3a3260;--accent:#a58cff;--accent-soft:#30275a;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-b);font-size:18px;line-height:1.75}
+.wrap{max-width:980px;margin:0 auto;padding:20px 16px 40px}
+h1{font-family:var(--f-d);font-weight:400;font-size:clamp(26px,4vw,36px);margin:0}
+.sub{color:var(--muted);margin:4px 0 18px}
+.back{display:inline-block;margin-bottom:12px;color:var(--accent);font-weight:700;text-decoration:none}
+.quick{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 20px;padding:0;list-style:none}
+.quick a{display:block;background:var(--paper);border:2px solid var(--line);border-radius:999px;padding:2px 14px;color:var(--ink);text-decoration:none;font-weight:700;font-size:15px}
+.quick a:hover{border-color:var(--accent)}
+.step{background:var(--paper);border:2px solid var(--line);border-radius:20px;padding:16px 18px;margin:0 0 14px;display:grid;grid-template-columns:56px minmax(0,1fr);gap:4px 14px}
+.num{grid-row:span 2;width:52px;height:52px;border-radius:50%;background:var(--accent);color:#fff;font-family:var(--f-d);font-size:26px;display:grid;place-items:center}
+.step h2{font-family:var(--f-d);font-weight:400;font-size:22px;margin:4px 0 0}
+.step p,.step ul{margin:4px 0}
+.step ul{padding-left:1.2em}
+kbd{background:var(--accent-soft);border:1px solid var(--line);border-bottom-width:3px;border-radius:6px;padding:0 6px;font-family:inherit;font-size:.9em}
+.tip{background:#fff6d6;color:#5a4300;border-radius:12px;padding:6px 12px;margin-top:8px;font-size:16px}
+.warn{background:#ffe5e0;color:#7a2416;border-radius:12px;padding:6px 12px;margin-top:8px;font-size:16px}
+.files{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
+.file{background:var(--bg);border:2px solid var(--line);border-radius:14px;padding:6px 12px;font-size:15px}
+.file b{display:block}
+figure{margin:10px 0 0}
+figure svg{width:100%;height:auto;display:block;background:#fff;border-radius:14px;border:2px solid var(--line)}
+figcaption{color:var(--muted);font-size:14px;margin-top:4px}
+footer{color:var(--muted);font-size:13px;text-align:center;margin-top:24px}
+@media (max-width:560px){.step{grid-template-columns:1fr}.num{grid-row:auto;width:42px;height:42px;font-size:20px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="./">← 回紙娃娃角色產生器</a>
+  <h1>把主播包放進 Canva，做出會說話的虛擬主播</h1>
+  <p class="sub">做法：「閉嘴」的圖放最底下，「說話 GIF」只疊在有聲音的地方。主播講話時嘴巴會動，停下來就閉嘴。</p>
+  <ul class="quick">
+    <li><a href="#s1">1 下載</a></li><li><a href="#s2">2 解壓縮</a></li><li><a href="#s3">3 上傳</a></li><li><a href="#s4">4 閉嘴墊底</a></li>
+    <li><a href="#s5">5 加聲音</a></li><li><a href="#s6">6 疊說話 GIF</a></li><li><a href="#s7">7 眨眼</a></li><li><a href="#s8">8 下載影片</a></li>
+  </ul>
+
+  <section class="step" id="s1"><div class="num">1</div><h2>在紙娃娃網站下載主播包</h2>
+    <div><p>角色做好、取好名字，按紫色的「<b>下載主播包（zip）</b>」。背景不要勾，透明的最好用。</p>
+      <div class="files">
+        <div class="file"><b>名字_閉嘴.png</b>墊在最底下</div>
+        <div class="file"><b>名字_說話.gif</b>會開口說話</div>
+        <div class="file"><b>名字_張嘴.png</b>想要自己做動畫時用</div>
+        <div class="file"><b>名字_眨眼.png</b>停頓時眨一下眼</div>
+        <div class="file"><b>名字_角色代碼.txt</b>下次還原角色</div>
+      </div></div></section>
+
+  <section class="step" id="s2"><div class="num">2</div><h2>解壓縮</h2>
+    <div><p>在下載的 zip 上按<b>右鍵</b> →「<b>全部解壓縮</b>」→「解壓縮」。會多出一個資料夾，裡面就是上面那些檔案。</p>
+      <div class="warn">沒有解壓縮的話，Canva 會看不到裡面的圖片。</div></div></section>
+
+  <section class="step" id="s3"><div class="num">3</div><h2>開一個 Canva 影片，上傳檔案</h2>
+    <div><ul><li>Canva 首頁 → 建立設計 →「<b>影片</b>」（16:9）。</li>
+      <li>左邊點「<b>上傳</b>」→「上傳檔案」→ 到剛剛的資料夾，按 <kbd>Ctrl</kbd>＋<kbd>A</kbd> 全選 → 開啟。</li>
+      <li>想要背景的話，先放 Canva 的背景，或「我的主題大探索」做的圖片。</li></ul></div></section>
+
+  <section class="step" id="s4"><div class="num">4</div><h2>「閉嘴」放最底層，時間拉滿</h2>
+    <div><p>把 <b>閉嘴.png</b> 拖到畫面上，調好大小和位置。下面的時間軸裡，把它的長度拉到和整段影片一樣長。</p>
+      <div class="tip">記下它的大小和位置：點圖片 →「位置」→「進階」，看寬、高、X、Y 的數字，等一下 GIF 要填一樣的。</div></div></section>
+
+  <section class="step" id="s5"><div class="num">5</div><h2>加上聲音</h2>
+    <div><ul><li>左邊「<b>應用程式</b>」找「<b>文字轉語音</b>」，打上主播要說的話，選一個聲音，加到設計裡。</li>
+      <li>也可以用左邊「上傳」→「錄製自己」自己錄。</li>
+      <li>一句話一段聲音，比較好對嘴。</li></ul></div></section>
+
+  <section class="step" id="s6"><div class="num">6</div><h2>「說話 GIF」疊上去，只放在有聲音的地方</h2>
+    <div><ul><li>把 <b>說話.gif</b> 拖到畫面，到「位置」→「進階」填上和閉嘴<b>一樣</b>的寬、高、X、Y，兩張就會完全重疊。</li>
+      <li>在時間軸上，把 GIF 對齊聲音：聲音開始的地方開始、聲音結束的地方結束。</li>
+      <li>一句話對一段 GIF。中間停頓的地方，把 GIF 分割（<kbd>S</kbd>）開來，刪掉中間那一小段，主播就會自然閉嘴。</li></ul>
+      <figure>
+        <svg viewBox="0 0 900 250" role="img" aria-label="時間軸示意：最下面一條是閉嘴，整段拉滿；中間是說話 GIF，只在三段聲音的地方出現；最上面是三段聲音">
+          <g font-family="Noto Sans TC, Microsoft JhengHei, sans-serif" font-size="18" font-weight="700">
+            <text x="20" y="60" fill="#2a2440">聲音</text>
+            <rect x="140" y="38" width="200" height="34" rx="8" fill="#ffc531"/><rect x="380" y="38" width="160" height="34" rx="8" fill="#ffc531"/><rect x="600" y="38" width="240" height="34" rx="8" fill="#ffc531"/>
+            <text x="160" y="61" fill="#5a4300" font-size="15">大家好，我是小橋</text><text x="398" y="61" fill="#5a4300" font-size="15">今天要介紹</text><text x="618" y="61" fill="#5a4300" font-size="15">臺南的牛肉湯！</text>
+            <text x="20" y="128" fill="#2a2440">說話 GIF</text>
+            <rect x="140" y="106" width="200" height="34" rx="8" fill="#6b4fd8"/><rect x="380" y="106" width="160" height="34" rx="8" fill="#6b4fd8"/><rect x="600" y="106" width="240" height="34" rx="8" fill="#6b4fd8"/>
+            <text x="20" y="196" fill="#2a2440">閉嘴 PNG</text>
+            <rect x="140" y="174" width="740" height="34" rx="8" fill="#2f9e5b"/><text x="420" y="197" fill="#fff" font-size="15">整段拉滿，墊在最底下</text>
+            <path d="M350 92 V230 M560 92 V230" stroke="#e2553b" stroke-width="3" stroke-dasharray="6 6"/>
+            <text x="352" y="240" fill="#e2553b" font-size="14">停頓：只看到閉嘴</text>
+          </g>
+        </svg>
+        <figcaption>時間軸由上到下：聲音、說話 GIF、閉嘴 PNG。紅線的地方沒有 GIF，主播就閉嘴。</figcaption>
+      </figure></div></section>
+
+  <section class="step" id="s7"><div class="num">7</div><h2>（加分）停頓時眨眼</h2>
+    <div><p>不說話的地方，把 <b>眨眼.png</b> 疊上去，長度只要 <b>0.2 秒</b>，主播就會眨一下眼睛，看起來更像真的。</p></div></section>
+
+  <section class="step" id="s8"><div class="num">8</div><h2>播放檢查，下載影片</h2>
+    <div><p>按播放看看嘴巴有沒有跟聲音對上。沒問題就按右上「分享」→「下載」→ 檔案類型選 <b>MP4 影片</b>。</p>
+      <div class="tip">角色代碼.txt 要留著！下次到紙娃娃網站貼上代碼按「還原」，就能繼續改同一個主播。</div></div></section>
+
+  <footer>Cona 老師的資訊教室 · 怎麼把主播包放進 Canva v1.0 · 2026-11-15</footer>
+</div>
+</body>
+</html>
