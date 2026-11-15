@@ -108,6 +108,8 @@ h1 small{font-family:var(--f-b);font-size:12px;color:var(--muted);margin-left:6p
 <div class="app">
   <header>
     <h1>紙娃娃角色產生器<small>v@@VERSION@@</small></h1>
+    <span class="lbl" id="sexLbl">角色</span>
+    <span class="seg" role="group" aria-labelledby="sexLbl" id="sexSeg"><button type="button" data-sex="m">男生</button><button type="button" data-sex="f">女生</button><button type="button" data-sex="">全部</button></span>
     <span class="lbl" id="styleLbl">畫風</span>
     <span class="seg" role="group" aria-labelledby="styleLbl" id="styleSeg"></span>
     <span class="lbl" id="modeLbl">身體</span>
@@ -188,6 +190,19 @@ const CKEYS=['skinC','hairC','topC','pantsC','shoeC'];
 const BGS=[['none','透明'],['white','白色'],['pink','粉紅'],['yellow','鵝黃'],['mint','薄荷'],['blue','淺藍'],['purple','淡紫'],['sky','天空'],['news','新聞台'],['class','教室'],['stage','舞台'],['night','星空'],['stream','直播間']];
 const SOLID={white:'#ffffff',pink:'#ffe0ea',yellow:'#fff3c4',mint:'#d8f5e6',blue:'#dcefff',purple:'#ece4ff'};
 const KEY='dq-avatar-v5';
+/* 男生／女生：照款式名稱分，沒列到的兩邊都有。選「全部」時所有款式都能用 */
+const SEX_ONLY={
+  f:['齊瀏海長直髮','雙馬尾','高馬尾','丸子頭','鮑伯頭','單邊辮子','超長直髮＋呆毛','雙丸子長辮','水手服','主播套裝','襯衫領結','百褶裙','舞台短裙','蝴蝶結','兔耳髮箍'],
+  m:['清爽短髮','刺蝟頭','中分','主播西裝','西裝褲']};
+const SEX_DEF={m:{hair:'清爽短髮',top:'主播西裝'},f:{hair:'齊瀏海長直髮',top:'水手服',bottom:'百褶裙'}};
+const okSex=(o,sx)=>!sx||!(SEX_ONLY[sx==='m'?'f':'m'].includes(o.name));
+const optsOf=(c,sx=state&&state.sex)=>PACK.cats[c].opts.filter(o=>okSex(o,sx));
+function sexPatch(sx){   /* 換性別：身上不屬於這個性別的款式，換成這個性別的預設款（沒有就拿掉／換第一款） */
+  const p={sex:sx};if(!sx)return p;
+  CAT_ORDER.forEach(c=>{const C=PACK.cats[c];if(!C)return;const cur=C.opts.find(o=>o.id===state[c]);if(!cur||okSex(cur,sx))return;
+    const d=C.opts.find(o=>o.name===(SEX_DEF[sx]||{})[c])||(C.none?null:optsOf(c,sx)[0]);p[c]=d?d.id:'';});
+  const dh=PACK.cats.hair&&PACK.cats.hair.opts.find(o=>o.name===SEX_DEF[sx].hair);if(dh&&state.sex!==sx)p.hair=dh.id;
+  return p;}
 let STYLES=[],PACKS={},IMGS={},PACK,style,state,history=[],tab='face',talking=null,talkOpen=false,blinkNow=false;
 
 /* ================= 載入 ================= */
@@ -203,14 +218,14 @@ async function loadPack(id){
   PACKS[id]=p;IMGS[id]=im;
 }
 function defaults(p){const d={};CAT_ORDER.forEach(c=>{const C=p.cats[c];d[c]=C?(C.none?'':C.opts[0].id):'';});
-  return Object.assign({v:5,style:p.id,mode:'half',name:'小橋',flip:false,bg:'none',bgOut:false},d,{skinC:null,hairC:null,topC:null,pantsC:null,shoeC:null});}
+  return Object.assign({v:5,style:p.id,mode:'half',name:'小橋',flip:false,bg:'none',bgOut:false,sex:''},d,{skinC:null,hairC:null,topC:null,pantsC:null,shoeC:null});}
 const isHex=v=>/^#[0-9a-f]{6}$/i.test(v||'');
 function sanitize(s,p){
   const o=defaults(p);if(!s||typeof s!=='object')return o;
   CAT_ORDER.forEach(c=>{const C=p.cats[c];if(!C)return;const v=s[c];if(v===''&&C.none)o[c]='';else if(C.opts.some(x=>x.id===v))o[c]=v;});
   CKEYS.forEach(k=>{o[k]=isHex(s[k])?s[k].toLowerCase():null;});
   if(typeof s.name==='string')o.name=s.name.replace(/[\u0000-\u001f]/g,'').slice(0,10);
-  o.flip=!!s.flip;o.bgOut=!!s.bgOut;if(BGS.some(b=>b[0]===s.bg))o.bg=s.bg;if(s.mode==='full'||s.mode==='half')o.mode=s.mode;
+  o.flip=!!s.flip;o.bgOut=!!s.bgOut;if(BGS.some(b=>b[0]===s.bg))o.bg=s.bg;if(s.mode==='full'||s.mode==='half')o.mode=s.mode;if(s.sex==='m'||s.sex==='f')o.sex=s.sex;
   return o;
 }
 
@@ -265,9 +280,50 @@ function draw(ctx,s,pose,mode,withBg){
   LAYERS.forEach(c=>{
     if(c==='base'||(mode!=='full'&&(c==='shoes'||c==='pet')))return;
     const r=rectOf(c,s,pose);if(!r)return;const [m,name]=r;
+    const hr=c==='hair'&&rectOf('hat',s,pose),cut=hr&&hairCut(m,name,hr[0]);
+    if(cut){   /* 戴帽子：頭髮先畫在另一張，把露出帽頂、帽緣上方的頭髮擦掉，才不會穿出帽子 */
+      HC.width=OFF.width;HC.height=OFF.height;const h=HC.getContext('2d');h.setTransform(o.getTransform());
+      h.drawImage(img(c,name),m.x,m.y,m.w,m.h);h.globalCompositeOperation='destination-out';h.drawImage(cut,0,0);
+      o.save();o.setTransform(1,0,0,1,0,0);o.drawImage(HC,0,0);o.restore();return;}
     o.drawImage(img(c,name),m.x,m.y,m.w,m.h);});
   o.restore();
   ctx.drawImage(OFF,0,0);
+}
+/* 會蓋住頭頂的帽子（名稱是「…帽」）：做一張「頭髮擦除區」＝帽子上緣以上＋緊貼帽子兩側、帽緣高度以上的一小條 */
+const HC=document.createElement('canvas'),CUT={};
+function hatCut(o){
+  const k=style+'/'+o.id;if(k in CUT)return CUT[k];
+  if(!/帽$/.test(o.name||''))return CUT[k]=null;
+  const w=Math.round(o.w),h=Math.round(o.h),t=document.createElement('canvas');t.width=w;t.height=h;
+  const x=t.getContext('2d');x.drawImage(IMGS[style][o.id],0,0,w,h);const a=x.getImageData(0,0,w,h).data;
+  const on=(i,j)=>a[(j*w+i)*4+3]>96,top=new Int32Array(w).fill(-1);
+  for(let i=0;i<w;i++)for(let j=0;j<h;j++)if(on(i,j)){top[i]=j;break;}
+  let L=-1,R=-1;for(let i=0;i<w;i++)if(top[i]>=0){if(L<0)L=i;R=i;}
+  if(L<0)return CUT[k]=null;
+  const side=(i0,i1)=>{let s=0,n=0;for(let i=i0;i<=i1;i++){let y0=-1,y1=-1;for(let j=0;j<h;j++)if(on(i,j)){if(y0<0)y0=j;y1=j;}if(y0>=0){s+=y1;n++;}}return n?s/n:h/2;};   /* 帽子最外側的下緣＝帽緣高度 */
+  const yl0=side(L,Math.min(R,L+5)),yr0=side(Math.max(L,R-5),R),yl=Math.max(yl0,yr0*.6+yl0*.4),yr=Math.max(yr0,yl0*.6+yr0*.4);   /* 斜戴（貝雷帽）時高的那邊往下拉一些 */
+  const W=PACK.canvas[0],c=document.createElement('canvas');c.width=W;c.height=Math.ceil(o.y+h);
+  const g=c.getContext('2d');g.fillStyle='#000';
+  const m=Math.round((R-L)*.07);   /* 兩側只擦貼著帽子的一小條（雙馬尾等從旁邊垂下來的頭髮保留）；帽子那一側翹高（斜戴的貝雷帽）就不擦，頭髮本來就會露出來 */
+  if(yl0>h*.7)g.fillRect(o.x+L-m,0,m,o.y+yl);if(yr0>h*.7)g.fillRect(o.x+R+1,0,m,o.y+yr);
+  for(let i=L;i<=R;i++)if(top[i]>=0)g.fillRect(o.x+i,0,1,o.y+top[i]+3);
+  c.brim=o.y+Math.max(yl,yr);return CUT[k]=c;
+}
+/* 擦完後，帽緣以上、和頭髮主體不相連的碎塊（例如丸子頭被切剩的邊）也一起擦掉 */
+function hairCut(m,name,hat){
+  const base=hatCut(hat);if(!base)return null;const k=style+'/'+name+'/'+hat.id;if(k in CUT)return CUT[k];
+  const x0=Math.floor(m.x),y0=Math.floor(m.y),w=Math.ceil(m.w),h=Math.ceil(m.h),t=document.createElement('canvas');t.width=w;t.height=h;
+  const x=t.getContext('2d');x.drawImage(IMGS[style][name],m.x-x0,m.y-y0,m.w,m.h);const A=x.getImageData(0,0,w,h).data;
+  x.clearRect(0,0,w,h);x.drawImage(base,-x0,-y0);const C=x.getImageData(0,0,w,h).data;
+  const keep=new Uint8Array(w*h);for(let i=0;i<w*h;i++)keep[i]=A[i*4+3]>6&&C[i*4+3]<128?1:0;
+  const lab=new Int32Array(w*h),st=new Int32Array(w*h),out=document.createElement('canvas');out.width=base.width;out.height=base.height;
+  const g=out.getContext('2d');g.drawImage(base,0,0);g.fillStyle='#000';let n=0;
+  for(let p=0;p<w*h;p++){if(!keep[p]||lab[p])continue;n++;let sp=0,maxY=0;const pix=[];st[sp++]=p;lab[p]=n;
+    while(sp){const q=st[--sp];pix.push(q);const qy=(q/w)|0,qx=q-qy*w;if(qy>maxY)maxY=qy;
+      if(qx>0&&keep[q-1]&&!lab[q-1]){lab[q-1]=n;st[sp++]=q-1;}if(qx<w-1&&keep[q+1]&&!lab[q+1]){lab[q+1]=n;st[sp++]=q+1;}
+      if(qy>0&&keep[q-w]&&!lab[q-w]){lab[q-w]=n;st[sp++]=q-w;}if(qy<h-1&&keep[q+w]&&!lab[q+w]){lab[q+w]=n;st[sp++]=q+w;}}
+    if(y0+maxY<base.brim)pix.forEach(q=>{const qy=(q/w)|0;g.fillRect(x0+q-qy*w,y0+qy,1,1);});}
+  return CUT[k]=out;
 }
 function drawBg(ctx,id,w,h){
   if(id==='none')return;
@@ -337,12 +393,12 @@ function renderTabs(){
 }
 function renderOpts(){
   const C=PACK.cats[tab],box=$('opts');box.innerHTML='';
-  $('catTitle').textContent=C.name;$('catCount').textContent=C.opts.length+' 款';
+  $('catTitle').textContent=C.name;const OP=optsOf(tab);$('catCount').textContent=OP.length+' 款';
   const note=$('note');
   if(FULL_ONLY.includes(tab)&&effMode()==='half'){note.hidden=false;note.innerHTML='';const t=document.createElement('span');t.textContent=C.name+'要「全身」才看得清楚。';
     const b=document.createElement('button');b.type='button';b.className='btn';b.textContent='切換到全身';b.onclick=()=>commit({mode:'full'});note.append(t,b);}
   else note.hidden=true;
-  const list=(C.none?[{id:'',name:C.none}]:[]).concat(C.opts);
+  const list=(C.none?[{id:'',name:C.none}]:[]).concat(OP);
   const hide=tab==='top'?{hand:''}:tab==='bottom'?{hand:'',pet:''}:tab==='hair'?{hat:''}:{};
   list.forEach(o=>{const b=document.createElement('button');b.type='button';b.className='opt';b.setAttribute('aria-pressed',state[tab]===o.id);b.title=o.name;
     b.append(thumb(Object.assign({},state,hide,{[tab]:o.id,flip:false}),tab));const sp=document.createElement('span');sp.textContent=o.name;b.append(sp);
@@ -364,6 +420,7 @@ function renderStyles(){const box=$('styleSeg');box.innerHTML='';STYLES.forEach(
   b.onclick=()=>{if(x.id!==style){history=[];setStyle(x.id);}};box.append(b);});}
 function renderAll(){
   renderStage();renderTabs();renderOpts();renderBgs();renderStyles();fitStage();
+  document.querySelectorAll('#sexSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.sex===(state.sex||'')));
   $('bFlip').setAttribute('aria-pressed',state.flip);const full=effMode()==='full';
   $('mHalf').setAttribute('aria-pressed',!full);$('mFull').setAttribute('aria-pressed',full);
   if(document.activeElement!==$('nameInput'))$('nameInput').value=state.name;
@@ -376,23 +433,24 @@ function commit(patch){history.push(JSON.stringify(state));if(history.length>40)
 /* ================= 按鈕 ================= */
 const pick=a=>a[Math.floor(Math.random()*a.length)];
 const NONE_P={hair:.03,hat:.55,glasses:.75,hand:.5,pet:.6};
-function randomize(){const p={};CAT_ORDER.forEach(c=>{const C=PACK.cats[c];if(!C)return;p[c]=(C.none&&Math.random()<(NONE_P[c]||.3))?'':pick(C.opts).id;});
+function randomize(){const p={};CAT_ORDER.forEach(c=>{const C=PACK.cats[c];if(!C)return;p[c]=(C.none&&Math.random()<(NONE_P[c]||.3))?'':pick(optsOf(c)).id;});
   p.skinC=pick(SKIN);p.hairC=pick(HAIRC);p.topC=pick(CLOTH);p.pantsC=pick(PANTS);p.shoeC=pick(SHOE);commit(p);}
 $('bRandom').onclick=()=>{randomize();flash('換一個新造型！');};
-$('bCatRandom').onclick=()=>{const C=PACK.cats[tab];const p={[tab]:pick(C.opts).id};(COLORS[tab]||[]).forEach(([k,,l])=>p[k]=pick(l));commit(p);};
+$('bCatRandom').onclick=()=>{const p={[tab]:pick(optsOf(tab)).id};(COLORS[tab]||[]).forEach(([k,,l])=>p[k]=pick(l));commit(p);};
 function stopTalk(){if(talking){clearInterval(talking);talking=null;talkOpen=false;}$('bTalk').setAttribute('aria-pressed','false');$('bTalk').textContent='說話預覽';}
 $('bTalk').onclick=()=>{if(talking){stopTalk();renderStage();return;}talking=setInterval(()=>{talkOpen=!talkOpen;renderStage();},200);$('bTalk').setAttribute('aria-pressed','true');$('bTalk').textContent='停止說話';};
 setInterval(()=>{if(talking||document.hidden||!PACK)return;blinkNow=true;renderStage();setTimeout(()=>{blinkNow=false;renderStage();},150);},4200);
 $('bFlip').onclick=()=>commit({flip:!state.flip});
+document.querySelectorAll('#sexSeg button').forEach(b=>b.onclick=()=>{if((state.sex||'')!==b.dataset.sex){commit(sexPatch(b.dataset.sex));flash(b.dataset.sex?'只列出'+b.textContent+'的款式':'所有款式都列出來了');}});
 $('mHalf').onclick=()=>commit({mode:'half'});$('mFull').onclick=()=>commit({mode:'full'});
 $('bUndo').onclick=()=>{if(!history.length){flash('沒有可以復原的步驟');return;}state=sanitize(JSON.parse(history.pop()),PACK);save();renderAll();};
-$('bReset').onclick=()=>{commit(Object.assign(defaults(PACK),{name:state.name,mode:state.mode}));flash('回到預設角色了，按「復原」可以救回來');};
+$('bReset').onclick=()=>{{const sx=state.sex,d=Object.assign(defaults(PACK),{name:state.name,mode:state.mode,sex:sx});CAT_ORDER.forEach(c=>{const C=PACK.cats[c],n=sx&&SEX_DEF[sx][c],o=C&&n&&C.opts.find(x=>x.name===n);if(o)d[c]=o.id;});commit(d);}flash('回到預設角色了，按「復原」可以救回來');};
 $('nameInput').addEventListener('input',()=>{state.name=$('nameInput').value.slice(0,10);save();});
 $('bgOut').addEventListener('change',()=>{state.bgOut=$('bgOut').checked;save();});
 window.addEventListener('resize',fitStage);
 
 /* ================= 角色代碼 DQ5 ================= */
-const CODE_KEYS=['style','mode','name','flip','bg','bgOut',...CAT_ORDER,...CKEYS];
+const CODE_KEYS=['style','mode','name','flip','bg','bgOut',...CAT_ORDER,...CKEYS,'sex'];   /* sex 放最後，舊代碼少這格也能讀 */
 const b64e=t=>btoa(unescape(encodeURIComponent(t))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 const b64d=t=>decodeURIComponent(escape(atob(t.replace(/-/g,'+').replace(/_/g,'/'))));
 const enc=s=>'DQ5-'+b64e(JSON.stringify(CODE_KEYS.map(k=>typeof s[k]==='boolean'?(s[k]?1:0):(CKEYS.includes(k)?(s[k]?s[k].slice(1):0):s[k]))));

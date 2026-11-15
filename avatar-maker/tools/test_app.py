@@ -93,7 +93,7 @@ async def main():
         check(d[0] <= d[1], f'不會左右捲動 {d}')
         check(not errs, '沒有 console 錯誤' + (f'：{errs[:5]}' if errs else ''))
         print('【離線版】')
-        off = sorted(glob.glob(str(HERE / '紙娃娃角色產生器_離線版_v*.html')))[-1]
+        off = max(glob.glob(str(HERE / '紙娃娃角色產生器_離線版_v*.html')), key=os.path.getmtime)   # 最新做的那份（v0.6.1 照字母排會排在 v0.6 前面）
         pg2 = await b.new_page(viewport={'width': 1366, 'height': 657})
         e2 = []
         pg2.on('pageerror', lambda e: e2.append(str(e)))
