@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- 紙娃娃畫風選秀 v1.0 2026-11-15 · Cona 老師的資訊教室
+     十種畫風樣張由 Codex 生成（交接站 AVA-02 R1）；老師挑中後才做成紙娃娃部件。 -->
+<title>紙娃娃畫風選秀</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Huninn&family=Noto+Sans+TC:wght@400;700&display=swap">
+<style>
+:root{--bg:#f3f0fa;--paper:#fff;--ink:#2a2440;--muted:#6c6685;--line:#d9d3ea;--accent:#6b4fd8;--accent-soft:#e8e2fb;--sun:#ffc531;
+  --f-d:"Huninn","Noto Sans TC",system-ui,sans-serif;--f-b:"Noto Sans TC",system-ui,"Microsoft JhengHei",sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17132a;--paper:#221c3a;--ink:#ece8fb;--muted:#a9a2c6;--line:#3a3260;--accent:#a58cff;--accent-soft:#30275a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#17132a;--paper:#221c3a;--ink:#ece8fb;--muted:#a9a2c6;--line:#3a3260;--accent:#a58cff;--accent-soft:#30275a;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-b);font-size:16px;line-height:1.6}
+.wrap{max-width:1400px;margin:0 auto;padding:16px 16px 40px}
+h1{font-family:var(--f-d);font-weight:400;font-size:clamp(24px,3.4vw,34px);margin:0}
+.sub{color:var(--muted);margin:2px 0 16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,400px),1fr));gap:14px}
+.card{background:var(--paper);border:3px solid var(--line);border-radius:20px;overflow:hidden;cursor:zoom-in;padding:0;text-align:left;font:inherit;color:inherit}
+.card:hover{border-color:var(--accent)}
+.card img{width:100%;aspect-ratio:3/2;object-fit:cover;display:block;background:#f7f4ee}
+.cap{display:flex;gap:10px;align-items:flex-start;padding:10px 14px 12px}
+.num{flex:none;width:40px;height:40px;border-radius:50%;background:var(--accent);color:#fff;font-family:var(--f-d);font-size:20px;display:grid;place-items:center}
+.cap h2{font-family:var(--f-d);font-weight:400;font-size:20px;margin:0}
+.cap p{margin:0;color:var(--muted);font-size:14px;line-height:1.5}
+.miss{display:grid;place-items:center;aspect-ratio:3/2;color:var(--muted);background:repeating-linear-gradient(45deg,var(--bg) 0 12px,var(--paper) 12px 24px)}
+dialog{border:0;border-radius:18px;padding:0;max-width:96vw;max-height:94vh;background:var(--paper);color:var(--ink)}
+dialog::backdrop{background:#000a}
+dialog img{display:block;max-width:96vw;max-height:84vh}
+dialog .bar{display:flex;align-items:center;gap:10px;padding:8px 14px}
+dialog .bar span{flex:1;font-weight:700}
+dialog button{font:inherit;border:2px solid var(--line);background:var(--paper);color:inherit;border-radius:999px;padding:3px 14px;cursor:pointer;font-weight:700}
+footer{color:var(--muted);font-size:13px;text-align:center;margin-top:24px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>紙娃娃畫風選秀：十種畫風，選一種</h1>
+  <p class="sub">每張都是同樣兩個小朋友（左：拿麥克風的主播，右：揮手的雙馬尾），只換畫風。點圖可以放大。選好跟 Claude 說「選 N 號」，也可以選兩種混搭。</p>
+  <div class="grid" id="grid"></div>
+  <footer>Cona 老師的資訊教室 · 紙娃娃畫風選秀 v1.0 · 2026-11-15 · 圖由 Codex 生成</footer>
+</div>
+<dialog id="dlg"><div class="bar"><span id="dlgT"></span><button type="button" id="prev">‹ 上一張</button><button type="button" id="next">下一張 ›</button><button type="button" id="close">關閉</button></div><img id="dlgI" alt=""></dialog>
+<script>
+const S=[
+ ['手繪蠟筆繪本','蠟筆、水彩筆觸和紙張質感，溫暖的兒童繪本感。'],
+ ['日式可愛','圓滾滾大頭、粉嫩配色、閃亮大眼，像日本可愛文具角色。'],
+ ['日式漫畫／動畫','電視動畫的賽璐璐上色、銳利線條、有層次的頭髮。'],
+ ['美式卡通','粗黑外框、誇張表情、鮮豔平塗、圓圓的身形。'],
+ ['美式漫畫','英雄漫畫的墨線、網點陰影、強烈明暗。'],
+ ['3D 動畫電影','立體角色、柔和打光、圓潤材質。'],
+ ['像素風','16-bit 遊戲像素畫，配色鮮豔。'],
+ ['韓系貼圖','通訊軟體貼圖的簡單線條、Q 萌表情、粉彩配色。'],
+ ['黏土動畫','像黏土或軟陶捏出來的立體角色。'],
+ ['時尚向量插畫','現代扁平向量、幾何造型、時髦配色。']];
+const g=document.getElementById('grid'),dlg=document.getElementById('dlg');let cur=0;
+S.forEach(([n,d],i)=>{const k=String(i+1).padStart(2,'0');const b=document.createElement('button');b.type='button';b.className='card';
+  b.innerHTML=`<img src="styles/style_${k}.webp" alt="${i+1} 號：${n}" loading="lazy"><div class="cap"><div class="num">${i+1}</div><div><h2></h2><p></p></div></div>`;
+  b.querySelector('h2').textContent=n;b.querySelector('p').textContent=d;
+  b.querySelector('img').onerror=e=>{const m=document.createElement('div');m.className='miss';m.textContent='這張還在畫';e.target.replaceWith(m);};
+  b.onclick=()=>show(i);g.append(b);});
+function show(i){cur=(i+S.length)%S.length;const k=String(cur+1).padStart(2,'0');document.getElementById('dlgI').src=`styles/style_${k}.webp`;
+  document.getElementById('dlgT').textContent=`${cur+1} 號　${S[cur][0]}`;if(!dlg.open)dlg.showModal();}
+document.getElementById('prev').onclick=()=>show(cur-1);document.getElementById('next').onclick=()=>show(cur+1);
+document.getElementById('close').onclick=()=>dlg.close();
+dlg.addEventListener('click',e=>{if(e.target===dlg)dlg.close();});
+document.addEventListener('keydown',e=>{if(!dlg.open)return;if(e.key==='ArrowLeft')show(cur-1);if(e.key==='ArrowRight')show(cur+1);});
+</script>
+</body>
+</html>
