@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- 紙娃娃 AI 畫風樣品 v0.1 2026-11-15 · Cona 老師的資訊教室
+     部件圖由 Codex 生成（交接站 AVA-01 R1），tools/raster_parts.py 去背、對齊人台、減掉人台拆成圖層；網頁用 canvas 疊圖，頭髮和上衣主色用程式換色。 -->
+<title>紙娃娃 AI 畫風樣品</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Huninn&family=Noto+Sans+TC:wght@400;700&display=swap">
+<style>
+:root{--bg:#f3f0fa;--paper:#fff;--ink:#2a2440;--muted:#6c6685;--line:#d9d3ea;--accent:#6b4fd8;--accent-soft:#e8e2fb;--sun:#ffc531;--chk1:#e6e1f3;--chk2:#fff;
+  --f-d:"Huninn","Noto Sans TC",system-ui,sans-serif;--f-b:"Noto Sans TC",system-ui,"Microsoft JhengHei",sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17132a;--paper:#221c3a;--ink:#ece8fb;--muted:#a9a2c6;--line:#3a3260;--accent:#a58cff;--accent-soft:#30275a;--chk1:#2c2650;--chk2:#221c3a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#17132a;--paper:#221c3a;--ink:#ece8fb;--muted:#a9a2c6;--line:#3a3260;--accent:#a58cff;--accent-soft:#30275a;--chk1:#2c2650;--chk2:#221c3a;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-b);font-size:15px;line-height:1.5}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.app{height:100vh;height:100dvh;display:grid;grid-template-rows:auto minmax(0,1fr);gap:8px;padding:8px 12px 10px}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px}
+h1{font-family:var(--f-d);font-weight:400;font-size:22px;margin:0}
+h1 small{font-family:var(--f-b);font-size:12px;color:var(--muted);margin-left:6px}
+.badge{background:#fff3c4;color:#6b4e00;border-radius:999px;padding:1px 10px;font-size:13px;font-weight:700}
+.sp{flex:1}
+a.lnk{color:var(--accent);font-weight:700;text-decoration:none;font-size:14px}
+.seg{display:inline-flex;border:2px solid var(--line);border-radius:999px;overflow:hidden;background:var(--paper)}
+.seg button{border:0;background:none;padding:3px 14px;font-weight:700;font-size:14px}
+.seg button[aria-pressed="true"]{background:var(--accent);color:#fff}
+.main{display:grid;grid-template-columns:minmax(300px,420px) minmax(0,1fr);gap:10px;min-height:0}
+.card{background:var(--paper);border:2px solid var(--line);border-radius:16px;padding:10px;min-height:0}
+.left{display:flex;flex-direction:column;gap:8px}
+.stagebox{flex:1;min-height:0;display:grid;place-items:center}
+#stage{display:block;border-radius:12px;border:2px solid var(--line);background:repeating-conic-gradient(var(--chk1) 0 25%,var(--chk2) 0 50%) 0 0/24px 24px}
+.tools{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.btn{border:2px solid var(--line);background:var(--paper);border-radius:999px;padding:3px 12px;font-weight:700;font-size:14px}
+.btn:hover{border-color:var(--accent)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.right{display:flex;flex-direction:column;gap:8px}
+.tabs{display:flex;flex-wrap:wrap;gap:6px}
+.tab{border:2px solid var(--line);background:var(--bg);border-radius:10px;padding:2px 14px;font-weight:700}
+.tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.opts{flex:1;min-height:0;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;align-content:start;padding:2px}
+.opt{position:relative;border:3px solid var(--line);background:#fff;border-radius:14px;padding:0;aspect-ratio:1;overflow:hidden}
+.opt canvas{width:100%;height:100%;display:block}
+.opt span{position:absolute;left:0;right:0;bottom:0;background:#ffffffd9;color:#2a2440;font-size:13px;font-weight:700;text-align:center}
+.opt[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.opt[aria-pressed="true"] span{background:var(--accent);color:#fff}
+.crow{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.crow b{font-size:13px;min-width:3.2em}
+.sw{width:28px;height:28px;border-radius:50%;border:3px solid var(--line);padding:0}
+.sw[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.note{color:var(--muted);font-size:13px;margin:0}
+.loading{display:grid;place-items:center;height:100%;color:var(--muted)}
+@media (max-width:860px),(max-height:520px){.app{height:auto}.main{grid-template-columns:1fr}.stagebox{height:60vh}.opts{overflow:visible}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>紙娃娃 AI 畫風樣品<small>v0.1 · 2026-11-15</small></h1>
+    <span class="badge">樣品：部件是 Codex 生的圖</span>
+    <span class="seg" role="group" aria-label="身體"><button type="button" id="mHalf">半身</button><button type="button" id="mFull" aria-pressed="true">全身</button></span>
+    <span class="sp"></span>
+    <a class="lnk" href="../">← 回到目前的紙娃娃</a>
+  </header>
+  <div class="main">
+    <section class="card left" aria-label="預覽">
+      <div class="stagebox" id="stagebox"><canvas id="stage" width="1024" height="1536"></canvas></div>
+      <div class="tools">
+        <button class="btn pri" type="button" id="bRandom">隨機搭配</button>
+        <button class="btn" type="button" id="bTalk" aria-pressed="false">說話預覽</button>
+        <button class="btn" type="button" id="bPng">下載 PNG</button>
+      </div>
+    </section>
+    <section class="card right" aria-label="選擇部件">
+      <div class="tabs" id="tabs" role="tablist"></div>
+      <div class="opts" id="opts"><div class="loading">載入圖片中…</div></div>
+      <div id="colors"></div>
+      <p class="note">樣品只有：臉 3 組、髮型 4、上衣 4、手持物 4。頭髮和上衣的顏色是程式換的，看看換色效果自不自然。</p>
+    </section>
+  </div>
+</div>
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const CATS=[
+  {id:'face',name:'臉',none:false,opts:[['A','閃亮大眼'],['B','開心大笑'],['C','酷酷貓咪嘴']]},
+  {id:'hair',name:'髮型',none:'光頭',opts:[['hair_1','清爽短髮'],['hair_2','齊瀏海長髮'],['hair_3','雙馬尾'],['hair_4','蓬鬆捲髮']]},
+  {id:'top',name:'上衣',none:false,opts:[['top_1','主播西裝'],['top_2','帽 T'],['top_3','水手服'],['top_4','運動球衣']]},
+  {id:'item',name:'手持物',none:'不要',opts:[['item_1','麥克風'],['item_2','魔法棒'],['item_3','故事書'],['item_4','珍珠奶茶']]},
+];
+const HAIRC=[null,'#2b2b33','#5a3a28','#b5651d','#e8b84a','#d9462f','#ff8fb3','#3f7fd9','#8a5fd3','#c9ccd6'];
+const TOPC=[null,'#2b2b33','#e2553b','#f28c28','#ffc531','#2f9e5b','#4dc3c9','#ff8fb3','#8a5fd3','#8d6e63'];
+const COLORS={hair:['hairC','髮色',HAIRC],top:['topC','衣服',TOPC]};
+let META,IMG={},state={face:'A',hair:'hair_1',top:'top_1',item:'',hairC:null,topC:null,mode:'full'},tab='face',talking=null,open=false,blink=false;
+
+/* ---------- 換色（HSV：把部件主要顏色的色相換掉，亮暗比例保留） ---------- */
+function rgb2hsv(r,g,b){const mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn;let h=0;if(d){if(mx===r)h=((g-b)/d)%6;else if(mx===g)h=(b-r)/d+2;else h=(r-g)/d+4;h*=60;if(h<0)h+=360;}return [h,mx?d/mx:0,mx/255];}
+function hsv2rgb(h,s,v){const c=v*s,x=c*(1-Math.abs((h/60)%2-1)),m=v-c;let r=0,g=0,b=0;
+  if(h<60)[r,g,b]=[c,x,0];else if(h<120)[r,g,b]=[x,c,0];else if(h<180)[r,g,b]=[0,c,x];else if(h<240)[r,g,b]=[0,x,c];else if(h<300)[r,g,b]=[x,0,c];else[r,g,b]=[c,0,x];
+  return [(r+m)*255,(g+m)*255,(b+m)*255];}
+const hdist=(a,b)=>{const d=Math.abs(a-b)%360;return d>180?360-d:d;};
+const recolorCache={};
+function recolor(name,hex,onlyMain){
+  const key=name+hex;if(recolorCache[key])return recolorCache[key];
+  const img=IMG[name],c=document.createElement('canvas');c.width=img.width;c.height=img.height;const x=c.getContext('2d');x.drawImage(img,0,0);
+  const d=x.getImageData(0,0,c.width,c.height),p=d.data;
+  // 找原本的主色（不算描邊、不算白色）
+  let hs=[],ss=0,vs=0,n=0;
+  for(let i=0;i<p.length;i+=16){if(p[i+3]<200)continue;const [h,s,v]=rgb2hsv(p[i],p[i+1],p[i+2]);if(v<.22||s<.18)continue;hs.push(h);ss+=s;vs+=v;n++;}
+  if(!n){recolorCache[key]=img;return img;}
+  hs.sort((a,b)=>a-b);const refH=hs[hs.length>>1],refS=ss/n,refV=vs/n;
+  const [tr,tg,tb]=[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16));const [tH,tS,tV]=rgb2hsv(tr,tg,tb);
+  for(let i=0;i<p.length;i+=4){if(!p[i+3])continue;const [h,s,v]=rgb2hsv(p[i],p[i+1],p[i+2]);
+    if(onlyMain&&(hdist(h,refH)>38||s<.2))continue;
+    if(!onlyMain&&v<.16)continue;
+    const ns=Math.min(1,s*(tS+.02)/Math.max(.05,refS)),nv=Math.min(1,v*Math.max(.12,tV)/Math.max(.05,refV));
+    const [r,g,b]=hsv2rgb(tH,tS<.08?tS:ns,nv);p[i]=r;p[i+1]=g;p[i+2]=b;}
+  x.putImageData(d,0,0);recolorCache[key]=c;return c;
+}
+
+/* ---------- 疊圖 ---------- */
+function layer(ctx,name,src){const m=META.parts[name];if(!m)return;ctx.drawImage(src||IMG[name],m.x,m.y,m.w,m.h);}
+function draw(ctx,s,pose){
+  pose=pose||{};
+  ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
+  layer(ctx,'base');
+  if(s.top)layer(ctx,s.top,s.topC?recolor(s.top,s.topC,true):null);
+  const f='face_'+s.face+'_'+(pose.mouth==='open'?'open':pose.eyes==='blink'?'blink':'closed');layer(ctx,f);
+  if(s.hair)layer(ctx,s.hair,s.hairC?recolor(s.hair,s.hairC,false):null);
+  if(s.item){const m=META.parts[s.item],A=META.hand;const sc=A.size/Math.max(m.w,m.h);
+    ctx.drawImage(IMG[s.item],A.x-m.w*sc/2,A.y-m.h*sc*.8,m.w*sc,m.h*sc);}
+}
+function stageH(){return state.mode==='half'?1024:1536;}
+function render(){
+  const c=$('stage');const H=stageH();if(c.height!==H)c.height=H;
+  const ctx=c.getContext('2d');draw(ctx,state,{mouth:open?'open':'closed',eyes:blink&&!talking?'blink':'open'});fit();
+}
+function fit(){const box=$('stagebox'),c=$('stage');const H=stageH(),w=Math.min(box.clientWidth,box.clientHeight*1024/H);c.style.width=Math.floor(w)+'px';c.style.height=Math.floor(w*H/1024)+'px';}
+
+/* ---------- 介面 ---------- */
+const VIEW={face:[312,150,400],hair:[212,40,600],top:[212,430,600],item:[350,380,560]};
+function thumb(s,cat){
+  const c=document.createElement('canvas');c.width=c.height=240;const [vx,vy,vs]=VIEW[cat];
+  const big=document.createElement('canvas');big.width=1024;big.height=1536;draw(big.getContext('2d'),s);
+  c.getContext('2d').drawImage(big,vx,vy,vs,vs,0,0,240,240);return c;
+}
+function renderTabs(){const box=$('tabs');box.innerHTML='';CATS.forEach(C=>{const b=document.createElement('button');b.type='button';b.className='tab';b.role='tab';b.textContent=C.name;
+  b.setAttribute('aria-selected',C.id===tab);b.onclick=()=>{tab=C.id;renderTabs();renderOpts();};box.append(b);});}
+function renderOpts(){
+  const C=CATS.find(x=>x.id===tab),box=$('opts');box.innerHTML='';
+  const list=(C.none?[['',C.none]]:[]).concat(C.opts);
+  list.forEach(([id,name])=>{const b=document.createElement('button');b.type='button';b.className='opt';b.setAttribute('aria-pressed',state[tab]===id);
+    b.append(thumb(Object.assign({},state,{[tab]:id}),tab));const sp=document.createElement('span');sp.textContent=name;b.append(sp);
+    b.onclick=()=>{state[tab]=id;render();renderOpts();};box.append(b);});
+  const cb=$('colors');cb.innerHTML='';const col=COLORS[tab];
+  if(col){const [key,label,list2]=col;const row=document.createElement('div');row.className='crow';const l=document.createElement('b');l.textContent=label;row.append(l);
+    list2.forEach(hex=>{const b=document.createElement('button');b.type='button';b.className='sw';b.title=hex||'原色';
+      b.style.background=hex||'conic-gradient(#5a3a28 0 25%,#3d6fd1 0 50%,#5a3a28 0 75%,#3d6fd1 0)';b.setAttribute('aria-label',hex?label+' '+hex:'原本的顏色');
+      b.setAttribute('aria-pressed',state[key]===hex);b.onclick=()=>{state[key]=hex;render();renderOpts();};row.append(b);});cb.append(row);}
+}
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+$('bRandom').onclick=()=>{state.face=pick(CATS[0].opts)[0];state.hair=pick(CATS[1].opts)[0];state.top=pick(CATS[2].opts)[0];state.item=Math.random()<.5?'':pick(CATS[3].opts)[0];
+  state.hairC=pick(HAIRC);state.topC=pick(TOPC);render();renderOpts();};
+$('bTalk').onclick=()=>{if(talking){clearInterval(talking);talking=null;open=false;}else talking=setInterval(()=>{open=!open;render();},200);
+  $('bTalk').setAttribute('aria-pressed',!!talking);$('bTalk').textContent=talking?'停止說話':'說話預覽';render();};
+setInterval(()=>{if(talking||document.hidden||!META)return;blink=true;render();setTimeout(()=>{blink=false;render();},160);},4000);
+$('mHalf').onclick=()=>{state.mode='half';$('mHalf').setAttribute('aria-pressed',true);$('mFull').setAttribute('aria-pressed',false);render();};
+$('mFull').onclick=()=>{state.mode='full';$('mFull').setAttribute('aria-pressed',true);$('mHalf').setAttribute('aria-pressed',false);render();};
+$('bPng').onclick=()=>{$('stage').toBlob(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='AI樣品角色.png';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),3000);});};
+window.addEventListener('resize',fit);
+
+/* ---------- 載入 ---------- */
+(async()=>{
+  META=await (await fetch('parts/parts.json',{cache:'no-cache'})).json();
+  await Promise.all(Object.keys(META.parts).map(n=>new Promise((res,rej)=>{const i=new Image();i.onload=()=>{IMG[n]=i;res();};i.onerror=rej;i.src='parts/'+n+'.webp';})));
+  renderTabs();renderOpts();render();
+  window.__proto={state,render,draw,META};
+})();
+})();
+</script>
+</body>
+</html>
