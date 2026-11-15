@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""點陣部件處理 v1.1 2026-11-15（對位會和「不移動」比較取好的；細線部件不被當雜點）：把 Codex 生的「人台＋某部件」圖，去背、對齊人台、減掉人台，拆出單一部件圖層。
+"""點陣部件處理 v1.2 2026-11-16（鞋子門檻降到 12，白襪不會被當成淺膚色；對位會和「不移動」比較取好的；細線部件不被當雜點）：把 Codex 生的「人台＋某部件」圖，去背、對齊人台、減掉人台，拆出單一部件圖層。
 用法：python tools/raster_parts.py <Codex 圖資料夾> <輸出資料夾> [--debug <除錯圖資料夾>]
 輸入（1024×1536、純綠底）：base.png、hair_N.png、top_N.png、face_X_closed|open|blink.png；items.png（1024×1024 四格）
 輸出：base.webp＋每個部件裁切後的 webp，以及 parts.json（每張的位置 x, y, w, h）
@@ -203,7 +203,7 @@ def main():
         elif n.startswith('bottom_'):
             plan.append((f, n, (yy < frac(.45)) | feet, legs & ~feet | (legs & (yy < frac(.90))), 22))
         elif n.startswith('shoes_'):
-            plan.append((f, n, yy < frac(.70), yy > frac(.72), 22))
+            plan.append((f, n, yy < frac(.70), yy > frac(.72), 12))   # 白襪和淺膚色差不到 22（kawaii 足球襪會不見）
         elif n.startswith('hat_'):
             plan.append((f, n, yy > R['neck'] + 40, headz, 22))
         elif n.startswith('glasses_'):
