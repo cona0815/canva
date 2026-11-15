@@ -38,7 +38,7 @@ def main():
         tmp = tempfile.mkdtemp()
         shutil.copy(os.path.join(case, 'art', 'R1', f'base_{st}.png'), os.path.join(tmp, 'base.png'))
         # 只收已驗收的輪次（環境變數 ROUNDS 可指定，例如 ROUNDS=R2,R3,R3b；避免把 Codex 還在畫的半成品包進去）
-        for r in os.environ.get('ROUNDS', 'R2,R3,R3b,R4,R5').split(','):
+        for r in os.environ.get('ROUNDS', 'R2,R3,R3b,R4,R5,R6').split(','):
             d = os.path.join(case, 'art', r, st)
             if os.path.isdir(d):
                 for f in os.listdir(d):
