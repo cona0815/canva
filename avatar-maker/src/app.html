@@ -62,6 +62,7 @@ h1 small{font-family:var(--f-b);font-size:12px;color:var(--muted);margin-left:6p
 .ohead .cnt{color:var(--muted);font-size:13px}
 .note{background:#fff6d6;color:#6b4e00;border-radius:10px;padding:3px 10px;font-size:13px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .opts{flex:1;min-height:0;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;align-content:start;padding:2px}
+.opts.dense{grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:6px}   /* 款式超過 24 款（上衣）時格子縮小，教室螢幕不用捲動 */
 .opt{position:relative;border:3px solid var(--line);background:var(--tile);border-radius:14px;padding:0;aspect-ratio:1;overflow:hidden}
 .opt canvas{width:100%;height:100%;display:block}
 .opt span{position:absolute;left:0;right:0;bottom:0;background:#ffffffd9;color:#2a2440;font-size:12px;font-weight:700;line-height:1.4;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -291,8 +292,9 @@ function draw(ctx,s,pose,mode,withBg){
 }
 /* 會蓋住頭頂的帽子（名稱是「…帽」）：做一張「頭髮擦除區」＝帽子上緣以上＋緊貼帽子兩側、帽緣高度以上的一小條 */
 const HC=document.createElement('canvas'),CUT={};
-function hatCut(o){
-  const k=style+'/'+o.id;if(k in CUT)return CUT[k];
+const NO_STRIP=['高雙馬尾＋髮圈','雙馬尾'];   /* 兩側綁馬尾：只擦帽子圓頂那段，帽緣兩側留著，馬尾像從帽子底下鑽出來（整欄擦會切出缺口） */
+function hatCut(o,strip=true){
+  const k=style+'/'+o.id+(strip?'':'/ns');if(k in CUT)return CUT[k];
   if(!/帽$/.test(o.name||''))return CUT[k]=null;
   const w=Math.round(o.w),h=Math.round(o.h),t=document.createElement('canvas');t.width=w;t.height=h;
   const x=t.getContext('2d');x.drawImage(IMGS[style][o.id],0,0,w,h);const a=x.getImageData(0,0,w,h).data;
@@ -305,13 +307,13 @@ function hatCut(o){
   const W=PACK.canvas[0],c=document.createElement('canvas');c.width=W;c.height=Math.ceil(o.y+h);
   const g=c.getContext('2d');g.fillStyle='#000';
   const m=Math.round((R-L)*.07);   /* 兩側只擦貼著帽子的一小條（雙馬尾等從旁邊垂下來的頭髮保留）；帽子那一側翹高（斜戴的貝雷帽）就不擦，頭髮本來就會露出來 */
-  if(yl0>h*.7)g.fillRect(o.x+L-m,0,m,o.y+yl);if(yr0>h*.7)g.fillRect(o.x+R+1,0,m,o.y+yr);
-  for(let i=L;i<=R;i++)if(top[i]>=0)g.fillRect(o.x+i,0,1,o.y+top[i]+3);
+  if(strip&&yl0>h*.7)g.fillRect(o.x+L-m,0,m,o.y+yl);if(strip&&yr0>h*.7)g.fillRect(o.x+R+1,0,m,o.y+yr);
+  for(let i=L;i<=R;i++)if(top[i]>=0&&(strip||top[i]<h*.5))g.fillRect(o.x+i,0,1,o.y+top[i]+3);
   c.brim=o.y+Math.max(yl,yr);return CUT[k]=c;
 }
 /* 擦完後，帽緣以上、和頭髮主體不相連的碎塊（例如丸子頭被切剩的邊）也一起擦掉 */
 function hairCut(m,name,hat){
-  const base=hatCut(hat);if(!base)return null;const k=style+'/'+name+'/'+hat.id;if(k in CUT)return CUT[k];
+  const base=hatCut(hat,!NO_STRIP.includes(m.name));if(!base)return null;const k=style+'/'+name+'/'+hat.id;if(k in CUT)return CUT[k];
   const x0=Math.floor(m.x),y0=Math.floor(m.y),w=Math.ceil(m.w),h=Math.ceil(m.h),t=document.createElement('canvas');t.width=w;t.height=h;
   const x=t.getContext('2d');x.drawImage(IMGS[style][name],m.x-x0,m.y-y0,m.w,m.h);const A=x.getImageData(0,0,w,h).data;
   x.clearRect(0,0,w,h);x.drawImage(base,-x0,-y0);const C=x.getImageData(0,0,w,h).data;
@@ -399,6 +401,7 @@ function renderOpts(){
     const b=document.createElement('button');b.type='button';b.className='btn';b.textContent='切換到全身';b.onclick=()=>commit({mode:'full'});note.append(t,b);}
   else note.hidden=true;
   const list=(C.none?[{id:'',name:C.none}]:[]).concat(OP);
+  box.classList.toggle('dense',list.length>24);
   const hide=tab==='top'?{hand:''}:tab==='bottom'?{hand:'',pet:''}:tab==='hair'?{hat:''}:{};
   list.forEach(o=>{const b=document.createElement('button');b.type='button';b.className='opt';b.setAttribute('aria-pressed',state[tab]===o.id);b.title=o.name;
     b.append(thumb(Object.assign({},state,hide,{[tab]:o.id,flip:false}),tab));const sp=document.createElement('span');sp.textContent=o.name;b.append(sp);
