@@ -1,27 +1,28 @@
 #!/usr/bin/env python3
-"""點陣風格包產生程式 v1.0 2026-11-15
+"""點陣風格包產生程式 v1.1 2026-11-15（加 VTuber 部件）
 把交接站 AVA-03 裡 Codex 畫的圖（人台＋部件，綠底）拆成圖層，做成網頁用的風格包 packs/<畫風>/。
 用法：python tools/make_raster_pack.py <AVA-03 案件資料夾> [畫風 ...]
-  會讀：art/R1/base_<畫風>.png、art/R2/<畫風>/*.png、art/R3/<畫風>/*.png（有就讀）
+  會讀：art/R1/base_<畫風>.png、art/R2/<畫風>/*.png、art/R3、R3b、R4/<畫風>/*.png（有就讀）
   會寫：packs/<畫風>/parts.json＋每個圖層的 .webp，packs/index.json
 """
 import json, os, sys, shutil, subprocess, tempfile
 
 STYLES = {'kawaii': '日式可愛', 'anime': '日式漫畫', 'sticker': '韓系貼圖'}
 FACES = ['微笑', '開心大笑', '酷酷', '害羞', '驚訝', '生氣', '眨眼得意', '愛心眼']
-HAIR = ['清爽短髮', '刺蝟頭', '中分', '旁分瀏海', '齊瀏海長直髮', '雙馬尾', '高馬尾', '丸子頭', '鮑伯頭', '單邊辮子', '蓬鬆捲髮', '層次狼尾']
+HAIR = ['清爽短髮', '刺蝟頭', '中分', '旁分瀏海', '齊瀏海長直髮', '雙馬尾', '高馬尾', '丸子頭', '鮑伯頭', '單邊辮子', '蓬鬆捲髮', '層次狼尾', '超長直髮＋呆毛', '雙丸子長辮']
 TOPS = ['主播西裝', '帽 T', '水手服', '運動球衣', '制服背心', '條紋 T 恤', '毛衣', '偶像舞台裝', '醫師袍', '廚師服', '太空衣', '魔法袍',
-        '主播套裝', '襯衫領結', '潮 T', '時尚短外套', '針織背心', '亮片舞台外套', '足球衣', '籃球衣']
+        '主播套裝', '襯衫領結', '潮 T', '時尚短外套', '針織背心', '亮片舞台外套', '足球衣', '籃球衣',
+        '和風羽織', '科技偶像外套', '小耳朵斗篷']
 BOTTOMS = ['西裝褲', '牛仔褲', '百褶裙', '長褲', '舞台短裙', '皮褲', '運動短褲', '籃球褲']
 SHOES = ['皮鞋', '短靴', '舞台靴', '足球鞋', '籃球鞋']
-HATS = ['主播耳麥', '頭戴耳機', '棒球帽', '貝雷帽', '漁夫帽', '頭戴麥克風', '蝴蝶結', '運動頭帶']
-GLASSES = ['圓框眼鏡', '方框眼鏡', '太陽眼鏡']
-ITEMS = ['麥克風', '新聞稿', '自拍手機', '遊戲手把', '攝影機', '相機', '珍珠奶茶', '螢光棒', '足球', '籃球', '獎盃']
-PETS = ['小貓', '小狗', '小兔', '小機器人']
+HATS = ['主播耳麥', '頭戴耳機', '棒球帽', '貝雷帽', '漁夫帽', '頭戴麥克風', '蝴蝶結', '運動頭帶', '貓耳髮箍', '狐狸耳髮箍', '兔耳髮箍', '天使光環', '小惡魔角']
+GLASSES = ['圓框眼鏡', '方框眼鏡', '太陽眼鏡', '臉頰星星貼紙', '科技單眼鏡片']
+ITEMS = ['麥克風', '新聞稿', '自拍手機', '遊戲手把', '攝影機', '相機', '珍珠奶茶', '螢光棒', '足球', '籃球', '獎盃', '直播麥克風', '星星魔法棒']
+PETS = ['小貓', '小狗', '小兔', '小機器人', '飄浮小精靈', '迷你小龍']
 # 分類：(id, 名稱, 檔名前綴, 款式名, 可以不要時的名字, 換色方式)
 CATS = [('face', '表情', 'face', FACES, None, None), ('hair', '髮型', 'hair', HAIR, '光頭', 'all'), ('top', '上衣', 'top', TOPS, None, 'main'),
         ('bottom', '下身', 'bottom', BOTTOMS, '灰短褲', 'main'), ('shoes', '鞋子', 'shoes', SHOES, '白球鞋', 'main'), ('hat', '帽子頭飾', 'hat', HATS, '不要', None),
-        ('glasses', '眼鏡', 'glasses', GLASSES, '不要', None), ('hand', '手持物', 'hand', ITEMS, '不要', None), ('pet', '夥伴', 'pet', PETS, '不要', None)]
+        ('glasses', '眼鏡臉飾', 'glasses', GLASSES, '不要', None), ('hand', '手持物', 'hand', ITEMS, '不要', None), ('pet', '夥伴', 'pet', PETS, '不要', None)]
 
 
 def main():
@@ -33,7 +34,8 @@ def main():
     for st in styles:
         tmp = tempfile.mkdtemp()
         shutil.copy(os.path.join(case, 'art', 'R1', f'base_{st}.png'), os.path.join(tmp, 'base.png'))
-        for r in ('R2', 'R3', 'R4'):
+        # 只收已驗收的輪次（環境變數 ROUNDS 可指定，例如 ROUNDS=R2,R3,R3b；避免把 Codex 還在畫的半成品包進去）
+        for r in os.environ.get('ROUNDS', 'R2,R3,R3b,R4').split(','):
             d = os.path.join(case, 'art', r, st)
             if os.path.isdir(d):
                 for f in os.listdir(d):

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""點陣部件處理 v1.0 2026-11-15：把 Codex 生的「人台＋某部件」圖，去背、對齊人台、減掉人台，拆出單一部件圖層。
+"""點陣部件處理 v1.1 2026-11-15（對位會和「不移動」比較取好的；細線部件不被當雜點）：把 Codex 生的「人台＋某部件」圖，去背、對齊人台、減掉人台，拆出單一部件圖層。
 用法：python tools/raster_parts.py <Codex 圖資料夾> <輸出資料夾> [--debug <除錯圖資料夾>]
 輸入（1024×1536、純綠底）：base.png、hair_N.png、top_N.png、face_X_closed|open|blink.png；items.png（1024×1024 四格）
 輸出：base.webp＋每個部件裁切後的 webp，以及 parts.json（每張的位置 x, y, w, h）
@@ -55,6 +55,22 @@ def align(img, base, mask_region):
     return warp
 
 
+def align_err(img, base, M, mask_region):
+    """對位後，在不該變的區域裡兩張圖的平均差（越小越好）"""
+    w = warp_rgba(img, M, base.shape)
+    m = mask_region & (base[..., 3] > 128) & (w[..., 3] > 128)
+    if m.sum() < 1000:
+        return 1e9
+    return float(np.abs(w[..., :3][m] - base[..., :3][m]).mean())
+
+
+def best_align(img, base, mask_region):
+    """ECC 有時會被大面積的新部件（例如長褲蓋住小腿）帶歪：和「不移動」比，取差比較小的"""
+    M = align(img, base, mask_region)
+    I = np.eye(2, 3, dtype=np.float32)
+    return M if align_err(img, base, M, mask_region) < align_err(img, base, I, mask_region) else I
+
+
 def warp_rgba(img, M, shape):
     return cv2.warpAffine(img, M, (shape[1], shape[0]), flags=cv2.INTER_LINEAR | cv2.WARP_INVERSE_MAP, borderMode=cv2.BORDER_CONSTANT, borderValue=(0, 0, 0, 0))
 
@@ -63,13 +79,19 @@ def lab(rgb):
     return cv2.cvtColor((rgb / 255).astype(np.float32), cv2.COLOR_RGB2LAB)
 
 
-def extract(img, base, region, thresh=22, min_area=600, grow=3):
+def extract(img, base, region, thresh=22, min_area=600, grow=3, open_k=5, fill=True, same_hue=False):
     """img、base 都已對齊的 rgba；region＝部件可能出現的範圍（bool）"""
     ia, ba = img[..., 3] / 255, base[..., 3] / 255
     d = np.linalg.norm(lab(img[..., :3]) - lab(base[..., :3]), axis=2)
     new = (ia > .5) & ((ba < .5) | (d > thresh))
     new &= region
-    k = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+    if same_hue:
+        # 帽簷在額頭投的陰影：和人台同色相、只是變暗的皮膚，不算部件（否則配上頭髮會蓋住瀏海）
+        hi = cv2.cvtColor(np.clip(img[..., :3], 0, 255).astype(np.uint8), cv2.COLOR_RGB2HSV).astype(np.float32)
+        hb = cv2.cvtColor(np.clip(base[..., :3], 0, 255).astype(np.uint8), cv2.COLOR_RGB2HSV).astype(np.float32)
+        dh = np.abs(hi[..., 0] - hb[..., 0]); dh = np.minimum(dh, 180 - dh)
+        new &= ~((ba > .5) & (dh < 7) & (hi[..., 1] > 50) & (hb[..., 1] > 30))
+    k = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (open_k, open_k))
     m = cv2.morphologyEx(new.astype(np.uint8), cv2.MORPH_OPEN, k)
     m = cv2.morphologyEx(m, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 9)))
     n, labl, st, _ = cv2.connectedComponentsWithStats(m, 8)
@@ -77,10 +99,13 @@ def extract(img, base, region, thresh=22, min_area=600, grow=3):
     keep[1:] = st[1:, cv2.CC_STAT_AREA] >= min_area
     m = keep[labl].astype(np.uint8)
     # 把洞補起來（部件內部和人台同色的地方，例如白襯衫）
-    cnts, _ = cv2.findContours(m, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    filled = np.zeros_like(m)
-    cv2.drawContours(filled, cnts, -1, 1, -1)
-    m = filled & (ia > .05)
+    # 帽子、眼鏡不補洞：鏡片裡、帽簷下是人台的皮膚，補進來會蓋住表情和瀏海
+    if fill:
+        cnts, _ = cv2.findContours(m, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        filled = np.zeros_like(m)
+        cv2.drawContours(filled, cnts, -1, 1, -1)
+        m = filled
+    m = m & (ia > .05)
     if grow:
         m = cv2.dilate(m.astype(np.uint8), cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (grow * 2 + 1,) * 2)) & (ia > .05)
     soft = cv2.GaussianBlur(m.astype(np.float32), (5, 5), 0)
@@ -161,10 +186,10 @@ def main():
     body_still = R['still'] | (np.mgrid[0:base.shape[0], 0:base.shape[1]][0] < R['neck'] - 20)   # 換衣服時：頭和腳不變
     yy, xx = np.mgrid[0:base.shape[0], 0:base.shape[1]]
     frac = lambda f: R['top'] + Hh * f
-    legs = (yy > frac(.55))
+    legs = (yy > frac(.46))   # 從褲頭開始（v1.0 用 .55 會少掉腰頭、露出灰短褲）
     feet = (yy > frac(.86))
     headz = (yy < R['neck'] + 30)
-    handz = (yy > frac(.40)) & (yy < frac(.92)) & (xx > R['cx'] + 60)
+    handz = (yy > frac(.28)) & (yy < frac(.92)) & (xx > R['cx'] + 60)   # 魔法棒、螢光棒比較長，往上放寬
     face_big = cv2.dilate(R['face'].astype(np.uint8), cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (81, 81))).astype(bool)
     plan = []
     for f in sorted(os.listdir(a.src)):
@@ -182,16 +207,17 @@ def main():
         elif n.startswith('hat_'):
             plan.append((f, n, yy > R['neck'] + 40, headz, 22))
         elif n.startswith('glasses_'):
-            plan.append((f, n, ~face_big, face_big, 20))
+            plan.append((f, n, ~face_big, face_big & (yy < R['top'] + (R['neck'] - R['top']) * .80), 20))
         elif n.startswith('hand_'):
             plan.append((f, n, ~handz, handz, 22))
         elif n.startswith('pet_'):
             plan.append((f, n, yy < frac(.5), (yy > frac(.45)) & ((xx < R['cx'] - 200) | (xx > R['cx'] + 200)), 22))
     for f, n, still, region, th in plan:
         img = chroma(load(os.path.join(a.src, f)))
-        M = align(img, base, still)
+        M = best_align(img, base, still)
         al = warp_rgba(img, M, base.shape)
-        part = extract(al, base, region, th, min_area=300 if n.startswith('face_') else 1500)
+        thin = n.startswith(('glasses_', 'hat_'))   # 細鏡框、耳麥線：開運算用小核、小塊也留
+        part = extract(al, base, region, th, min_area=300 if n.startswith('face_') else 150 if thin else 1500, open_k=3 if thin else 5, fill=not thin, same_hue=n.startswith('hat_'))
         meta['parts'][n] = bbox_save(part, os.path.join(a.out, n + '.webp'))
         meta['parts'][n]['warp'] = [round(float(v), 4) for v in M.ravel()]
         er = None
