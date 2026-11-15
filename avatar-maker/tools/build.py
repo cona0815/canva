@@ -1,40 +1,40 @@
 #!/usr/bin/env python3
-"""紙娃娃角色產生器 建置程式 v1.0 2026-11-15
+"""紙娃娃角色產生器 建置程式 v2.0 2026-11-15
 用法（在 avatar-maker 資料夾執行）：python tools/build.py
-1. 重新產生風格包：flat（make_flat.py）、chibi（make_chibi.py）、sketch（make_sketch.py，Codex 寫的）
-2. 由 src/app.html 產生：
-   - index.html                                   上線版（內建扁平圓潤風，其他畫風從 packs/ 載入）
-   - 紙娃娃角色產生器_v<版本>_<日期>.html          版本存檔（和 index.html 一樣）
-   - 紙娃娃角色產生器_離線版_v<版本>_<日期>.html   離線版（所有畫風都包進去，直接雙擊就能開）
+由 src/app.html 產生：
+  - index.html                                   上線版（從 packs/<畫風>/ 載入 AI 圖層）
+  - 紙娃娃角色產生器_v<版本>_<日期>.html          版本存檔（和 index.html 一樣）
+  - 紙娃娃角色產生器_離線版_v<版本>_<日期>.html   離線版（三種畫風的圖都包進去，直接雙擊就能開）
+風格包由 tools/make_raster_pack.py 產生（Codex 畫的圖 → 拆圖層）。
+v0.4 以前的 SVG 版：src/app_svg_v0.4.html，產生程式 make_flat.py／make_chibi.py／make_sketch.py 保留不再使用。
 版本號和日期改下面兩行。
 """
-import json, os, subprocess, sys
+import base64, json, os
 
-VERSION = '0.4'
+VERSION = '0.5'
 DATE = '2026-11-15'
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.chdir(ROOT)
-py = sys.executable
-for cmd in (['tools/make_flat.py', 'packs/flat/pack.json'], ['tools/make_chibi.py', 'packs/chibi/pack.json'], ['tools/make_sketch.py', 'packs/sketch/pack.json']):
-    subprocess.run([py] + cmd, check=True, env=dict(os.environ, PYTHONIOENCODING='utf-8'))
-
 src = open('src/app.html', encoding='utf-8').read().replace('@@VERSION@@', VERSION).replace('@@DATE@@', DATE)
-dump = lambda o: json.dumps(o, ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
-flat = json.load(open('packs/flat/pack.json', encoding='utf-8'))
 styles = json.load(open('packs/index.json', encoding='utf-8'))
 
 
-def make(embed_all):
-    s = src.replace('/*@@FLAT@@*/null', dump(flat))
-    if embed_all:
-        packs = {x['id']: json.load(open(f'packs/{x["id"]}/pack.json', encoding='utf-8')) for x in styles if x['id'] != 'flat'}
-        s = s.replace('/*@@EMBED@@*/{}', dump(packs)).replace('/*@@EMBED_LIST@@*/[]', dump([x for x in styles if x['id'] != 'flat']))
-        s = s.replace('href="guide.html"', 'href="https://cona0815.github.io/canva/avatar-maker/guide.html"')
-    return s
+def embed():
+    out = {}
+    for st in styles:
+        d = f'packs/{st["id"]}'
+        pack = json.load(open(f'{d}/parts.json', encoding='utf-8'))
+        img = {}
+        for f in os.listdir(d):
+            if f.endswith('.webp'):
+                img[f[:-5]] = 'data:image/webp;base64,' + base64.b64encode(open(f'{d}/{f}', 'rb').read()).decode()
+        out[st['id']] = {'pack': pack, 'img': img}
+    return json.dumps(out, ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
 
 
-online, offline = make(False), make(True)
+online = src
+offline = src.replace('/*@@EMBED@@*/null', embed()).replace('href="guide.html"', 'href="https://cona0815.github.io/canva/avatar-maker/guide.html"')
 outs = {'index.html': online, f'紙娃娃角色產生器_v{VERSION}_{DATE}.html': online, f'紙娃娃角色產生器_離線版_v{VERSION}_{DATE}.html': offline}
 for name, text in outs.items():
     open(name, 'w', encoding='utf-8', newline='\n').write(text)

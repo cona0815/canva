@@ -89,6 +89,23 @@ def extract(img, base, region, thresh=22, min_area=600, grow=3):
     return out
 
 
+def erase_mask(img, base, region, min_area=250):
+    """人台有、新圖沒有的地方（例如外套比白 T 恤窄，露出來的 T 恤）→ 網頁畫這個部件前要先把人台這些地方擦掉"""
+    e = (img[..., 3] < 90) & (base[..., 3] > 150) & region
+    e = cv2.morphologyEx(e.astype(np.uint8), cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5)))
+    n, labl, st, _ = cv2.connectedComponentsWithStats(e, 8)
+    keep = np.zeros(n, bool)
+    keep[1:] = st[1:, cv2.CC_STAT_AREA] >= min_area
+    e = keep[labl].astype(np.uint8)
+    if not e.any():
+        return None
+    e = cv2.dilate(e, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5)))
+    out = np.zeros(img.shape, np.float32)
+    out[..., :3] = 255
+    out[..., 3] = cv2.GaussianBlur(e.astype(np.float32), (3, 3), 0) * 255
+    return out
+
+
 def bbox_save(rgba, path, pad=4):
     a = rgba[..., 3]
     ys, xs = np.where(a > 3)
@@ -142,15 +159,34 @@ def main():
     meta['hand'] = {'x': int(xs.mean()), 'y': int(ys.mean()), 'size': int(Hh * .22)} if len(xs) else {'x': R['cx'] + 220, 'y': int(R['top'] + Hh * .65), 'size': int(Hh * .22)}
     head_still = ~R['hair']   # 換頭髮時：身體不變
     body_still = R['still'] | (np.mgrid[0:base.shape[0], 0:base.shape[1]][0] < R['neck'] - 20)   # 換衣服時：頭和腳不變
+    yy, xx = np.mgrid[0:base.shape[0], 0:base.shape[1]]
+    frac = lambda f: R['top'] + Hh * f
+    legs = (yy > frac(.55))
+    feet = (yy > frac(.86))
+    headz = (yy < R['neck'] + 30)
+    handz = (yy > frac(.40)) & (yy < frac(.92)) & (xx > R['cx'] + 60)
+    face_big = cv2.dilate(R['face'].astype(np.uint8), cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (81, 81))).astype(bool)
     plan = []
     for f in sorted(os.listdir(a.src)):
         n = f[:-4]
         if n.startswith('hair_'):
             plan.append((f, n, head_still, R['hair'] | R['body'], 22))
         elif n.startswith('top_'):
-            plan.append((f, n, body_still, R['body'], 22))
+            plan.append((f, n, body_still, R['body'], 14))
         elif n.startswith('face_'):
             plan.append((f, n, ~R['face'], R['face'], 18))
+        elif n.startswith('bottom_'):
+            plan.append((f, n, (yy < frac(.45)) | feet, legs & ~feet | (legs & (yy < frac(.90))), 22))
+        elif n.startswith('shoes_'):
+            plan.append((f, n, yy < frac(.70), yy > frac(.72), 22))
+        elif n.startswith('hat_'):
+            plan.append((f, n, yy > R['neck'] + 40, headz, 22))
+        elif n.startswith('glasses_'):
+            plan.append((f, n, ~face_big, face_big, 20))
+        elif n.startswith('hand_'):
+            plan.append((f, n, ~handz, handz, 22))
+        elif n.startswith('pet_'):
+            plan.append((f, n, yy < frac(.5), (yy > frac(.45)) & ((xx < R['cx'] - 200) | (xx > R['cx'] + 200)), 22))
     for f, n, still, region, th in plan:
         img = chroma(load(os.path.join(a.src, f)))
         M = align(img, base, still)
@@ -158,8 +194,15 @@ def main():
         part = extract(al, base, region, th, min_area=300 if n.startswith('face_') else 1500)
         meta['parts'][n] = bbox_save(part, os.path.join(a.out, n + '.webp'))
         meta['parts'][n]['warp'] = [round(float(v), 4) for v in M.ravel()]
+        er = None
+        if n.startswith(('top_', 'bottom_', 'shoes_')):
+            er = erase_mask(al, base, region)
+            if er is not None:
+                meta['parts'][n]['erase'] = bbox_save(er, os.path.join(a.out, n + '_erase.webp'))
         if a.debug:
             comp = base.copy()
+            if er is not None:
+                comp[..., 3] *= 1 - er[..., 3] / 255
             pa = part[..., 3:4] / 255
             comp[..., :3] = comp[..., :3] * (1 - pa) + part[..., :3] * pa
             comp[..., 3] = np.maximum(comp[..., 3], part[..., 3])
