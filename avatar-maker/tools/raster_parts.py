@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""點陣部件處理 v1.3 2026-11-16（帽子也做擦除遮罩；鞋子門檻降到 12，白襪不會被當成淺膚色；對位會和「不移動」比較取好的；細線部件不被當雜點）：把 Codex 生的「人台＋某部件」圖，去背、對齊人台、減掉人台，拆出單一部件圖層。
+"""點陣部件處理 v1.4 2026-11-16（頭髮補洞不補進臉；--fine-faces：手遊風表情的細閉眼線另外加回來；帽子也做擦除遮罩；鞋子門檻降到 12，白襪不會被當成淺膚色；對位會和「不移動」比較取好的；細線部件不被當雜點）：把 Codex 生的「人台＋某部件」圖，去背、對齊人台、減掉人台，拆出單一部件圖層。
 用法：python tools/raster_parts.py <Codex 圖資料夾> <輸出資料夾> [--debug <除錯圖資料夾>]
 輸入（1024×1536、純綠底）：base.png、hair_N.png、top_N.png、face_X_closed|open|blink.png；items.png（1024×1024 四格）
 輸出：base.webp＋每個部件裁切後的 webp，以及 parts.json（每張的位置 x, y, w, h）
@@ -79,7 +79,7 @@ def lab(rgb):
     return cv2.cvtColor((rgb / 255).astype(np.float32), cv2.COLOR_RGB2LAB)
 
 
-def extract(img, base, region, thresh=22, min_area=600, grow=3, open_k=5, fill=True, same_hue=False):
+def extract(img, base, region, thresh=22, min_area=600, grow=3, open_k=5, fill=True, same_hue=False, protect=None):
     """img、base 都已對齊的 rgba；region＝部件可能出現的範圍（bool）"""
     ia, ba = img[..., 3] / 255, base[..., 3] / 255
     d = np.linalg.norm(lab(img[..., :3]) - lab(base[..., :3]), axis=2)
@@ -105,12 +105,30 @@ def extract(img, base, region, thresh=22, min_area=600, grow=3, open_k=5, fill=T
         filled = np.zeros_like(m)
         cv2.drawContours(filled, cnts, -1, 1, -1)
         m = filled
+        if protect is not None:   # 補洞不可以補進臉（捲髮把整張臉圍起來時，會把空白臉當成頭髮的一部分、蓋住表情）
+            m = m & ~(protect & ~new).astype(np.uint8)
     m = m & (ia > .05)
     if grow:
         m = cv2.dilate(m.astype(np.uint8), cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (grow * 2 + 1,) * 2)) & (ia > .05)
     soft = cv2.GaussianBlur(m.astype(np.float32), (5, 5), 0)
     out = img.copy()
     out[..., 3] = img[..., 3] * np.clip(soft * 1.4, 0, 1)
+    return out
+
+
+def add_dark_lines(part, img, base, region, dl=12, min_area=30):
+    """臉裡面比人台暗很多的細線（閉眼線、眉毛、小嘴）→ 併進部件；只看暗的，避免把皮膚明暗差異當成部件"""
+    li, lb = lab(img[..., :3])[..., 0], lab(base[..., :3])[..., 0]
+    m = ((img[..., 3] > 128) & (lb - li > dl) & region).astype(np.uint8)
+    n, labl, st, _ = cv2.connectedComponentsWithStats(m, 8)
+    keep = np.zeros(n, bool)
+    keep[1:] = st[1:, cv2.CC_STAT_AREA] >= min_area
+    m = cv2.dilate(keep[labl].astype(np.uint8), cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5)))
+    soft = np.clip(cv2.GaussianBlur(m.astype(np.float32), (5, 5), 0) * 1.4, 0, 1)
+    out = part.copy()
+    a = np.maximum(part[..., 3], img[..., 3] * soft)
+    out[..., :3] = np.where((part[..., 3:4] < 1) & (a[..., None] > 0), img[..., :3], part[..., :3])
+    out[..., 3] = a
     return out
 
 
@@ -167,7 +185,7 @@ def regions(base):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('src'); ap.add_argument('out'); ap.add_argument('--debug')
+    ap.add_argument('src'); ap.add_argument('out'); ap.add_argument('--debug'); ap.add_argument('--fine-faces', action='store_true')
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
     if a.debug:
@@ -190,6 +208,7 @@ def main():
     feet = (yy > frac(.86))
     headz = (yy < R['neck'] + 30)
     handz = (yy > frac(.28)) & (yy < frac(.92)) & (xx > R['cx'] + 60)   # 魔法棒、螢光棒比較長，往上放寬
+    face_inner = cv2.erode(R['face'].astype(np.uint8), cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (61, 41))).astype(bool)   # 不碰臉的外輪廓和耳朵
     face_big = cv2.dilate(R['face'].astype(np.uint8), cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (81, 81))).astype(bool)
     plan = []
     for f in sorted(os.listdir(a.src)):
@@ -217,7 +236,9 @@ def main():
         M = best_align(img, base, still)
         al = warp_rgba(img, M, base.shape)
         thin = n.startswith(('glasses_', 'hat_'))   # 細鏡框、耳麥線：開運算用小核、小塊也留
-        part = extract(al, base, region, th, min_area=300 if n.startswith('face_') else 150 if thin else 1500, open_k=3 if thin else 5, fill=not thin, same_hue=n.startswith('hat_'))
+        part = extract(al, base, region, th, min_area=300 if n.startswith('face_') else 150 if thin else 1500, open_k=3 if thin else 5, fill=not thin, same_hue=n.startswith('hat_'), protect=face_big if n.startswith('hair_') else None)
+        if a.fine_faces and n.startswith('face_'):   # 手遊風閉眼線、眉毛很細：開運算會把它們當雜點去掉 → 另外把臉內「變深的細線」加回來
+            part = add_dark_lines(part, al, base, face_inner)
         meta['parts'][n] = bbox_save(part, os.path.join(a.out, n + '.webp'))
         meta['parts'][n]['warp'] = [round(float(v), 4) for v in M.ravel()]
         er = None

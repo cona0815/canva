@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""點陣風格包產生程式 v1.3 2026-11-16（老師說手持物、夥伴不要了：DROP 的類別不收；加 R6～R9）
+"""點陣風格包產生程式 v1.4 2026-11-16（加第四畫風 game＝R11；老師說手持物、夥伴不要了：DROP 的類別不收；加 R6～R9）
 把交接站 AVA-03 裡 Codex 畫的圖（人台＋部件，綠底）拆成圖層，做成網頁用的風格包 packs/<畫風>/。
 用法：python tools/make_raster_pack.py <AVA-03 案件資料夾> [畫風 ...]
   會讀：art/R1/base_<畫風>.png、art/R2/<畫風>/*.png、art/R3、R3b、R4/<畫風>/*.png（有就讀）
@@ -7,7 +7,8 @@
 """
 import json, os, sys, shutil, subprocess, tempfile
 
-STYLES = {'kawaii': '日式可愛', 'anime': '日式漫畫', 'sticker': '韓系貼圖'}
+STYLES = {'kawaii': '日式可愛', 'anime': '日式漫畫', 'sticker': '韓系貼圖', 'game': '手遊冒險風'}
+FINE_FACES = ('game',)   # 線條細的畫風：表情的細閉眼線要另外補回來
 FACES = ['微笑', '開心大笑', '酷酷', '害羞', '驚訝', '生氣', '眨眼得意', '愛心眼', '星星眼', '亮晶晶大眼', '調皮吐舌', '自信帥氣', '思考中', '感動淚汪汪']
 HAIR = ['清爽短髮', '刺蝟頭', '中分', '旁分瀏海', '齊瀏海長直髮', '雙馬尾', '高馬尾', '丸子頭', '鮑伯頭', '單邊辮子', '蓬鬆捲髮', '層次狼尾', '超長直髮＋呆毛', '雙丸子長辮', '韓系逗號瀏海', '偶像碎蓋', '公主切長髮', '高雙馬尾＋髮圈', '半紮側編髮', '平頭', '短翹髮', '大波浪長捲髮', '雙麻花辮', '側邊單馬尾', '微捲蓬鬆短髮', '兩側推短髮', '低雙馬尾', '蓬鬆中長髮']
 TOPS = ['主播西裝', '帽 T', '水手服', '運動球衣', '制服背心', '條紋 T 恤', '毛衣', '偶像舞台裝', '醫師袍', '廚師服', '太空衣', '魔法袍',
@@ -38,7 +39,7 @@ def main():
         tmp = tempfile.mkdtemp()
         shutil.copy(os.path.join(case, 'art', 'R1', f'base_{st}.png'), os.path.join(tmp, 'base.png'))
         # 只收已驗收的輪次（環境變數 ROUNDS 可指定，例如 ROUNDS=R2,R3,R3b；避免把 Codex 還在畫的半成品包進去）
-        for r in os.environ.get('ROUNDS', 'R2,R3,R3b,R4,R5,R6,R7,R8,R9').split(','):
+        for r in os.environ.get('ROUNDS', 'R2,R3,R3b,R4,R5,R6,R7,R8,R9,R11').split(','):
             d = os.path.join(case, 'art', r, st)
             if os.path.isdir(d):
                 for f in os.listdir(d):
@@ -47,12 +48,15 @@ def main():
         out = os.path.join(root, 'packs', st)
         if os.path.isdir(out):
             shutil.rmtree(out)
-        subprocess.run([sys.executable, os.path.join(here, 'raster_parts.py'), tmp, out], check=True, env=dict(os.environ, PYTHONIOENCODING='utf-8'))
+        subprocess.run([sys.executable, os.path.join(here, 'raster_parts.py'), tmp, out] + (['--fine-faces'] if st in FINE_FACES else []), check=True, env=dict(os.environ, PYTHONIOENCODING='utf-8'))
         meta = json.load(open(os.path.join(out, 'parts.json'), encoding='utf-8'))
         P = meta['parts']
         pack = {'format': 3, 'id': st, 'name': STYLES[st], 'version': '1.0', 'date': '2026-11-15', 'author': 'Codex 畫圖、Claude 拆圖層',
                 'canvas': meta['canvas'], 'halfH': meta['canvas'][0], 'base': P['base'], 'cats': {}}
         W, H = meta['canvas']; hs = (meta['neck'] - meta['top']) * 1.35
+        top = meta['top']; hd = meta['neck'] - top
+        if (W - top) / hd > 3.6:   # 頭身比高（手遊風約 6 頭身）：半身模式只取頭頂上方一點到約 3.1 個頭高，放大成正方形，取景才和其他畫風一樣
+            side = round(hd * 3.4); pack['halfBox'] = [round(meta['cx'] - side / 2), max(0, round(top - hd * .3)), side]
         pack['headBox'] = [round((meta['cx'] - hs / 2) / W, 4), round(max(0, meta['top'] - hs * .12) / H, 4), round(hs / W, 4)]
         for cid, cname, pre, names, none, rc in CATS:
             opts = []

@@ -274,7 +274,8 @@ function draw(ctx,s,pose,mode,withBg){
   if(withBg)drawBg(ctx,s.bg,ctx.canvas.width,ctx.canvas.height);
   /* 角色先畫在另一張畫布：人台畫完後，用部件的「擦除遮罩」把被新衣服蓋住、但露在外面的地方擦掉 */
   const k=ctx.canvas.width/W;OFF.width=ctx.canvas.width;OFF.height=ctx.canvas.height;const o=OFF.getContext('2d');
-  o.save();o.scale(k,k);if(s.flip){o.translate(W,0);o.scale(-1,1);}
+  o.save();o.scale(k,k);if(mode!=='full'&&PACK.halfBox){const [hx,hy,hw]=PACK.halfBox;o.scale(W/hw,W/hw);o.translate(-hx,-hy);}   /* 頭身比高的畫風：半身放大取景 */
+  if(s.flip){o.translate(W,0);o.scale(-1,1);}
   const rcmode={base:s.skinC&&['skin',s.skinC],hair:s.hairC&&['all',s.hairC],top:s.topC&&['main',s.topC],bottom:s.pantsC&&['main',s.pantsC],shoes:s.shoeC&&['main',s.shoeC]};
   const img=(c,name)=>rcmode[c]?recolor(name,rcmode[c][1],rcmode[c][0]):IMGS[style][name];
   o.drawImage(img('base','base'),PACK.base.x,PACK.base.y,PACK.base.w,PACK.base.h);
