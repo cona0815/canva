@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<!-- 紙娃娃角色產生器 v0.9 2026-11-16 · Cona 老師的資訊教室
+<!-- 紙娃娃角色產生器 v1.0 2026-11-16 · Cona 老師的資訊教室
      這個檔案是 tools/build.py 由 src/app.html 產生的，要改請改 src/app.html 再執行：python tools/build.py
      v0.5：改用 AI 畫的圖（Codex 生圖、tools/make_raster_pack.py 拆圖層），畫風只留老師選的三種：日式可愛、日式漫畫、韓系貼圖；
            canvas 疊圖，膚色、髮色、衣服、褲子、鞋子用程式換色；舊的 SVG 版保留在 紙娃娃角色產生器_v0.4_2026-11-15.html（原始檔 src/app_svg_v0.4.html）
@@ -108,7 +108,7 @@ h1 small{font-family:var(--f-b);font-size:12px;color:var(--muted);margin-left:6p
 <div class="loading" id="loading">載入圖片中…</div>
 <div class="app">
   <header>
-    <h1>紙娃娃角色產生器<small>v0.9</small></h1>
+    <h1>紙娃娃角色產生器<small>v1.0</small></h1>
     <span class="lbl" id="sexLbl">角色</span>
     <span class="seg" role="group" aria-labelledby="sexLbl" id="sexSeg"><button type="button" data-sex="m">男生</button><button type="button" data-sex="f">女生</button><button type="button" data-sex="">全部</button></span>
     <span class="lbl" id="styleLbl">畫風</span>
@@ -166,7 +166,7 @@ h1 small{font-family:var(--f-b);font-size:12px;color:var(--muted);margin-left:6p
         <p class="hint">主播包：閉嘴、張嘴、眨眼三張圖＋會說話的 GIF＋角色代碼。</p>
         <div id="results" aria-live="polite"></div>
       </section>
-      <div class="foot">Cona 老師的資訊教室 · v0.9 · 2026-11-16 · 圖：Codex 生成</div>
+      <div class="foot">Cona 老師的資訊教室 · v1.0 · 2026-11-16 · 圖：Codex 生成</div>
     </div>
   </div>
 </div>
@@ -175,7 +175,7 @@ h1 small{font-family:var(--f-b);font-size:12px;color:var(--muted);margin-left:6p
 <script>
 (function(){
 'use strict';
-const VERSION='0.9', DATE='2026-11-16';
+const VERSION='1.0', DATE='2026-11-16';
 const EMBED=/*@@EMBED@@*/null;   /* 離線版：{畫風:{pack, img:{名稱:dataURL}}} */
 const $=id=>document.getElementById(id);
 const CAT_ORDER=['face','hair','top','bottom','shoes','hat','glasses','hand','pet'];
@@ -193,8 +193,8 @@ const SOLID={white:'#ffffff',pink:'#ffe0ea',yellow:'#fff3c4',mint:'#d8f5e6',blue
 const KEY='dq-avatar-v5';
 /* 男生／女生：照款式名稱分，沒列到的兩邊都有。選「全部」時所有款式都能用 */
 const SEX_ONLY={
-  f:['齊瀏海長直髮','雙馬尾','高馬尾','丸子頭','鮑伯頭','單邊辮子','超長直髮＋呆毛','雙丸子長辮','水手服','主播套裝','襯衫領結','百褶裙','舞台短裙','蝴蝶結','兔耳髮箍','公主切長髮','高雙馬尾＋髮圈','半紮側編髮','星星髮夾','大波浪長捲髮','雙麻花辮','側邊單馬尾','格紋裙'],
-  m:['清爽短髮','刺蝟頭','中分','主播西裝','西裝褲','韓系逗號瀏海','偶像碎蓋','平頭','短翹髮']};
+  f:['齊瀏海長直髮','雙馬尾','高馬尾','丸子頭','鮑伯頭','單邊辮子','超長直髮＋呆毛','雙丸子長辮','水手服','主播套裝','襯衫領結','百褶裙','舞台短裙','蝴蝶結','兔耳髮箍','公主切長髮','高雙馬尾＋髮圈','半紮側編髮','星星髮夾','大波浪長捲髮','雙麻花辮','側邊單馬尾','格紋裙','泡泡袖上衣','蓬蓬紗裙','瑪莉珍鞋','低雙馬尾','吊帶裙','A字牛仔裙','碎花長裙','蛋糕裙','褲裙','短裙配內搭褲','百褶長裙','網球裙','圓點圓裙'],
+  m:['清爽短髮','刺蝟頭','中分','主播西裝','西裝褲','韓系逗號瀏海','偶像碎蓋','平頭','短翹髮','微捲蓬鬆短髮','兩側推短髮']};
 const SEX_DEF={m:{hair:'清爽短髮',top:'主播西裝'},f:{hair:'齊瀏海長直髮',top:'水手服',bottom:'百褶裙'}};
 const okSex=(o,sx)=>!sx||!(SEX_ONLY[sx==='m'?'f':'m'].includes(o.name));
 const optsOf=(c,sx=state&&state.sex)=>PACK.cats[c].opts.filter(o=>okSex(o,sx));
@@ -276,7 +276,7 @@ function draw(ctx,s,pose,mode,withBg){
   const img=(c,name)=>rcmode[c]?recolor(name,rcmode[c][1],rcmode[c][0]):IMGS[style][name];
   o.drawImage(img('base','base'),PACK.base.x,PACK.base.y,PACK.base.w,PACK.base.h);
   o.globalCompositeOperation='destination-out';
-  ['top','bottom','shoes'].forEach(c=>{if(mode!=='full'&&c==='shoes')return;const r=rectOf(c,s,pose);if(r&&r[0].erase){const e=r[0].erase;o.drawImage(IMGS[style][r[1]+'_erase'],e.x,e.y,e.w,e.h);}});
+  ['top','bottom','shoes','hat'].forEach(c=>{if(mode!=='full'&&c==='shoes')return;const r=rectOf(c,s,pose);if(r&&r[0].erase){const e=r[0].erase;o.drawImage(IMGS[style][r[1]+'_erase'],e.x,e.y,e.w,e.h);}});
   o.globalCompositeOperation='source-over';
   LAYERS.forEach(c=>{
     if(c==='base'||(mode!=='full'&&(c==='shoes'||c==='pet')))return;
@@ -306,7 +306,8 @@ function hatCut(o,strip=true){
   const m=Math.round((R-L)*.07);   /* 兩側只擦貼著帽子的一小條（雙馬尾等從旁邊垂下來的頭髮保留）；帽子那一側翹高（斜戴的貝雷帽）就不擦，頭髮本來就會露出來 */
   if(strip&&yl0>h*.7)g.fillRect(o.x+L-m,0,m,o.y+yl);if(strip&&yr0>h*.7)g.fillRect(o.x+R+1,0,m,o.y+yr);
   const wide=/草帽/.test(o.name);   /* 寬帽簷（草帽）：馬尾在帽簷上方的部分也擦，讓馬尾從帽簷底下垂出來 */
-  for(let i=L;i<=R;i++)if(top[i]>=0&&(strip||wide||top[i]<h*.5))g.fillRect(o.x+i,0,1,o.y+top[i]+3);
+  const run=i=>{let j=h-1;while(j>=0&&!on(i,j))j--;while(j>0&&on(i,j-1))j--;return Math.max(j,top[i]);};   /* 最下面那一段的上緣：魔術師高帽帽身上寬下窄，帽身和帽緣中間的空隙也要擦到帽緣 */
+  for(let i=L;i<=R;i++)if(top[i]>=0&&(strip||wide||top[i]<h*.5))g.fillRect(o.x+i,0,1,o.y+run(i)+3);
   c.brim=o.y+Math.max(yl,yr);return CUT[k]=c;
 }
 /* 原尺寸的頭髮先擦好帽子遮住的部分，存起來（每種髮型＋帽子＋髮色一張） */

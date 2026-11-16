@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- 紙娃娃角色產生器 v0.6.1 2026-11-15 · Cona 老師的資訊教室
+     這個檔案是 tools/build.py 由 src/app.html 產生的，要改請改 src/app.html 再執行：python tools/build.py
+     v0.5：改用 AI 畫的圖（Codex 生圖、tools/make_raster_pack.py 拆圖層），畫風只留老師選的三種：日式可愛、日式漫畫、韓系貼圖；
+           canvas 疊圖，膚色、髮色、衣服、褲子、鞋子用程式換色；舊的 SVG 版保留在 紙娃娃角色產生器_v0.4_2026-11-15.html（原始檔 src/app_svg_v0.4.html）
+     v0.4：手繪線條風　v0.3：全身／表情／動作／17 類（SVG）　v0.2：可切換畫風　v0.1：第 1 階段原型 -->
+<title>紙娃娃角色產生器</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Huninn&family=Noto+Sans+TC:wght@400;700&display=swap">
+<style>
+:root{
+  --bg:#f3f0fa; --paper:#ffffff; --ink:#2a2440; --muted:#6c6685; --line:#d9d3ea; --tile:#ffffff;
+  --accent:#6b4fd8; --accent-soft:#e8e2fb; --sun:#ffc531; --warn:#e2553b; --chk1:#e6e1f3; --chk2:#ffffff;
+  --f-d:"Huninn","Noto Sans TC",system-ui,sans-serif; --f-b:"Noto Sans TC",system-ui,"Microsoft JhengHei",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#17132a; --paper:#221c3a; --ink:#ece8fb; --muted:#a9a2c6; --line:#3a3260; --accent:#a58cff; --accent-soft:#30275a; --tile:#f4f1fb; --chk1:#2c2650; --chk2:#221c3a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#17132a; --paper:#221c3a; --ink:#ece8fb; --muted:#a9a2c6; --line:#3a3260; --accent:#a58cff; --accent-soft:#30275a; --tile:#f4f1fb; --chk1:#2c2650; --chk2:#221c3a; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-b);font-size:15px;line-height:1.5}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.app{height:100vh;height:100dvh;display:grid;grid-template-rows:auto minmax(0,1fr);gap:8px;padding:8px 12px 10px}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px}
+h1{font-family:var(--f-d);font-weight:400;font-size:22px;margin:0;white-space:nowrap}
+h1 small{font-family:var(--f-b);font-size:12px;color:var(--muted);margin-left:6px}
+.sp{flex:1}
+.lbl{font-weight:700;font-size:14px}
+.seg{display:inline-flex;border:2px solid var(--line);border-radius:999px;overflow:hidden;background:var(--paper)}
+.seg button{border:0;background:none;padding:3px 14px;font-weight:700;font-size:14px}
+.seg button[aria-pressed="true"]{background:var(--accent);color:#fff}
+.help{color:var(--accent);font-weight:700;font-size:14px;text-decoration:none;border:2px solid var(--accent-soft);border-radius:999px;padding:2px 12px;background:var(--paper)}
+.main{display:grid;grid-template-columns:minmax(280px,360px) minmax(0,1fr) 250px;gap:10px;min-height:0}
+.col{display:flex;flex-direction:column;gap:8px;min-height:0;min-width:0}
+.card{background:var(--paper);border:2px solid var(--line);border-radius:16px;padding:10px}
+.card h2{font-family:var(--f-d);font-weight:400;font-size:16px;margin:0 0 6px}
+.btn{border:2px solid var(--line);background:var(--paper);border-radius:999px;padding:3px 12px;font-weight:700;font-size:14px;white-space:nowrap}
+.btn:hover{border-color:var(--accent)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.btn:disabled{opacity:.5;cursor:wait}
+.stagecard{flex:1;display:flex;flex-direction:column;min-height:0;gap:8px}
+.stagebox{flex:1;min-height:0;display:grid;place-items:center}
+#stage{display:block;border-radius:12px;border:2px solid var(--line)}
+#stage.clear{background:repeating-conic-gradient(var(--chk1) 0 25%,var(--chk2) 0 50%) 0 0/24px 24px}
+.tools{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.wardrobe{flex:1;display:flex;flex-direction:column;gap:8px;min-height:0}
+.tabs{display:flex;flex-wrap:wrap;gap:5px}
+.tab{border:2px solid var(--line);background:var(--bg);border-radius:10px;padding:2px 12px;font-weight:700;font-size:14px}
+.tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.tab.dim{opacity:.55}
+.ohead{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ohead h2{margin:0}
+.ohead .cnt{color:var(--muted);font-size:13px}
+.note{background:#fff6d6;color:#6b4e00;border-radius:10px;padding:3px 10px;font-size:13px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.opts{flex:1;min-height:0;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;align-content:start;padding:2px}
+.opt{position:relative;border:3px solid var(--line);background:var(--tile);border-radius:14px;padding:0;aspect-ratio:1;overflow:hidden}
+.opt canvas{width:100%;height:100%;display:block}
+.opt span{position:absolute;left:0;right:0;bottom:0;background:#ffffffd9;color:#2a2440;font-size:12px;font-weight:700;line-height:1.4;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.opt[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.opt[aria-pressed="true"] span{background:var(--accent);color:#fff}
+.opt:hover{border-color:var(--accent)}
+.colors{display:grid;gap:4px}
+.crow{display:flex;flex-wrap:wrap;align-items:center;gap:5px}
+.crow .lab{font-weight:700;font-size:13px;min-width:3.2em}
+.sw{width:26px;height:26px;border-radius:50%;border:3px solid var(--line);padding:0}
+.sw[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.sw.orig{background:conic-gradient(#c9a27e 0 25%,#7aa0e0 0 50%,#c9a27e 0 75%,#7aa0e0 0)}
+.bgs{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.bgb{aspect-ratio:1;border-radius:10px;border:3px solid var(--line);padding:0;overflow:hidden}
+.bgb canvas{width:100%;height:100%;display:block}
+.bgb[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.chk{display:flex;align-items:center;gap:6px;font-size:13px;margin-top:6px}
+.row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.txt{padding:4px 10px;border:2px solid var(--line);border-radius:10px;background:var(--bg);min-width:0}
+.hint{color:var(--muted);font-size:12px;margin:5px 0 0;line-height:1.45}
+.dl{display:grid;gap:6px}
+.dl .btn{width:100%;padding:5px 12px}
+.dl .btn.big{font-size:16px;padding:7px 12px}
+#results{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+#results figure{margin:0;display:grid;justify-items:center;font-size:11px;color:var(--muted)}
+#results img{width:48px;height:48px;object-fit:contain;border-radius:8px;border:2px solid var(--line);background:repeating-conic-gradient(var(--chk1) 0 25%,var(--chk2) 0 50%) 0 0/12px 12px}
+.toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:6px 18px;border-radius:99px;font-weight:700;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9;max-width:90vw;text-align:center}
+.toast.show{opacity:1}
+.loading{position:fixed;inset:0;display:grid;place-items:center;background:var(--bg);font-family:var(--f-d);font-size:22px;z-index:20}
+.foot{color:var(--muted);font-size:11px;text-align:center}
+@media (max-width:980px),(max-height:540px){
+  .app{height:auto;min-height:100vh}
+  .main{grid-template-columns:minmax(0,1fr)}
+  .stagebox{height:min(62vh,560px);flex:none}
+  .opts{overflow:visible}
+  .side{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px}
+}
+@media (max-height:760px) and (min-width:981px){.card{padding:8px}.col{gap:6px}.hint{margin-top:3px}.dl{gap:4px}.dl .btn.big{padding:5px 12px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="loading" id="loading">載入圖片中…</div>
+<div class="app">
+  <header>
+    <h1>紙娃娃角色產生器<small>v0.6.1</small></h1>
+    <span class="lbl" id="sexLbl">角色</span>
+    <span class="seg" role="group" aria-labelledby="sexLbl" id="sexSeg"><button type="button" data-sex="m">男生</button><button type="button" data-sex="f">女生</button><button type="button" data-sex="">全部</button></span>
+    <span class="lbl" id="styleLbl">畫風</span>
+    <span class="seg" role="group" aria-labelledby="styleLbl" id="styleSeg"></span>
+    <span class="lbl" id="modeLbl">身體</span>
+    <span class="seg" role="group" aria-labelledby="modeLbl"><button type="button" id="mHalf">半身</button><button type="button" id="mFull">全身</button></span>
+    <span class="sp"></span>
+    <a class="help" href="guide.html" target="_blank" rel="noopener">怎麼放進 Canva？</a>
+  </header>
+  <div class="main">
+    <div class="col">
+      <section class="card stagecard" aria-label="預覽">
+        <div class="stagebox" id="stagebox"><canvas id="stage" class="clear" width="700" height="700"></canvas></div>
+        <div class="tools">
+          <button class="btn pri" type="button" id="bRandom">隨機搭配</button>
+          <button class="btn" type="button" id="bTalk" aria-pressed="false">說話預覽</button>
+          <button class="btn" type="button" id="bFlip" aria-pressed="false">翻轉</button>
+          <button class="btn" type="button" id="bUndo">復原</button>
+          <button class="btn" type="button" id="bReset">重設</button>
+        </div>
+      </section>
+    </div>
+    <div class="col">
+      <section class="card wardrobe" aria-label="選擇部件">
+        <div class="tabs" id="tabs" role="tablist"></div>
+        <div class="ohead"><h2 id="catTitle"></h2><span class="cnt" id="catCount"></span><span class="sp"></span><button class="btn" type="button" id="bCatRandom">這一類隨機</button></div>
+        <div class="note" id="note" hidden></div>
+        <div class="opts" id="opts"></div>
+        <div class="colors" id="colors"></div>
+      </section>
+    </div>
+    <div class="col side">
+      <section class="card">
+        <h2>背景</h2>
+        <div class="bgs" id="bgs"></div>
+        <label class="chk"><input type="checkbox" id="bgOut"> 下載時也要背景</label>
+        <p class="hint">不勾＝透明背景（放進 Canva 最好用）。</p>
+      </section>
+      <section class="card">
+        <h2>名字和角色代碼</h2>
+        <div class="row"><label for="nameInput" class="lbl">名字</label><input class="txt" id="nameInput" maxlength="10" style="flex:1" autocomplete="off" placeholder="10 個字以內"></div>
+        <div class="row" style="margin-top:6px"><button class="btn" type="button" id="bCopyCode">複製角色代碼</button></div>
+        <div class="row" style="margin-top:6px">
+          <input class="txt" id="codeInput" placeholder="貼上角色代碼" style="flex:1" autocomplete="off" aria-label="貼上角色代碼">
+          <button class="btn" type="button" id="bLoadCode">還原</button>
+        </div>
+        <p class="hint">角色會自動存在這台電腦。換電腦或電腦被還原時，貼上代碼再按「還原」。</p>
+      </section>
+      <section class="card">
+        <h2>下載，帶去 Canva</h2>
+        <div class="dl">
+          <button class="btn pri big" type="button" id="bPack">下載主播包（zip）</button>
+          <div class="row"><button class="btn" type="button" id="bPng" style="flex:1;width:auto">只要 PNG</button><button class="btn" type="button" id="bGif" style="flex:1;width:auto">只要說話 GIF</button></div>
+        </div>
+        <p class="hint">主播包：閉嘴、張嘴、眨眼三張圖＋會說話的 GIF＋角色代碼。</p>
+        <div id="results" aria-live="polite"></div>
+      </section>
+      <div class="foot">Cona 老師的資訊教室 · v0.6.1 · 2026-11-15 · 圖：Codex 生成</div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function(){
+'use strict';
+const VERSION='0.6.1', DATE='2026-11-15';
+const EMBED=/*@@EMBED@@*/null;   /* 離線版：{畫風:{pack, img:{名稱:dataURL}}} */
+const $=id=>document.getElementById(id);
+const CAT_ORDER=['face','hair','top','bottom','shoes','hat','glasses','hand','pet'];
+const FULL_ONLY=['bottom','shoes','pet'];
+const LAYERS=['base','bottom','shoes','top','face','hair','glasses','hat','hand','pet'];   /* 疊圖順序（底→頂） */
+const SKIN=[null,'#ffe3cf','#f6c7a4','#e0a878','#b97a4f','#7d4b2e'];
+const HAIRC=[null,'#2b2b33','#5a3a28','#b5651d','#e8b84a','#d9462f','#ff8fb3','#3f7fd9','#3faa6b','#8a5fd3','#c9ccd6'];
+const CLOTH=[null,'#23407a','#1f7fbf','#4dc3c9','#2f9e5b','#ffc531','#f28c28','#e2553b','#ff8fb3','#8a5fd3','#8d6e63','#2b2b33'];
+const PANTS=[null,'#3d5a8a','#2b2b33','#6c7383','#8d6e63','#c9a66b','#e2553b','#2f9e5b','#ff8fb3','#8a5fd3'];
+const SHOE=[null,'#e2553b','#2b2b33','#8d6e63','#ffc531','#1f7fbf','#ff8fb3','#2f9e5b','#8a5fd3'];
+const COLORS={face:[['skinC','膚色',SKIN]],hair:[['hairC','髮色',HAIRC]],top:[['topC','衣服',CLOTH]],bottom:[['pantsC','顏色',PANTS]],shoes:[['shoeC','顏色',SHOE]]};
+const CKEYS=['skinC','hairC','topC','pantsC','shoeC'];
+const BGS=[['none','透明'],['white','白色'],['pink','粉紅'],['yellow','鵝黃'],['mint','薄荷'],['blue','淺藍'],['purple','淡紫'],['sky','天空'],['news','新聞台'],['class','教室'],['stage','舞台'],['night','星空'],['stream','直播間']];
+const SOLID={white:'#ffffff',pink:'#ffe0ea',yellow:'#fff3c4',mint:'#d8f5e6',blue:'#dcefff',purple:'#ece4ff'};
+const KEY='dq-avatar-v5';
+/* 男生／女生：照款式名稱分，沒列到的兩邊都有。選「全部」時所有款式都能用 */
+const SEX_ONLY={
+  f:['齊瀏海長直髮','雙馬尾','高馬尾','丸子頭','鮑伯頭','單邊辮子','超長直髮＋呆毛','雙丸子長辮','水手服','主播套裝','襯衫領結','百褶裙','舞台短裙','蝴蝶結','兔耳髮箍'],
+  m:['清爽短髮','刺蝟頭','中分','主播西裝','西裝褲']};
+const SEX_DEF={m:{hair:'清爽短髮',top:'主播西裝'},f:{hair:'齊瀏海長直髮',top:'水手服',bottom:'百褶裙'}};
+const okSex=(o,sx)=>!sx||!(SEX_ONLY[sx==='m'?'f':'m'].includes(o.name));
+const optsOf=(c,sx=state&&state.sex)=>PACK.cats[c].opts.filter(o=>okSex(o,sx));
+function sexPatch(sx){   /* 換性別：身上不屬於這個性別的款式，換成這個性別的預設款（沒有就拿掉／換第一款） */
+  const p={sex:sx};if(!sx)return p;
+  CAT_ORDER.forEach(c=>{const C=PACK.cats[c];if(!C)return;const cur=C.opts.find(o=>o.id===state[c]);if(!cur||okSex(cur,sx))return;
+    const d=C.opts.find(o=>o.name===(SEX_DEF[sx]||{})[c])||(C.none?null:optsOf(c,sx)[0]);p[c]=d?d.id:'';});
+  const dh=PACK.cats.hair&&PACK.cats.hair.opts.find(o=>o.name===SEX_DEF[sx].hair);if(dh&&state.sex!==sx)p.hair=dh.id;
+  return p;}
+let STYLES=[],PACKS={},IMGS={},PACK,style,state,history=[],tab='face',talking=null,talkOpen=false,blinkNow=false;
+
+/* ================= 載入 ================= */
+function loadImg(src){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=src;});}
+async function loadPack(id){
+  if(PACKS[id])return;
+  let p,src;
+  if(EMBED&&EMBED[id]){p=EMBED[id].pack;src=n=>EMBED[id].img[n];}
+  else{p=await (await fetch(`packs/${id}/parts.json`,{cache:'no-cache'})).json();src=n=>`packs/${id}/${n}.webp`;}
+  const names=['base'];
+  Object.entries(p.cats).forEach(([c,C])=>C.opts.forEach(o=>{if(c==='face')['closed','open','blink'].forEach(s=>names.push(`face_${o.id}_${s}`));else{names.push(o.id);if(o.erase)names.push(o.id+'_erase');}}));
+  const im={};await Promise.all(names.map(n=>loadImg(src(n)).then(i=>{im[n]=i;})));
+  PACKS[id]=p;IMGS[id]=im;
+}
+function defaults(p){const d={};CAT_ORDER.forEach(c=>{const C=p.cats[c];d[c]=C?(C.none?'':C.opts[0].id):'';});
+  return Object.assign({v:5,style:p.id,mode:'half',name:'小橋',flip:false,bg:'none',bgOut:false,sex:''},d,{skinC:null,hairC:null,topC:null,pantsC:null,shoeC:null});}
+const isHex=v=>/^#[0-9a-f]{6}$/i.test(v||'');
+function sanitize(s,p){
+  const o=defaults(p);if(!s||typeof s!=='object')return o;
+  CAT_ORDER.forEach(c=>{const C=p.cats[c];if(!C)return;const v=s[c];if(v===''&&C.none)o[c]='';else if(C.opts.some(x=>x.id===v))o[c]=v;});
+  CKEYS.forEach(k=>{o[k]=isHex(s[k])?s[k].toLowerCase():null;});
+  if(typeof s.name==='string')o.name=s.name.replace(/[\u0000-\u001f]/g,'').slice(0,10);
+  o.flip=!!s.flip;o.bgOut=!!s.bgOut;if(BGS.some(b=>b[0]===s.bg))o.bg=s.bg;if(s.mode==='full'||s.mode==='half')o.mode=s.mode;if(s.sex==='m'||s.sex==='f')o.sex=s.sex;
+  return o;
+}
+
+/* ================= 換色 =================
+   all：整個部件換色相（頭髮）；main：只換部件主色（衣服、褲子、鞋子）；skin：人台的膚色 */
+function rgb2hsv(r,g,b){const mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn;let h=0;if(d){if(mx===r)h=((g-b)/d)%6;else if(mx===g)h=(b-r)/d+2;else h=(r-g)/d+4;h*=60;if(h<0)h+=360;}return [h,mx?d/mx:0,mx/255];}
+function hsv2rgb(h,s,v){const c=v*s,x=c*(1-Math.abs((h/60)%2-1)),m=v-c;let r=0,g=0,b=0;
+  if(h<60)[r,g,b]=[c,x,0];else if(h<120)[r,g,b]=[x,c,0];else if(h<180)[r,g,b]=[0,c,x];else if(h<240)[r,g,b]=[0,x,c];else if(h<300)[r,g,b]=[x,0,c];else[r,g,b]=[c,0,x];
+  return [(r+m)*255,(g+m)*255,(b+m)*255];}
+const hdist=(a,b)=>{const d=Math.abs(a-b)%360;return d>180?360-d:d;};
+const RC={};
+function recolor(name,hex,mode){
+  const img=IMGS[style][name];const key=style+name+hex+mode;if(RC[key])return RC[key];
+  const c=document.createElement('canvas');c.width=img.width;c.height=img.height;const x=c.getContext('2d',{willReadFrequently:true});x.drawImage(img,0,0);
+  const d=x.getImageData(0,0,c.width,c.height),p=d.data;
+  const hs=[];let ss=0,vs=0,n=0;
+  const want=mode==='skin'?(h,s,v)=>(h<45||h>340)&&s>.12&&s<.65&&v>.55:(h,s,v)=>v>.22&&s>.2;
+  for(let i=0;i<p.length;i+=16){if(p[i+3]<200)continue;const [h,s,v]=rgb2hsv(p[i],p[i+1],p[i+2]);if(!want(h,s,v))continue;hs.push(h);ss+=s;vs+=v;n++;}
+  if(!n){RC[key]=img;return img;}
+  hs.sort((a,b)=>a-b);const refH=hs[hs.length>>1],refS=ss/n,refV=vs/n;
+  const [tH,tS,tV]=rgb2hsv(...[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)));
+  for(let i=0;i<p.length;i+=4){if(p[i+3]<8)continue;const [h,s,v]=rgb2hsv(p[i],p[i+1],p[i+2]);
+    if(mode==='all'){if(v<.16)continue;}
+    else if(mode==='skin'){if(!(hdist(h,refH)<28&&s>.08&&v>.35))continue;}
+    else if(hdist(h,refH)>38||s<.18)continue;
+    const ns=Math.min(1,s*(tS+.02)/Math.max(.05,refS)),nv=Math.min(1,v*Math.max(.12,tV)/Math.max(.05,refV));
+    const [r,g,b]=hsv2rgb(tH,tS<.08?tS:ns,nv);p[i]=r;p[i+1]=g;p[i+2]=b;}
+  x.putImageData(d,0,0);RC[key]=c;return c;
+}
+
+/* ================= 畫角色 ================= */
+function rectOf(c,s,pose){
+  if(c==='base')return [PACK.base,'base'];
+  const C=PACK.cats[c];if(!C||!s[c])return null;const o=C.opts.find(x=>x.id===s[c]);if(!o)return null;
+  if(c==='face'){const st=pose.mouth==='open'?'open':pose.eyes==='blink'?'blink':'closed';return [o[st],`face_${o.id}_${st}`];}
+  return [o,o.id];
+}
+const OFF=document.createElement('canvas');
+function draw(ctx,s,pose,mode,withBg){
+  pose=pose||{};const W=PACK.canvas[0];
+  ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
+  if(withBg)drawBg(ctx,s.bg,ctx.canvas.width,ctx.canvas.height);
+  /* 角色先畫在另一張畫布：人台畫完後，用部件的「擦除遮罩」把被新衣服蓋住、但露在外面的地方擦掉 */
+  const k=ctx.canvas.width/W;OFF.width=ctx.canvas.width;OFF.height=ctx.canvas.height;const o=OFF.getContext('2d');
+  o.save();o.scale(k,k);if(s.flip){o.translate(W,0);o.scale(-1,1);}
+  const rcmode={base:s.skinC&&['skin',s.skinC],hair:s.hairC&&['all',s.hairC],top:s.topC&&['main',s.topC],bottom:s.pantsC&&['main',s.pantsC],shoes:s.shoeC&&['main',s.shoeC]};
+  const img=(c,name)=>rcmode[c]?recolor(name,rcmode[c][1],rcmode[c][0]):IMGS[style][name];
+  o.drawImage(img('base','base'),PACK.base.x,PACK.base.y,PACK.base.w,PACK.base.h);
+  o.globalCompositeOperation='destination-out';
+  ['top','bottom','shoes'].forEach(c=>{if(mode!=='full'&&c==='shoes')return;const r=rectOf(c,s,pose);if(r&&r[0].erase){const e=r[0].erase;o.drawImage(IMGS[style][r[1]+'_erase'],e.x,e.y,e.w,e.h);}});
+  o.globalCompositeOperation='source-over';
+  LAYERS.forEach(c=>{
+    if(c==='base'||(mode!=='full'&&(c==='shoes'||c==='pet')))return;
+    const r=rectOf(c,s,pose);if(!r)return;const [m,name]=r;
+    const hr=c==='hair'&&rectOf('hat',s,pose),cut=hr&&hairCut(m,name,hr[0]);
+    if(cut){   /* 戴帽子：頭髮先畫在另一張，把露出帽頂、帽緣上方的頭髮擦掉，才不會穿出帽子 */
+      HC.width=OFF.width;HC.height=OFF.height;const h=HC.getContext('2d');h.setTransform(o.getTransform());
+      h.drawImage(img(c,name),m.x,m.y,m.w,m.h);h.globalCompositeOperation='destination-out';h.drawImage(cut,0,0);
+      o.save();o.setTransform(1,0,0,1,0,0);o.drawImage(HC,0,0);o.restore();return;}
+    o.drawImage(img(c,name),m.x,m.y,m.w,m.h);});
+  o.restore();
+  ctx.drawImage(OFF,0,0);
+}
+/* 會蓋住頭頂的帽子（名稱是「…帽」）：做一張「頭髮擦除區」＝帽子上緣以上＋緊貼帽子兩側、帽緣高度以上的一小條 */
+const HC=document.createElement('canvas'),CUT={};
+function hatCut(o){
+  const k=style+'/'+o.id;if(k in CUT)return CUT[k];
+  if(!/帽$/.test(o.name||''))return CUT[k]=null;
+  const w=Math.round(o.w),h=Math.round(o.h),t=document.createElement('canvas');t.width=w;t.height=h;
+  const x=t.getContext('2d');x.drawImage(IMGS[style][o.id],0,0,w,h);const a=x.getImageData(0,0,w,h).data;
+  const on=(i,j)=>a[(j*w+i)*4+3]>96,top=new Int32Array(w).fill(-1);
+  for(let i=0;i<w;i++)for(let j=0;j<h;j++)if(on(i,j)){top[i]=j;break;}
+  let L=-1,R=-1;for(let i=0;i<w;i++)if(top[i]>=0){if(L<0)L=i;R=i;}
+  if(L<0)return CUT[k]=null;
+  const side=(i0,i1)=>{let s=0,n=0;for(let i=i0;i<=i1;i++){let y0=-1,y1=-1;for(let j=0;j<h;j++)if(on(i,j)){if(y0<0)y0=j;y1=j;}if(y0>=0){s+=y1;n++;}}return n?s/n:h/2;};   /* 帽子最外側的下緣＝帽緣高度 */
+  const yl0=side(L,Math.min(R,L+5)),yr0=side(Math.max(L,R-5),R),yl=Math.max(yl0,yr0*.6+yl0*.4),yr=Math.max(yr0,yl0*.6+yr0*.4);   /* 斜戴（貝雷帽）時高的那邊往下拉一些 */
+  const W=PACK.canvas[0],c=document.createElement('canvas');c.width=W;c.height=Math.ceil(o.y+h);
+  const g=c.getContext('2d');g.fillStyle='#000';
+  const m=Math.round((R-L)*.07);   /* 兩側只擦貼著帽子的一小條（雙馬尾等從旁邊垂下來的頭髮保留）；帽子那一側翹高（斜戴的貝雷帽）就不擦，頭髮本來就會露出來 */
+  if(yl0>h*.7)g.fillRect(o.x+L-m,0,m,o.y+yl);if(yr0>h*.7)g.fillRect(o.x+R+1,0,m,o.y+yr);
+  for(let i=L;i<=R;i++)if(top[i]>=0)g.fillRect(o.x+i,0,1,o.y+top[i]+3);
+  c.brim=o.y+Math.max(yl,yr);return CUT[k]=c;
+}
+/* 擦完後，帽緣以上、和頭髮主體不相連的碎塊（例如丸子頭被切剩的邊）也一起擦掉 */
+function hairCut(m,name,hat){
+  const base=hatCut(hat);if(!base)return null;const k=style+'/'+name+'/'+hat.id;if(k in CUT)return CUT[k];
+  const x0=Math.floor(m.x),y0=Math.floor(m.y),w=Math.ceil(m.w),h=Math.ceil(m.h),t=document.createElement('canvas');t.width=w;t.height=h;
+  const x=t.getContext('2d');x.drawImage(IMGS[style][name],m.x-x0,m.y-y0,m.w,m.h);const A=x.getImageData(0,0,w,h).data;
+  x.clearRect(0,0,w,h);x.drawImage(base,-x0,-y0);const C=x.getImageData(0,0,w,h).data;
+  const keep=new Uint8Array(w*h);for(let i=0;i<w*h;i++)keep[i]=A[i*4+3]>6&&C[i*4+3]<128?1:0;
+  const lab=new Int32Array(w*h),st=new Int32Array(w*h),out=document.createElement('canvas');out.width=base.width;out.height=base.height;
+  const g=out.getContext('2d');g.drawImage(base,0,0);g.fillStyle='#000';let n=0;
+  for(let p=0;p<w*h;p++){if(!keep[p]||lab[p])continue;n++;let sp=0,maxY=0;const pix=[];st[sp++]=p;lab[p]=n;
+    while(sp){const q=st[--sp];pix.push(q);const qy=(q/w)|0,qx=q-qy*w;if(qy>maxY)maxY=qy;
+      if(qx>0&&keep[q-1]&&!lab[q-1]){lab[q-1]=n;st[sp++]=q-1;}if(qx<w-1&&keep[q+1]&&!lab[q+1]){lab[q+1]=n;st[sp++]=q+1;}
+      if(qy>0&&keep[q-w]&&!lab[q-w]){lab[q-w]=n;st[sp++]=q-w;}if(qy<h-1&&keep[q+w]&&!lab[q+w]){lab[q+w]=n;st[sp++]=q+w;}}
+    if(y0+maxY<base.brim)pix.forEach(q=>{const qy=(q/w)|0;g.fillRect(x0+q-qy*w,y0+qy,1,1);});}
+  return CUT[k]=out;
+}
+function drawBg(ctx,id,w,h){
+  if(id==='none')return;
+  const g=(stops,x0,y0,x1,y1)=>{const gr=ctx.createLinearGradient(x0,y0,x1,y1);stops.forEach(([o,c])=>gr.addColorStop(o,c));return gr;};
+  ctx.save();
+  if(SOLID[id]){ctx.fillStyle=SOLID[id];ctx.fillRect(0,0,w,h);}
+  else if(id==='sky'){ctx.fillStyle=g([[0,'#8fd0ff'],[1,'#e9f7ff']],0,0,0,h);ctx.fillRect(0,0,w,h);ctx.fillStyle='#fff3a6';ctx.beginPath();ctx.arc(w*.84,h*.1,w*.07,0,7);ctx.fill();
+    ctx.fillStyle='#ffffffe6';[[.2,.14,.11],[.26,.12,.07],[.7,.24,.12],[.76,.22,.07]].forEach(([x,y,r])=>{ctx.beginPath();ctx.ellipse(w*x,h*y,w*r,w*r*.42,0,0,7);ctx.fill();});
+    ctx.fillStyle='#9be08f';ctx.beginPath();ctx.moveTo(0,h*.9);ctx.quadraticCurveTo(w*.25,h*.82,w*.5,h*.89);ctx.quadraticCurveTo(w*.75,h*.95,w,h*.88);ctx.lineTo(w,h);ctx.lineTo(0,h);ctx.fill();}
+  else if(id==='news'){ctx.fillStyle=g([[0,'#1b4c9a'],[.6,'#0f2b5c'],[1,'#0a1d3f']],0,0,w,h);ctx.fillRect(0,0,w,h);
+    ctx.strokeStyle='#5f8fd855';ctx.lineWidth=Math.max(1,w*.002);for(let i=0;i<7;i++){ctx.beginPath();ctx.arc(w*.76,h*.3,w*(.08+i*.06),0,7);ctx.stroke();}
+    ctx.fillStyle='#2c6cd18c';ctx.fillRect(w*.04,h*.05,w*.3,h*.15);ctx.fillStyle='#2c6cd15a';ctx.fillRect(w*.66,h*.05,w*.3,h*.15);
+    ctx.fillStyle='#e2553b';ctx.fillRect(0,h-h*.07,w,h*.07);ctx.fillStyle='#ffc531';ctx.fillRect(0,h-h*.07,w*.21,h*.07);
+    ctx.fillStyle='#ffffffd9';[[.25,.3],[.58,.18],[.79,.16]].forEach(([x,ww])=>ctx.fillRect(w*x,h-h*.045,w*ww,h*.02));}
+  else if(id==='class'){ctx.fillStyle='#f6e7c8';ctx.fillRect(0,0,w,h);ctx.fillStyle='#8d6e63';ctx.fillRect(w*.09,h*.06,w*.82,h*.34);ctx.fillStyle='#2f6b4f';ctx.fillRect(w*.11,h*.075,w*.78,h*.31);
+    ctx.strokeStyle='#ffffffb3';ctx.lineWidth=Math.max(1,w*.007);ctx.lineCap='round';ctx.beginPath();ctx.moveTo(w*.17,h*.13);ctx.lineTo(w*.31,h*.13);ctx.moveTo(w*.17,h*.17);ctx.lineTo(w*.26,h*.17);ctx.stroke();
+    ctx.fillStyle='#d9b98a';ctx.fillRect(0,h*.86,w,h*.14);}
+  else if(id==='stage'){const gr=ctx.createRadialGradient(w*.5,h*.3,0,w*.5,h*.3,w*.9);gr.addColorStop(0,'#ff9fd2');gr.addColorStop(.55,'#7b3fc4');gr.addColorStop(1,'#2a1250');ctx.fillStyle=gr;ctx.fillRect(0,0,w,h);
+    ctx.fillStyle='#ffffff1f';ctx.beginPath();ctx.moveTo(w*.38,0);ctx.lineTo(w*.62,0);ctx.lineTo(w*.86,h);ctx.lineTo(w*.14,h);ctx.fill();
+    ctx.fillStyle='#fff6b0';[[.15,.12],[.86,.16],[.12,.5],[.88,.55],[.3,.06],[.7,.08]].forEach(([x,y])=>{const X=w*x,Y=h*y,r=w*.024;ctx.beginPath();ctx.moveTo(X,Y-r);ctx.lineTo(X+r*.3,Y-r*.3);ctx.lineTo(X+r,Y);ctx.lineTo(X+r*.3,Y+r*.3);ctx.lineTo(X,Y+r);ctx.lineTo(X-r*.3,Y+r*.3);ctx.lineTo(X-r,Y);ctx.lineTo(X-r*.3,Y-r*.3);ctx.fill();});
+    ctx.fillStyle='#3b1a6b';ctx.fillRect(0,h*.94,w,h*.06);}
+  else if(id==='night'){ctx.fillStyle=g([[0,'#1a1a4a'],[1,'#4a3b8f']],0,0,0,h);ctx.fillRect(0,0,w,h);ctx.fillStyle='#fff6c8';ctx.beginPath();ctx.arc(w*.82,h*.1,w*.07,0,7);ctx.fill();
+    ctx.fillStyle='#1f1f52';ctx.beginPath();ctx.arc(w*.85,h*.09,w*.064,0,7);ctx.fill();ctx.fillStyle='#ffffffe6';
+    [[.09,.08],[.22,.17],[.38,.06],[.56,.13],[.14,.35],[.9,.28],[.7,.22],[.06,.55],[.94,.6],[.3,.47]].forEach(([x,y],i)=>{ctx.beginPath();ctx.arc(w*x,h*y,Math.max(1,w*(i%3?.004:.007)),0,7);ctx.fill();});}
+  else if(id==='stream'){ctx.fillStyle=g([[0,'#2b1d5c'],[.55,'#3d2a7a'],[1,'#1c1442']],0,0,0,h);ctx.fillRect(0,0,w,h);
+    const hex=(x,y,r,c)=>{ctx.fillStyle=c;ctx.beginPath();for(let k=0;k<6;k++){const a=Math.PI/3*k+Math.PI/6;ctx[k?'lineTo':'moveTo'](x+r*Math.cos(a),y+r*Math.sin(a));}ctx.fill();};
+    const r=w*.045;for(let row=0;row<9;row++)for(let col=0;col<3;col++){const y=h*.08+row*r*1.55,x=(col+(row%2)*.5)*r*1.75+r;
+      hex(x,y,r*.9,(row+col)%3?'#4b3a8f':'#5a47a8');hex(w-x,y,r*.9,(row+col)%3?'#3a4a9a':'#4a5cb8');}
+    const neon=(c,y0,y1,x0,x1,lw)=>{ctx.save();ctx.strokeStyle=c;ctx.lineWidth=lw;ctx.shadowColor=c;ctx.shadowBlur=w*.03;ctx.lineJoin='round';ctx.beginPath();ctx.roundRect(w*x0,h*y0,w*(x1-x0),h*(y1-y0),w*.04);ctx.stroke();ctx.restore();};
+    neon('#5ef2ff',.06,.6,.2,.8,Math.max(2,w*.008));neon('#ff7ad9',.08,.58,.23,.77,Math.max(1,w*.004));
+    ctx.fillStyle='#ff4f7b';ctx.beginPath();ctx.roundRect(w*.04,h*.025,w*.15,h*.04,h*.02);ctx.fill();
+    ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(w*.065,h*.045,h*.009,0,7);ctx.fill();
+    ctx.font=`900 ${Math.round(h*.026)}px system-ui,sans-serif`;ctx.textBaseline='middle';ctx.fillText('LIVE',w*.085,h*.046);
+    const heart=(x,y,s,c)=>{ctx.fillStyle=c;ctx.beginPath();ctx.moveTo(x,y+s*.35);ctx.bezierCurveTo(x-s*.9,y-s*.35,x-s*.35,y-s*.95,x,y-s*.35);ctx.bezierCurveTo(x+s*.35,y-s*.95,x+s*.9,y-s*.35,x,y+s*.35);ctx.fill();};
+    [[.86,.42,.035,'#ff7ad9'],[.9,.33,.025,'#ffb3e6'],[.83,.27,.02,'#ff7ad9'],[.13,.7,.03,'#5ef2ff']].forEach(([x,y,s,c])=>heart(w*x,h*y,w*s,c));
+    ctx.fillStyle='#fff6b0';[[.12,.42],[.9,.6],[.16,.2]].forEach(([x,y])=>{const X=w*x,Y=h*y,q=w*.018;ctx.beginPath();ctx.moveTo(X,Y-q);ctx.lineTo(X+q*.3,Y-q*.3);ctx.lineTo(X+q,Y);ctx.lineTo(X+q*.3,Y+q*.3);ctx.lineTo(X,Y+q);ctx.lineTo(X-q*.3,Y+q*.3);ctx.lineTo(X-q,Y);ctx.lineTo(X-q*.3,Y-q*.3);ctx.fill();});
+    ctx.fillStyle=g([[0,'#2a2060'],[1,'#120c2e']],0,h*.9,0,h);ctx.fillRect(0,h*.9,w,h*.1);
+    ctx.fillStyle='#5ef2ff';ctx.fillRect(0,h*.9,w,Math.max(1,h*.004));}
+  ctx.restore();
+}
+
+/* ================= 介面 ================= */
+const effMode=()=>state.mode==='full'?'full':'half';
+function stageSize(){const [W,Hf]=PACK.canvas;return [W,effMode()==='full'?Hf:PACK.halfH];}
+function fitStage(){const box=$('stagebox'),c=$('stage');const [W,H]=stageSize();const cw=box.clientWidth,ch=box.clientHeight;if(!cw||!ch)return;
+  const w=Math.max(120,Math.floor(Math.min(cw,ch*W/H)));c.style.width=w+'px';c.style.height=Math.floor(w*H/W)+'px';}
+function renderStage(){
+  const c=$('stage');const [W,H]=stageSize();const cw=700,chh=Math.round(700*H/W);
+  if(c.width!==cw||c.height!==chh){c.width=cw;c.height=chh;fitStage();}
+  draw(c.getContext('2d'),state,{mouth:talkOpen?'open':'closed',eyes:blinkNow&&!talking?'blink':'open'},effMode(),true);
+  c.classList.toggle('clear',state.bg==='none');
+}
+/* 縮圖範圍：[x, y, 邊長]，都是畫布寬度的比例 */
+const VIEWS={top:[.2,.28,.6],bottom:[.2,.5,.6],shoes:[.28,.74,.44],hand:[.4,.34,.6],pet:[.45,.55,.55]};
+function viewOf(c){if(['face','hair','hat','glasses'].includes(c)&&PACK.headBox){const [x,y,s]=PACK.headBox;return [x,y*PACK.canvas[1]/PACK.canvas[0],s];}return VIEWS[c]||[0,0,1];}
+const TH=document.createElement('canvas');
+function thumb(s,c){
+  const [W,H]=PACK.canvas;TH.width=W/2;TH.height=H/2;draw(TH.getContext('2d'),s,{},'full',false);
+  const t=document.createElement('canvas');t.width=t.height=200;const [vx,vy,vs]=viewOf(c),k=W/2;
+  t.getContext('2d').drawImage(TH,vx*k,vy*k,vs*k,vs*k,0,0,200,200);return t;
+}
+function renderTabs(){
+  const box=$('tabs');box.innerHTML='';if(!PACK.cats[tab])tab='face';
+  CAT_ORDER.filter(c=>PACK.cats[c]).forEach(c=>{const b=document.createElement('button');b.type='button';b.className='tab';b.setAttribute('role','tab');b.textContent=PACK.cats[c].name.replace('帽子頭飾','帽子');
+    b.setAttribute('aria-selected',c===tab);if(FULL_ONLY.includes(c)&&effMode()==='half')b.classList.add('dim');
+    b.addEventListener('click',()=>{tab=c;renderTabs();renderOpts();});box.append(b);});
+}
+function renderOpts(){
+  const C=PACK.cats[tab],box=$('opts');box.innerHTML='';
+  $('catTitle').textContent=C.name;const OP=optsOf(tab);$('catCount').textContent=OP.length+' 款';
+  const note=$('note');
+  if(FULL_ONLY.includes(tab)&&effMode()==='half'){note.hidden=false;note.innerHTML='';const t=document.createElement('span');t.textContent=C.name+'要「全身」才看得清楚。';
+    const b=document.createElement('button');b.type='button';b.className='btn';b.textContent='切換到全身';b.onclick=()=>commit({mode:'full'});note.append(t,b);}
+  else note.hidden=true;
+  const list=(C.none?[{id:'',name:C.none}]:[]).concat(OP);
+  const hide=tab==='top'?{hand:''}:tab==='bottom'?{hand:'',pet:''}:tab==='hair'?{hat:''}:{};
+  list.forEach(o=>{const b=document.createElement('button');b.type='button';b.className='opt';b.setAttribute('aria-pressed',state[tab]===o.id);b.title=o.name;
+    b.append(thumb(Object.assign({},state,hide,{[tab]:o.id,flip:false}),tab));const sp=document.createElement('span');sp.textContent=o.name;b.append(sp);
+    b.onclick=()=>{commit({[tab]:o.id});};box.append(b);});
+  const cb=$('colors');cb.innerHTML='';
+  (COLORS[tab]||[]).forEach(([key,label,list2])=>{const row=document.createElement('div');row.className='crow';const l=document.createElement('span');l.className='lab';l.textContent=label;row.append(l);
+    list2.forEach(hex=>{const b=document.createElement('button');b.type='button';b.className='sw'+(hex?'':' orig');if(hex)b.style.background=hex;b.title=hex||'原本的顏色';
+      b.setAttribute('aria-label',hex?label+' '+hex:label+' 原本的顏色');b.setAttribute('aria-pressed',state[key]===hex);b.onclick=()=>commit({[key]:hex});row.append(b);});cb.append(row);});
+}
+function renderBgs(){
+  const box=$('bgs');box.innerHTML='';
+  BGS.forEach(([id,name])=>{const b=document.createElement('button');b.type='button';b.className='bgb';b.title=name;b.setAttribute('aria-label','背景 '+name);b.setAttribute('aria-pressed',state.bg===id);
+    const c=document.createElement('canvas');c.width=c.height=60;const x=c.getContext('2d');
+    if(id==='none'){for(let i=0;i<6;i++)for(let j=0;j<6;j++){x.fillStyle=(i+j)%2?'#ddd6ee':'#fff';x.fillRect(i*10,j*10,10,10);}}else drawBg(x,id,60,60);
+    b.append(c);b.onclick=()=>commit({bg:id});box.append(b);});
+  $('bgOut').checked=state.bgOut;$('bgOut').disabled=state.bg==='none';
+}
+function renderStyles(){const box=$('styleSeg');box.innerHTML='';STYLES.forEach(x=>{const b=document.createElement('button');b.type='button';b.textContent=x.name;b.setAttribute('aria-pressed',x.id===style);
+  b.onclick=()=>{if(x.id!==style){history=[];setStyle(x.id);}};box.append(b);});}
+function renderAll(){
+  renderStage();renderTabs();renderOpts();renderBgs();renderStyles();fitStage();
+  document.querySelectorAll('#sexSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.sex===(state.sex||'')));
+  $('bFlip').setAttribute('aria-pressed',state.flip);const full=effMode()==='full';
+  $('mHalf').setAttribute('aria-pressed',!full);$('mFull').setAttribute('aria-pressed',full);
+  if(document.activeElement!==$('nameInput'))$('nameInput').value=state.name;
+}
+const toast=$('toast');
+function flash(m){toast.textContent=m;toast.classList.add('show');clearTimeout(flash.t);flash.t=setTimeout(()=>toast.classList.remove('show'),2000);}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}};
+function commit(patch){history.push(JSON.stringify(state));if(history.length>40)history.shift();Object.assign(state,patch);save();renderAll();}
+
+/* ================= 按鈕 ================= */
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const NONE_P={hair:.03,hat:.55,glasses:.75,hand:.5,pet:.6};
+function randomize(){const p={};CAT_ORDER.forEach(c=>{const C=PACK.cats[c];if(!C)return;p[c]=(C.none&&Math.random()<(NONE_P[c]||.3))?'':pick(optsOf(c)).id;});
+  p.skinC=pick(SKIN);p.hairC=pick(HAIRC);p.topC=pick(CLOTH);p.pantsC=pick(PANTS);p.shoeC=pick(SHOE);commit(p);}
+$('bRandom').onclick=()=>{randomize();flash('換一個新造型！');};
+$('bCatRandom').onclick=()=>{const p={[tab]:pick(optsOf(tab)).id};(COLORS[tab]||[]).forEach(([k,,l])=>p[k]=pick(l));commit(p);};
+function stopTalk(){if(talking){clearInterval(talking);talking=null;talkOpen=false;}$('bTalk').setAttribute('aria-pressed','false');$('bTalk').textContent='說話預覽';}
+$('bTalk').onclick=()=>{if(talking){stopTalk();renderStage();return;}talking=setInterval(()=>{talkOpen=!talkOpen;renderStage();},200);$('bTalk').setAttribute('aria-pressed','true');$('bTalk').textContent='停止說話';};
+setInterval(()=>{if(talking||document.hidden||!PACK)return;blinkNow=true;renderStage();setTimeout(()=>{blinkNow=false;renderStage();},150);},4200);
+$('bFlip').onclick=()=>commit({flip:!state.flip});
+document.querySelectorAll('#sexSeg button').forEach(b=>b.onclick=()=>{if((state.sex||'')!==b.dataset.sex){commit(sexPatch(b.dataset.sex));flash(b.dataset.sex?'只列出'+b.textContent+'的款式':'所有款式都列出來了');}});
+$('mHalf').onclick=()=>commit({mode:'half'});$('mFull').onclick=()=>commit({mode:'full'});
+$('bUndo').onclick=()=>{if(!history.length){flash('沒有可以復原的步驟');return;}state=sanitize(JSON.parse(history.pop()),PACK);save();renderAll();};
+$('bReset').onclick=()=>{{const sx=state.sex,d=Object.assign(defaults(PACK),{name:state.name,mode:state.mode,sex:sx});CAT_ORDER.forEach(c=>{const C=PACK.cats[c],n=sx&&SEX_DEF[sx][c],o=C&&n&&C.opts.find(x=>x.name===n);if(o)d[c]=o.id;});commit(d);}flash('回到預設角色了，按「復原」可以救回來');};
+$('nameInput').addEventListener('input',()=>{state.name=$('nameInput').value.slice(0,10);save();});
+$('bgOut').addEventListener('change',()=>{state.bgOut=$('bgOut').checked;save();});
+window.addEventListener('resize',fitStage);
+
+/* ================= 角色代碼 DQ5 ================= */
+const CODE_KEYS=['style','mode','name','flip','bg','bgOut',...CAT_ORDER,...CKEYS,'sex'];   /* sex 放最後，舊代碼少這格也能讀 */
+const b64e=t=>btoa(unescape(encodeURIComponent(t))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const b64d=t=>decodeURIComponent(escape(atob(t.replace(/-/g,'+').replace(/_/g,'/'))));
+const enc=s=>'DQ5-'+b64e(JSON.stringify(CODE_KEYS.map(k=>typeof s[k]==='boolean'?(s[k]?1:0):(CKEYS.includes(k)?(s[k]?s[k].slice(1):0):s[k]))));
+function decRaw(t){t=String(t).replace(/\s+/g,'');if(!t.startsWith('DQ5-'))throw 0;const a=JSON.parse(b64d(t.slice(4)));if(!Array.isArray(a))throw 0;const o={};
+  CODE_KEYS.forEach((k,i)=>{let v=a[i];if(k==='flip'||k==='bgOut')v=!!v;else if(CKEYS.includes(k))v=v?'#'+v:null;o[k]=v;});return o;}
+$('bCopyCode').onclick=()=>{const code=enc(state),inp=$('codeInput');const fb=()=>{inp.value=code;inp.select();flash('代碼在下面的框裡，按 Ctrl+C 複製');};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(code).then(()=>{inp.value=code;flash('角色代碼複製好了！');},fb);else fb();};
+$('bLoadCode').onclick=()=>{let raw;try{raw=decRaw($('codeInput').value);}catch(e){flash('這不是正確的角色代碼（舊版的代碼不能用在新畫風）');return;}
+  history=[];const id=STYLES.some(x=>x.id===raw.style)?raw.style:STYLES[0].id;setStyle(id,raw).then(()=>{$('codeInput').value='';flash('角色還原成功！');});};
+
+/* ================= 匯出 ================= */
+function renderTo(pose,w){const [W,H]=stageSize();const c=document.createElement('canvas');c.width=w;c.height=Math.round(w*H/W);draw(c.getContext('2d'),state,pose,effMode(),state.bgOut&&state.bg!=='none');return c;}
+const canvasBlob=c=>new Promise(r=>c.toBlob(r,'image/png'));
+const fname=()=>(state.name.trim()||'我的角色').replace(/[\\/:*?"<>|.\u0000-\u001f]/g,'')||'我的角色';
+function download(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);}
+function showResults(items){const box=$('results');box.innerHTML='';items.forEach(([blob,label])=>{const f=document.createElement('figure');const i=document.createElement('img');i.src=URL.createObjectURL(blob);i.alt=label;const c=document.createElement('figcaption');c.textContent=label;f.append(i,c);box.append(f);});}
+const POSES=[['閉嘴',{mouth:'closed'}],['張嘴',{mouth:'open'}],['眨眼',{mouth:'closed',eyes:'blink'}]];
+function lzw(idx){const out=[];let cur=0,bits=0,size=9,next=258,table=new Map();
+  const emit=c=>{cur|=c<<bits;bits+=size;while(bits>=8){out.push(cur&255);cur>>=8;bits-=8;}};
+  emit(256);let p=idx[0];
+  for(let i=1;i<idx.length;i++){const k=idx[i],key=p<<8|k,f=table.get(key);if(f!==undefined){p=f;continue;}emit(p);
+    if(next===4096){emit(256);next=258;size=9;table=new Map();}else{if(next>=(1<<size))size++;table.set(key,next++);}p=k;}
+  emit(p);emit(257);if(bits>0)out.push(cur&255);return out;}
+function makeGif(frames,w,h,delayCs){
+  const count=new Map();
+  frames.forEach(d=>{for(let i=0;i<d.length;i+=4){if(d[i+3]<128)continue;const k=(d[i]>>3)<<10|(d[i+1]>>3)<<5|(d[i+2]>>3);count.set(k,(count.get(k)||0)+1);}});
+  const top=[...count.entries()].sort((a,b)=>b[1]-a[1]).slice(0,255).map(e=>e[0]);
+  const pal=top.map(k=>[(k>>10&31)<<3|4,(k>>5&31)<<3|4,(k&31)<<3|4]);const cache=new Map(top.map((k,i)=>[k,i+1]));
+  const nearest=k=>{let v=cache.get(k);if(v)return v;const r=(k>>10&31)<<3,g=(k>>5&31)<<3,b=(k&31)<<3;let best=1,bd=1e9;
+    for(let i=0;i<pal.length;i++){const p=pal[i],d=(p[0]-r)**2+(p[1]-g)**2+(p[2]-b)**2;if(d<bd){bd=d;best=i+1;}}cache.set(k,best);return best;};
+  const bytes=[];const push=(...a)=>a.forEach(v=>bytes.push(v&255));const w16=v=>push(v,v>>8);
+  'GIF89a'.split('').forEach(c=>push(c.charCodeAt(0)));w16(w);w16(h);push(0xF7,0,0);
+  push(0,0,0);for(let i=0;i<255;i++){const p=pal[i]||[0,0,0];push(p[0],p[1],p[2]);}
+  push(0x21,0xFF,0x0B);'NETSCAPE2.0'.split('').forEach(c=>push(c.charCodeAt(0)));push(3,1,0,0,0);
+  frames.forEach(d=>{const idx=new Uint8Array(w*h);for(let i=0,j=0;i<d.length;i+=4,j++)idx[j]=d[i+3]<128?0:nearest((d[i]>>3)<<10|(d[i+1]>>3)<<5|(d[i+2]>>3));
+    push(0x21,0xF9,4,0x09);w16(delayCs);push(0,0);push(0x2C);w16(0);w16(0);w16(w);w16(h);push(0);push(8);
+    const data=lzw(idx);for(let i=0;i<data.length;i+=255){const n=Math.min(255,data.length-i);push(n);for(let j=0;j<n;j++)bytes.push(data[i+j]);}push(0);});
+  push(0x3B);return new Blob([new Uint8Array(bytes)],{type:'image/gif'});}
+async function buildGif(){const get=pose=>{const c=renderTo(pose,500);return [c.getContext('2d').getImageData(0,0,c.width,c.height).data,c.width,c.height];};
+  const [c,w,h]=get({mouth:'closed'}),[o]=get({mouth:'open'}),[b]=get({mouth:'closed',eyes:'blink'});return makeGif([c,o,c,o,c,o,b,o,c,o],w,h,20);}
+const CRC=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0;}return t;})();
+const crc32=u=>{let c=0xFFFFFFFF;for(let i=0;i<u.length;i++)c=CRC[(c^u[i])&255]^(c>>>8);return (c^0xFFFFFFFF)>>>0;};
+function makeZip(files){const te=new TextEncoder(),chunks=[],central=[];let off=0;const u16=v=>[v&255,v>>8&255],u32=v=>[v&255,v>>8&255,v>>16&255,v>>>24&255];
+  files.forEach(f=>{const n=te.encode(f.name),crc=crc32(f.data),sz=f.data.length;
+    const head=[0x50,0x4B,3,4,...u16(20),...u16(0x0800),...u16(0),...u16(0),...u16(0x21),...u32(crc),...u32(sz),...u32(sz),...u16(n.length),...u16(0)];
+    chunks.push(new Uint8Array(head),n,f.data);
+    central.push(new Uint8Array([0x50,0x4B,1,2,...u16(20),...u16(20),...u16(0x0800),...u16(0),...u16(0),...u16(0x21),...u32(crc),...u32(sz),...u32(sz),...u16(n.length),...u16(0),...u16(0),...u16(0),...u16(0),...u32(0),...u32(off)]),n);
+    off+=head.length+n.length+sz;});
+  const cs=central.reduce((a,c)=>a+c.length,0);const end=new Uint8Array([0x50,0x4B,5,6,...u16(0),...u16(0),...u16(files.length),...u16(files.length),...u32(cs),...u32(off),...u16(0)]);
+  return new Blob([...chunks,...central,end],{type:'application/zip'});}
+const bytesOf=async b=>new Uint8Array(await b.arrayBuffer());
+const README=n=>`${n} 的主播包（紙娃娃角色產生器 v${VERSION}）
+
+1. 把這些檔案全部上傳到 Canva（左邊「上傳」）。
+2. 「${n}_閉嘴.png」放最底層，時間拉滿整段影片。
+3. 「${n}_說話.gif」疊在上面、位置對齊，只放在有聲音的地方；停頓時拿掉，主播就會閉嘴。
+4. 聲音用 Canva 的「文字轉語音」，或自己錄。
+5. 「${n}_角色代碼.txt」留著，下次貼回紙娃娃網站按「還原」，就能繼續改。
+`;
+async function busy(btn,fn){const t=btn.textContent;btn.disabled=true;btn.textContent='製作中…';stopTalk();try{await fn();}catch(e){console.error(e);flash('製作失敗，請再試一次');}btn.disabled=false;btn.textContent=t;}
+const OUT_W=1024;
+$('bPng').onclick=()=>busy($('bPng'),async()=>{const b=await canvasBlob(renderTo({mouth:'closed'},OUT_W));download(b,fname()+'.png');showResults([[b,'PNG']]);flash('PNG 下載好了');});
+$('bGif').onclick=()=>busy($('bGif'),async()=>{const g=await buildGif();download(g,fname()+'_說話.gif');showResults([[g,'說話 GIF']]);flash('GIF 下載好了');});
+$('bPack').onclick=()=>busy($('bPack'),async()=>{const n=fname(),files=[],shown=[];
+  for(const [label,pose] of POSES){const b=await canvasBlob(renderTo(pose,OUT_W));files.push({name:`${n}_${label}.png`,data:await bytesOf(b)});shown.push([b,label]);}
+  const g=await buildGif();files.push({name:`${n}_說話.gif`,data:await bytesOf(g)});shown.push([g,'說話 GIF']);
+  const te=new TextEncoder();files.push({name:`${n}_角色代碼.txt`,data:te.encode(enc(state))});files.push({name:'使用說明.txt',data:te.encode(README(n))});
+  download(makeZip(files),n+'_主播包.zip');showResults(shown);flash('主播包下載好了，解壓縮後上傳到 Canva');});
+
+/* ================= 畫風 ================= */
+async function setStyle(id,parts){
+  stopTalk();$('loading').hidden=false;
+  try{await loadPack(id);}catch(e){console.error(e);$('loading').hidden=true;flash('這個畫風載入失敗');return;}
+  style=id;PACK=PACKS[id];
+  state=sanitize(Object.assign({},parts||state||{},{style:id}),PACK);save();$('loading').hidden=true;renderAll();
+}
+window.__avatar={get state(){return state;},get PACK(){return PACK;},draw,enc,dec:t=>sanitize(decRaw(t),PACK),setStyle,randomize,commit,buildGif,makeZip,renderTo,
+  get tab(){return tab;},set tab(v){tab=v;renderTabs();renderOpts();},get STYLES(){return STYLES;}};
+(async()=>{
+  try{STYLES=EMBED?Object.keys(EMBED).map(k=>({id:k,name:EMBED[k].pack.name})):await (await fetch('packs/index.json',{cache:'no-cache'})).json();}catch(e){STYLES=[];}
+  STYLES=STYLES.filter(x=>x&&x.id);
+  if(!STYLES.length){$('loading').textContent='找不到畫風，請重新整理';return;}
+  let saved=null;try{saved=JSON.parse(localStorage.getItem(KEY)||'null');}catch(e){}
+  const id=saved&&STYLES.some(x=>x.id===saved.style)?saved.style:STYLES[0].id;
+  await setStyle(id,saved);
+  requestAnimationFrame(fitStage);
+})();
+})();
+</script>
+</body>
+</html>
