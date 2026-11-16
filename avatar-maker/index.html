@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<!-- 紙娃娃角色產生器 v1.0 2026-11-16 · Cona 老師的資訊教室
+<!-- 紙娃娃角色產生器 v1.1 2026-11-16 · Cona 老師的資訊教室
      這個檔案是 tools/build.py 由 src/app.html 產生的，要改請改 src/app.html 再執行：python tools/build.py
      v0.5：改用 AI 畫的圖（Codex 生圖、tools/make_raster_pack.py 拆圖層），畫風只留老師選的三種：日式可愛、日式漫畫、韓系貼圖；
            canvas 疊圖，膚色、髮色、衣服、褲子、鞋子用程式換色；舊的 SVG 版保留在 紙娃娃角色產生器_v0.4_2026-11-15.html（原始檔 src/app_svg_v0.4.html）
@@ -79,6 +79,8 @@ h1 small{font-family:var(--f-b);font-size:12px;color:var(--muted);margin-left:6p
 .bgb{aspect-ratio:1;border-radius:10px;border:3px solid var(--line);padding:0;overflow:hidden}
 .bgb canvas{width:100%;height:100%;display:block}
 .bgb[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.hrow{display:flex;align-items:center;justify-content:space-between;gap:4px}.fxw{display:flex;align-items:center;gap:4px;font:700 12px/1 var(--f-b);color:var(--muted)}
+.seg.sm button{font-size:12px;padding:2px 7px}
 .chk{display:flex;align-items:center;gap:6px;font-size:13px;margin-top:6px}
 .row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .txt{padding:4px 10px;border:2px solid var(--line);border-radius:10px;background:var(--bg);min-width:0}
@@ -108,7 +110,7 @@ h1 small{font-family:var(--f-b);font-size:12px;color:var(--muted);margin-left:6p
 <div class="loading" id="loading">載入圖片中…</div>
 <div class="app">
   <header>
-    <h1>紙娃娃角色產生器<small>v1.0</small></h1>
+    <h1>紙娃娃角色產生器<small>v1.1</small></h1>
     <span class="lbl" id="sexLbl">角色</span>
     <span class="seg" role="group" aria-labelledby="sexLbl" id="sexSeg"><button type="button" data-sex="m">男生</button><button type="button" data-sex="f">女生</button><button type="button" data-sex="">全部</button></span>
     <span class="lbl" id="styleLbl">畫風</span>
@@ -142,7 +144,7 @@ h1 small{font-family:var(--f-b);font-size:12px;color:var(--muted);margin-left:6p
     </div>
     <div class="col side">
       <section class="card">
-        <h2>背景</h2>
+        <h2 class="hrow"><span>背景</span><span class="fxw"><span id="fxLbl">光效</span><span class="seg sm" role="group" aria-labelledby="fxLbl" id="fxSeg"></span></span></h2>
         <div class="bgs" id="bgs"></div>
         <label class="chk"><input type="checkbox" id="bgOut"> 下載時也要背景</label>
         <p class="hint">不勾＝透明背景（放進 Canva 最好用）。</p>
@@ -166,7 +168,7 @@ h1 small{font-family:var(--f-b);font-size:12px;color:var(--muted);margin-left:6p
         <p class="hint">主播包：閉嘴、張嘴、眨眼三張圖＋會說話的 GIF＋角色代碼。</p>
         <div id="results" aria-live="polite"></div>
       </section>
-      <div class="foot">Cona 老師的資訊教室 · v1.0 · 2026-11-16 · 圖：Codex 生成</div>
+      <div class="foot">Cona 老師的資訊教室 · v1.1 · 2026-11-16 · 圖：Codex 生成</div>
     </div>
   </div>
 </div>
@@ -175,7 +177,7 @@ h1 small{font-family:var(--f-b);font-size:12px;color:var(--muted);margin-left:6p
 <script>
 (function(){
 'use strict';
-const VERSION='1.0', DATE='2026-11-16';
+const VERSION='1.1', DATE='2026-11-16';
 const EMBED=/*@@EMBED@@*/null;   /* 離線版：{畫風:{pack, img:{名稱:dataURL}}} */
 const $=id=>document.getElementById(id);
 const CAT_ORDER=['face','hair','top','bottom','shoes','hat','glasses','hand','pet'];
@@ -188,7 +190,8 @@ const PANTS=[null,'#3d5a8a','#2b2b33','#6c7383','#8d6e63','#c9a66b','#e2553b','#
 const SHOE=[null,'#e2553b','#2b2b33','#8d6e63','#ffc531','#1f7fbf','#ff8fb3','#2f9e5b','#8a5fd3'];
 const COLORS={face:[['skinC','膚色',SKIN]],hair:[['hairC','髮色',HAIRC]],top:[['topC','衣服',CLOTH]],bottom:[['pantsC','顏色',PANTS]],shoes:[['shoeC','顏色',SHOE]]};
 const CKEYS=['skinC','hairC','topC','pantsC','shoeC'];
-const BGS=[['none','透明'],['white','白色'],['pink','粉紅'],['yellow','鵝黃'],['mint','薄荷'],['blue','淺藍'],['purple','淡紫'],['sky','天空'],['news','新聞台'],['class','教室'],['stage','舞台'],['night','星空'],['stream','直播間']];
+const FXS=[['','無'],['rim','輪廓光'],['aura','氣場光暈']];
+const BGS=[['none','透明'],['white','白色'],['pink','粉紅'],['yellow','鵝黃'],['mint','薄荷'],['blue','淺藍'],['purple','淡紫'],['sky','天空'],['news','新聞台'],['class','教室'],['stage','舞台'],['night','星空'],['cosmos','星海'],['stream','直播間']];
 const SOLID={white:'#ffffff',pink:'#ffe0ea',yellow:'#fff3c4',mint:'#d8f5e6',blue:'#dcefff',purple:'#ece4ff'};
 const KEY='dq-avatar-v5';
 /* 男生／女生：照款式名稱分，沒列到的兩邊都有。選「全部」時所有款式都能用 */
@@ -219,14 +222,14 @@ async function loadPack(id){
   PACKS[id]=p;IMGS[id]=im;
 }
 function defaults(p){const d={};CAT_ORDER.forEach(c=>{const C=p.cats[c];d[c]=C?(C.none?'':C.opts[0].id):'';});
-  return Object.assign({v:5,style:p.id,mode:'half',name:'小橋',flip:false,bg:'none',bgOut:false,sex:''},d,{skinC:null,hairC:null,topC:null,pantsC:null,shoeC:null});}
+  return Object.assign({v:5,style:p.id,mode:'half',name:'小橋',flip:false,bg:'none',bgOut:false,sex:'',fx:''},d,{skinC:null,hairC:null,topC:null,pantsC:null,shoeC:null});}
 const isHex=v=>/^#[0-9a-f]{6}$/i.test(v||'');
 function sanitize(s,p){
   const o=defaults(p);if(!s||typeof s!=='object')return o;
   CAT_ORDER.forEach(c=>{const C=p.cats[c];if(!C)return;const v=s[c];if(v===''&&C.none)o[c]='';else if(C.opts.some(x=>x.id===v))o[c]=v;});
   CKEYS.forEach(k=>{o[k]=isHex(s[k])?s[k].toLowerCase():null;});
   if(typeof s.name==='string')o.name=s.name.replace(/[\u0000-\u001f]/g,'').slice(0,10);
-  o.flip=!!s.flip;o.bgOut=!!s.bgOut;if(BGS.some(b=>b[0]===s.bg))o.bg=s.bg;if(s.mode==='full'||s.mode==='half')o.mode=s.mode;if(s.sex==='m'||s.sex==='f')o.sex=s.sex;
+  o.flip=!!s.flip;o.bgOut=!!s.bgOut;if(BGS.some(b=>b[0]===s.bg))o.bg=s.bg;if(s.mode==='full'||s.mode==='half')o.mode=s.mode;if(s.sex==='m'||s.sex==='f')o.sex=s.sex;if(FXS.some(f=>f[0]===s.fx))o.fx=s.fx;
   return o;
 }
 
@@ -285,7 +288,28 @@ function draw(ctx,s,pose,mode,withBg){
     if(cut){o.drawImage(cutHairImg(name,m,hr[0],img(c,name),s.hairC||'',cut),m.x,m.y,m.w,m.h);return;}   /* 戴帽子：用原尺寸擦好的頭髮（縮小後才擦會漏擦出殘線） */
     o.drawImage(img(c,name),m.x,m.y,m.w,m.h);});
   o.restore();
-  ctx.drawImage(OFF,0,0);
+  drawFx(ctx,OFF,s.fx);
+}
+/* 光效（手遊立繪感）：角色外面一圈光暈＋邊緣內側兩色輪廓光；氣場光暈再加星光粒子。小縮圖不畫（太小看不出來又耗時） */
+const FXT=document.createElement('canvas');
+function drawFx(ctx,off,fx){
+  const w=ctx.canvas.width,h=ctx.canvas.height;
+  if(!fx||w<160){ctx.drawImage(off,0,0);return;}
+  ctx.save();
+  if(fx==='aura'){ctx.shadowColor='#ffcf5a';ctx.shadowBlur=w*.07;ctx.drawImage(off,0,0);ctx.shadowColor='#fff3c4';ctx.shadowBlur=w*.025;}
+  else{ctx.shadowColor='#4fc8ff';ctx.shadowBlur=w*.05;ctx.drawImage(off,0,0);ctx.shadowColor='#b9ecff';ctx.shadowBlur=w*.018;}
+  ctx.drawImage(off,0,0);ctx.restore();
+  FXT.width=w;FXT.height=h;const g=FXT.getContext('2d'),d=Math.max(2,w*.01);
+  const band=(col,dx)=>{g.globalCompositeOperation='source-over';g.clearRect(0,0,w,h);g.drawImage(off,0,0);
+    g.globalCompositeOperation='source-in';g.fillStyle=col;g.fillRect(0,0,w,h);
+    g.globalCompositeOperation='destination-out';g.drawImage(off,dx,d*.6);
+    ctx.save();ctx.globalCompositeOperation='screen';ctx.globalAlpha=.95;ctx.drawImage(FXT,0,0);ctx.restore();};
+  band(fx==='aura'?'#ffe08a':'#8fe8ff',d);band(fx==='aura'?'#ffb3e6':'#c9a6ff',-d);
+  if(fx==='aura'){ctx.save();
+    [[.13,.2,1],[.86,.14,.8],[.1,.52,.7],[.9,.44,1],[.2,.78,.6],[.82,.72,.75],[.28,.08,.5],[.72,.3,.55],[.06,.34,.45],[.94,.86,.5]].forEach(([x,y,s],i)=>{
+      const X=w*x,Y=h*y,r=w*.028*s;ctx.fillStyle=i%2?'#fff7d6':'#ffe08a';ctx.shadowColor='#ffd76b';ctx.shadowBlur=r*1.5;
+      ctx.beginPath();ctx.moveTo(X,Y-r);ctx.quadraticCurveTo(X,Y,X+r,Y);ctx.quadraticCurveTo(X,Y,X,Y+r);ctx.quadraticCurveTo(X,Y,X-r,Y);ctx.quadraticCurveTo(X,Y,X,Y-r);ctx.fill();});
+    ctx.restore();}
 }
 /* 會蓋住頭頂的帽子（名稱是「…帽」）：做一張「頭髮擦除區」＝帽子上緣以上＋緊貼帽子兩側、帽緣高度以上的一小條 */
 const CUT={};
@@ -363,6 +387,11 @@ function drawBg(ctx,id,w,h){
   else if(id==='night'){ctx.fillStyle=g([[0,'#1a1a4a'],[1,'#4a3b8f']],0,0,0,h);ctx.fillRect(0,0,w,h);ctx.fillStyle='#fff6c8';ctx.beginPath();ctx.arc(w*.82,h*.1,w*.07,0,7);ctx.fill();
     ctx.fillStyle='#1f1f52';ctx.beginPath();ctx.arc(w*.85,h*.09,w*.064,0,7);ctx.fill();ctx.fillStyle='#ffffffe6';
     [[.09,.08],[.22,.17],[.38,.06],[.56,.13],[.14,.35],[.9,.28],[.7,.22],[.06,.55],[.94,.6],[.3,.47]].forEach(([x,y],i)=>{ctx.beginPath();ctx.arc(w*x,h*y,Math.max(1,w*(i%3?.004:.007)),0,7);ctx.fill();});}
+  else if(id==='cosmos'){const gr=ctx.createRadialGradient(w*.5,h*.4,0,w*.5,h*.4,Math.max(w,h)*.8);gr.addColorStop(0,'#d6ecff');gr.addColorStop(.1,'#7d86ff');gr.addColorStop(.42,'#2c2672');gr.addColorStop(1,'#0a0a28');ctx.fillStyle=gr;ctx.fillRect(0,0,w,h);
+    const p=ctx.createLinearGradient(w*.3,0,w*.7,0);p.addColorStop(0,'#ffffff00');p.addColorStop(.5,'#ffffff40');p.addColorStop(1,'#ffffff00');ctx.fillStyle=p;ctx.fillRect(w*.3,0,w*.4,h);
+    ctx.strokeStyle='#ffffff38';ctx.lineWidth=Math.max(1,w*.004);ctx.beginPath();ctx.ellipse(w*.5,h*.4,w*.44,h*.3,0,0,7);ctx.stroke();
+    let sd=7;const rnd=()=>(sd=sd*16807%2147483647)/2147483647;
+    for(let i=0;i<70;i++){const x=rnd()*w,y=rnd()*h,r=Math.max(.6,w*(.002+rnd()*.005));ctx.fillStyle=`rgba(255,255,255,${(.4+rnd()*.6).toFixed(2)})`;ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fill();}}
   else if(id==='stream'){ctx.fillStyle=g([[0,'#2b1d5c'],[.55,'#3d2a7a'],[1,'#1c1442']],0,0,0,h);ctx.fillRect(0,0,w,h);
     const hex=(x,y,r,c)=>{ctx.fillStyle=c;ctx.beginPath();for(let k=0;k<6;k++){const a=Math.PI/3*k+Math.PI/6;ctx[k?'lineTo':'moveTo'](x+r*Math.cos(a),y+r*Math.sin(a));}ctx.fill();};
     const r=w*.045;for(let row=0;row<9;row++)for(let col=0;col<3;col++){const y=h*.08+row*r*1.55,x=(col+(row%2)*.5)*r*1.75+r;
@@ -444,6 +473,7 @@ function renderBgs(){
     if(id==='none'){for(let i=0;i<6;i++)for(let j=0;j<6;j++){x.fillStyle=(i+j)%2?'#ddd6ee':'#fff';x.fillRect(i*10,j*10,10,10);}}else drawBg(x,id,60,60);
     b.append(c);b.onclick=()=>commit({bg:id});box.append(b);});
   $('bgOut').checked=state.bgOut;$('bgOut').disabled=state.bg==='none';
+  const fb=$('fxSeg');fb.innerHTML='';FXS.forEach(([id,name])=>{const b=document.createElement('button');b.type='button';b.textContent=name;b.setAttribute('aria-pressed',(state.fx||'')===id);b.onclick=()=>commit({fx:id});fb.append(b);});
 }
 function renderStyles(){const box=$('styleSeg');box.innerHTML='';STYLES.forEach(x=>{const b=document.createElement('button');b.type='button';b.textContent=x.name;b.setAttribute('aria-pressed',x.id===style);
   b.onclick=()=>{if(x.id!==style){history=[];setStyle(x.id);}};box.append(b);});}
@@ -479,7 +509,7 @@ $('bgOut').addEventListener('change',()=>{state.bgOut=$('bgOut').checked;save();
 window.addEventListener('resize',fitStage);
 
 /* ================= 角色代碼 DQ5 ================= */
-const CODE_KEYS=['style','mode','name','flip','bg','bgOut',...CAT_ORDER,...CKEYS,'sex'];   /* sex 放最後，舊代碼少這格也能讀 */
+const CODE_KEYS=['style','mode','name','flip','bg','bgOut',...CAT_ORDER,...CKEYS,'sex','fx'];   /* sex、fx 放最後，舊代碼少這格也能讀 */
 const b64e=t=>btoa(unescape(encodeURIComponent(t))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 const b64d=t=>decodeURIComponent(escape(atob(t.replace(/-/g,'+').replace(/_/g,'/'))));
 const enc=s=>'DQ5-'+b64e(JSON.stringify(CODE_KEYS.map(k=>typeof s[k]==='boolean'?(s[k]?1:0):(CKEYS.includes(k)?(s[k]?s[k].slice(1):0):s[k]))));
