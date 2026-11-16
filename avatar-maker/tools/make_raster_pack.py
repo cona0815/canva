@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""點陣風格包產生程式 v1.4 2026-11-16（加第四畫風 game＝R11；不到 3 款的類別先不放；老師說手持物、夥伴不要了：DROP 的類別不收；加 R6～R9）
+"""點陣風格包產生程式 v1.4 2026-11-16（加第四畫風 game＝R11，衣服用 R12；不到 3 款的類別先不放；老師說手持物、夥伴不要了：DROP 的類別不收；加 R6～R9）
 把交接站 AVA-03 裡 Codex 畫的圖（人台＋部件，綠底）拆成圖層，做成網頁用的風格包 packs/<畫風>/。
 用法：python tools/make_raster_pack.py <AVA-03 案件資料夾> [畫風 ...]
   會讀：art/R1/base_<畫風>.png、art/R2/<畫風>/*.png、art/R3、R3b、R4/<畫風>/*.png（有就讀）
@@ -10,6 +10,7 @@ import json, os, sys, shutil, subprocess, tempfile
 STYLES = {'kawaii': '日式可愛', 'anime': '日式漫畫', 'sticker': '韓系貼圖', 'game': '手遊冒險風'}
 MIN_OPTS = 3   # 還沒畫齊、只有一兩款的類別先不放（11-16 老師：手遊風帽子只有 1 款先藏起來）
 FINE_FACES = ('game',)   # 線條細的畫風：表情的細閉眼線要另外補回來
+SKIP = {('game', 'R11'): ('top_', 'bottom_', 'shoes_')}   # 11-17 老師說 R11 的手遊風衣服沒有手遊感 → 衣服只收 R12 重新設計的
 FACES = ['微笑', '開心大笑', '酷酷', '害羞', '驚訝', '生氣', '眨眼得意', '愛心眼', '星星眼', '亮晶晶大眼', '調皮吐舌', '自信帥氣', '思考中', '感動淚汪汪']
 HAIR = ['清爽短髮', '刺蝟頭', '中分', '旁分瀏海', '齊瀏海長直髮', '雙馬尾', '高馬尾', '丸子頭', '鮑伯頭', '單邊辮子', '蓬鬆捲髮', '層次狼尾', '超長直髮＋呆毛', '雙丸子長辮', '韓系逗號瀏海', '偶像碎蓋', '公主切長髮', '高雙馬尾＋髮圈', '半紮側編髮', '平頭', '短翹髮', '大波浪長捲髮', '雙麻花辮', '側邊單馬尾', '微捲蓬鬆短髮', '兩側推短髮', '低雙馬尾', '蓬鬆中長髮']
 TOPS = ['主播西裝', '帽 T', '水手服', '運動球衣', '制服背心', '條紋 T 恤', '毛衣', '偶像舞台裝', '醫師袍', '廚師服', '太空衣', '魔法袍',
@@ -40,11 +41,11 @@ def main():
         tmp = tempfile.mkdtemp()
         shutil.copy(os.path.join(case, 'art', 'R1', f'base_{st}.png'), os.path.join(tmp, 'base.png'))
         # 只收已驗收的輪次（環境變數 ROUNDS 可指定，例如 ROUNDS=R2,R3,R3b；避免把 Codex 還在畫的半成品包進去）
-        for r in os.environ.get('ROUNDS', 'R2,R3,R3b,R4,R5,R6,R7,R8,R9,R11').split(','):
+        for r in os.environ.get('ROUNDS', 'R2,R3,R3b,R4,R5,R6,R7,R8,R9,R11,R12').split(','):
             d = os.path.join(case, 'art', r, st)
             if os.path.isdir(d):
                 for f in os.listdir(d):
-                    if f.endswith('.png') and not f.startswith(DROP):
+                    if f.endswith('.png') and not f.startswith(DROP) and not f.startswith(SKIP.get((st, r), ())):
                         shutil.copy(os.path.join(d, f), os.path.join(tmp, f))
         out = os.path.join(root, 'packs', st)
         if os.path.isdir(out):

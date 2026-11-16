@@ -330,6 +330,8 @@ function hatCut(o,strip=true){
   const g=c.getContext('2d');g.fillStyle='#000';
   const m=Math.round((R-L)*.07);   /* 兩側只擦貼著帽子的一小條（雙馬尾等從旁邊垂下來的頭髮保留）；帽子那一側翹高（斜戴的貝雷帽）就不擦，頭髮本來就會露出來 */
   if(strip&&yl0>h*.7)g.fillRect(o.x+L-m,0,m,o.y+yl);if(strip&&yr0>h*.7)g.fillRect(o.x+R+1,0,m,o.y+yr);
+  /* 手遊風（頭小、捲髮蓬）：帽子兩側更外面、帽緣以上的頭髮也擦掉，不然捲髮從帽子旁邊翹出來像鹿角；帽緣以下（耳朵旁）的頭髮留著 */
+  if(style==='game'){if(strip&&yl0>h*.7)g.fillRect(0,0,o.x+L-m,o.y+yl+h*.06);if(strip&&yr0>h*.7)g.fillRect(o.x+R+1+m,0,W,o.y+yr+h*.06);}
   const wide=/草帽/.test(o.name);   /* 寬帽簷（草帽）：馬尾在帽簷上方的部分也擦，讓馬尾從帽簷底下垂出來 */
   const run=i=>{let j=h-1;while(j>=0&&!on(i,j))j--;while(j>0&&on(i,j-1))j--;return Math.max(j,top[i]);};   /* 最下面那一段的上緣：魔術師高帽帽身上寬下窄，帽身和帽緣中間的空隙也要擦到帽緣 */
   for(let i=L;i<=R;i++)if(top[i]>=0&&(strip||wide||top[i]<h*.5))g.fillRect(o.x+i,0,1,o.y+run(i)+3);
