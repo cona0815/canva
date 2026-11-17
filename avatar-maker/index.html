@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<!-- 紙娃娃角色產生器 v1.3 2026-11-17 · Cona 老師的資訊教室
+<!-- 紙娃娃角色產生器 v1.3.1 2026-11-17 · Cona 老師的資訊教室
      這個檔案是 tools/build.py 由 src/app.html 產生的，要改請改 src/app.html 再執行：python tools/build.py
      v0.5：改用 AI 畫的圖（Codex 生圖、tools/make_raster_pack.py 拆圖層），畫風只留老師選的三種：日式可愛、日式漫畫、韓系貼圖；
            canvas 疊圖，膚色、髮色、衣服、褲子、鞋子用程式換色；舊的 SVG 版保留在 紙娃娃角色產生器_v0.4_2026-11-15.html（原始檔 src/app_svg_v0.4.html）
@@ -110,7 +110,7 @@ h1 small{font-family:var(--f-b);font-size:12px;color:var(--muted);margin-left:6p
 <div class="loading" id="loading">載入圖片中…</div>
 <div class="app">
   <header>
-    <h1>紙娃娃角色產生器<small>v1.3</small></h1>
+    <h1>紙娃娃角色產生器<small>v1.3.1</small></h1>
     <span class="lbl" id="sexLbl">角色</span>
     <span class="seg" role="group" aria-labelledby="sexLbl" id="sexSeg"><button type="button" data-sex="m">男生</button><button type="button" data-sex="f">女生</button><button type="button" data-sex="">全部</button></span>
     <span class="lbl" id="styleLbl">畫風</span>
@@ -168,7 +168,7 @@ h1 small{font-family:var(--f-b);font-size:12px;color:var(--muted);margin-left:6p
         <p class="hint">主播包：閉嘴、張嘴、眨眼三張圖＋會說話的 GIF＋角色代碼。</p>
         <div id="results" aria-live="polite"></div>
       </section>
-      <div class="foot">Cona 老師的資訊教室 · v1.3 · 2026-11-17 · 圖：Codex 生成</div>
+      <div class="foot">Cona 老師的資訊教室 · v1.3.1 · 2026-11-17 · 圖：Codex 生成</div>
     </div>
   </div>
 </div>
@@ -177,7 +177,7 @@ h1 small{font-family:var(--f-b);font-size:12px;color:var(--muted);margin-left:6p
 <script>
 (function(){
 'use strict';
-const VERSION='1.3', DATE='2026-11-17';
+const VERSION='1.3.1', DATE='2026-11-17';
 const EMBED=/*@@EMBED@@*/null;   /* 離線版：{畫風:{pack, img:{名稱:dataURL}}} */
 const $=id=>document.getElementById(id);
 const CAT_ORDER=['face','hair','top','bottom','shoes','hat','glasses','hand','pet'];
@@ -207,7 +207,9 @@ function sexPatch(sx){   /* 換性別：身上不屬於這個性別的款式，�
     const d=C.opts.find(o=>o.name===(SEX_DEF[sx]||{})[c])||(C.none?null:optsOf(c,sx)[0]);p[c]=d?d.id:'';});
   const dh=PACK.cats.hair&&PACK.cats.hair.opts.find(o=>o.name===SEX_DEF[sx].hair);if(dh&&state.sex!==sx)p.hair=dh.id;
   return p;}
-let STYLES=[],PACKS={},IMGS={},PACK,style,state,history=[],tab='face',talking=null,talkOpen=false,blinkNow=false;
+let STYLES=[],PACKS={},IMGS={},PACK,style,state,history=[],tab='face',talking=null,talkOpen=false,talkBlink=false,blinkNow=false;
+/* 說話節奏（預覽和 GIF 共用）：o 張嘴、c 閉嘴、b 閉嘴眨眼；長短不一、中間有停頓，約每秒 2 下，像一般講話 */
+const TALK=[['o',260],['c',200],['o',300],['c',180],['o',240],['c',260],['o',320],['c',450],['o',280],['c',200],['o',260],['b',150],['c',400]];
 
 /* ================= 載入 ================= */
 function loadImg(src){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=src;});}
@@ -420,7 +422,7 @@ function fitStage(){const box=$('stagebox'),c=$('stage');const [W,H]=stageSize()
 function renderStage(){
   const c=$('stage');const [W,H]=stageSize();const cw=700,chh=Math.round(700*H/W);
   if(c.width!==cw||c.height!==chh){c.width=cw;c.height=chh;fitStage();}
-  draw(c.getContext('2d'),state,{mouth:talkOpen?'open':'closed',eyes:blinkNow&&!talking?'blink':'open'},effMode(),true);
+  draw(c.getContext('2d'),state,{mouth:talkOpen?'open':'closed',eyes:(talking?talkBlink:blinkNow)?'blink':'open'},effMode(),true);
   c.classList.toggle('clear',state.bg==='none');
 }
 /* 縮圖範圍：[x, y, 邊長]，都是畫布寬度的比例 */
@@ -499,8 +501,8 @@ function randomize(){const p={};CAT_ORDER.forEach(c=>{const C=PACK.cats[c];if(!C
   p.skinC=pick(SKIN);p.hairC=pick(HAIRC);p.topC=pick(CLOTH);p.pantsC=pick(PANTS);p.shoeC=pick(SHOE);commit(p);}
 $('bRandom').onclick=()=>{randomize();flash('換一個新造型！');};
 $('bCatRandom').onclick=()=>{const p={[tab]:pick(optsOf(tab)).id};(COLORS[tab]||[]).forEach(([k,,l])=>p[k]=pick(l));commit(p);};
-function stopTalk(){if(talking){clearInterval(talking);talking=null;talkOpen=false;}$('bTalk').setAttribute('aria-pressed','false');$('bTalk').textContent='說話預覽';}
-$('bTalk').onclick=()=>{if(talking){stopTalk();renderStage();return;}talking=setInterval(()=>{talkOpen=!talkOpen;renderStage();},200);$('bTalk').setAttribute('aria-pressed','true');$('bTalk').textContent='停止說話';};
+function stopTalk(){if(talking){clearTimeout(talking);talking=null;talkOpen=false;talkBlink=false;}$('bTalk').setAttribute('aria-pressed','false');$('bTalk').textContent='說話預覽';}
+$('bTalk').onclick=()=>{if(talking){stopTalk();renderStage();return;}let i=0;const step=()=>{const [k,ms]=TALK[i++%TALK.length];talkOpen=k==='o';talkBlink=k==='b';renderStage();talking=setTimeout(step,ms);};step();$('bTalk').setAttribute('aria-pressed','true');$('bTalk').textContent='停止說話';};
 setInterval(()=>{if(talking||document.hidden||!PACK)return;blinkNow=true;renderStage();setTimeout(()=>{blinkNow=false;renderStage();},150);},4200);
 $('bFlip').onclick=()=>commit({flip:!state.flip});
 document.querySelectorAll('#sexSeg button').forEach(b=>b.onclick=()=>{if((state.sex||'')!==b.dataset.sex){commit(sexPatch(b.dataset.sex));flash(b.dataset.sex?'只列出'+b.textContent+'的款式':'所有款式都列出來了');}});
@@ -536,7 +538,7 @@ function lzw(idx){const out=[];let cur=0,bits=0,size=9,next=258,table=new Map();
   for(let i=1;i<idx.length;i++){const k=idx[i],key=p<<8|k,f=table.get(key);if(f!==undefined){p=f;continue;}emit(p);
     if(next===4096){emit(256);next=258;size=9;table=new Map();}else{if(next>=(1<<size))size++;table.set(key,next++);}p=k;}
   emit(p);emit(257);if(bits>0)out.push(cur&255);return out;}
-function makeGif(frames,w,h,delayCs){
+function makeGif(frames,w,h,delayCs){   /* delayCs：數字或每格一個的陣列（單位 1/100 秒） */
   const count=new Map();
   frames.forEach(d=>{for(let i=0;i<d.length;i+=4){if(d[i+3]<128)continue;const k=(d[i]>>3)<<10|(d[i+1]>>3)<<5|(d[i+2]>>3);count.set(k,(count.get(k)||0)+1);}});
   const top=[...count.entries()].sort((a,b)=>b[1]-a[1]).slice(0,255).map(e=>e[0]);
@@ -547,12 +549,12 @@ function makeGif(frames,w,h,delayCs){
   'GIF89a'.split('').forEach(c=>push(c.charCodeAt(0)));w16(w);w16(h);push(0xF7,0,0);
   push(0,0,0);for(let i=0;i<255;i++){const p=pal[i]||[0,0,0];push(p[0],p[1],p[2]);}
   push(0x21,0xFF,0x0B);'NETSCAPE2.0'.split('').forEach(c=>push(c.charCodeAt(0)));push(3,1,0,0,0);
-  frames.forEach(d=>{const idx=new Uint8Array(w*h);for(let i=0,j=0;i<d.length;i+=4,j++)idx[j]=d[i+3]<128?0:nearest((d[i]>>3)<<10|(d[i+1]>>3)<<5|(d[i+2]>>3));
-    push(0x21,0xF9,4,0x09);w16(delayCs);push(0,0);push(0x2C);w16(0);w16(0);w16(w);w16(h);push(0);push(8);
+  frames.forEach((d,fi)=>{const idx=new Uint8Array(w*h);for(let i=0,j=0;i<d.length;i+=4,j++)idx[j]=d[i+3]<128?0:nearest((d[i]>>3)<<10|(d[i+1]>>3)<<5|(d[i+2]>>3));
+    push(0x21,0xF9,4,0x09);w16(Array.isArray(delayCs)?delayCs[fi]:delayCs);push(0,0);push(0x2C);w16(0);w16(0);w16(w);w16(h);push(0);push(8);
     const data=lzw(idx);for(let i=0;i<data.length;i+=255){const n=Math.min(255,data.length-i);push(n);for(let j=0;j<n;j++)bytes.push(data[i+j]);}push(0);});
   push(0x3B);return new Blob([new Uint8Array(bytes)],{type:'image/gif'});}
 async function buildGif(){const get=pose=>{const c=renderTo(pose,500);return [c.getContext('2d').getImageData(0,0,c.width,c.height).data,c.width,c.height];};
-  const [c,w,h]=get({mouth:'closed'}),[o]=get({mouth:'open'}),[b]=get({mouth:'closed',eyes:'blink'});return makeGif([c,o,c,o,c,o,b,o,c,o],w,h,20);}
+  const [c,w,h]=get({mouth:'closed'}),[o]=get({mouth:'open'}),[b]=get({mouth:'closed',eyes:'blink'});const F={c,o,b};return makeGif(TALK.map(([k])=>F[k]),w,h,TALK.map(([,ms])=>ms/10));}
 const CRC=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0;}return t;})();
 const crc32=u=>{let c=0xFFFFFFFF;for(let i=0;i<u.length;i++)c=CRC[(c^u[i])&255]^(c>>>8);return (c^0xFFFFFFFF)>>>0;};
 function makeZip(files){const te=new TextEncoder(),chunks=[],central=[];let off=0;const u16=v=>[v&255,v>>8&255],u32=v=>[v&255,v>>8&255,v>>16&255,v>>>24&255];
