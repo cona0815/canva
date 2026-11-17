@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""點陣風格包產生程式 v1.4 2026-11-16（加第四畫風 game＝R11，衣服用 R12；不到 3 款的類別先不放；老師說手持物、夥伴不要了：DROP 的類別不收；加 R6～R9）
+"""點陣風格包產生程式 v1.5 2026-11-17（11-17 手遊風造型服搬到日式漫畫（port_tops.py）、手遊風先隱藏；加第四畫風 game＝R11，衣服用 R12；不到 3 款的類別先不放；老師說手持物、夥伴不要了：DROP 的類別不收；加 R6～R9）
 把交接站 AVA-03 裡 Codex 畫的圖（人台＋部件，綠底）拆成圖層，做成網頁用的風格包 packs/<畫風>/。
 用法：python tools/make_raster_pack.py <AVA-03 案件資料夾> [畫風 ...]
   會讀：art/R1/base_<畫風>.png、art/R2/<畫風>/*.png、art/R3、R3b、R4/<畫風>/*.png（有就讀）
@@ -9,6 +9,7 @@ import json, os, sys, shutil, subprocess, tempfile
 
 STYLES = {'kawaii': '日式可愛', 'anime': '日式漫畫', 'sticker': '韓系貼圖', 'game': '手遊冒險風'}
 MIN_OPTS = 3   # 還沒畫齊、只有一兩款的類別先不放（11-16 老師：手遊風帽子只有 1 款先藏起來）
+HIDDEN = ('game',)   # 11-17 老師：手遊風先隱藏（風格包照做、不列進 index.json；造型服已搬到日式漫畫）
 FINE_FACES = ('game',)   # 線條細的畫風：表情的細閉眼線要另外補回來
 SKIP = {('game', 'R11'): ('top_', 'bottom_', 'shoes_')}   # 11-17 老師說 R11 的手遊風衣服沒有手遊感 → 衣服只收 R12 重新設計的
 FACES = ['微笑', '開心大笑', '酷酷', '害羞', '驚訝', '生氣', '眨眼得意', '愛心眼', '星星眼', '亮晶晶大眼', '調皮吐舌', '自信帥氣', '思考中', '感動淚汪汪']
@@ -82,10 +83,13 @@ def main():
         shutil.rmtree(tmp)
         print(st, {k: len(v['opts']) for k, v in pack['cats'].items()})
         index.append({'id': st, 'name': STYLES[st]})
+    # 日式漫畫要加上從手遊風搬過來的造型服（需要 packs/game 已經做好）
+    if 'anime' in styles and os.path.exists(os.path.join(root, 'packs', 'game', 'parts.json')):
+        subprocess.run([sys.executable, os.path.join(here, 'port_tops.py')], check=True, env=dict(os.environ, PYTHONIOENCODING='utf-8'))
     allidx = {x['id']: x for x in json.load(open(os.path.join(root, 'packs', 'index.json'), encoding='utf-8')) if x['id'] in STYLES} if os.path.exists(os.path.join(root, 'packs', 'index.json')) else {}
     for x in index:
         allidx[x['id']] = x
-    order = [allidx[k] for k in STYLES if k in allidx]
+    order = [allidx[k] for k in STYLES if k in allidx and k not in HIDDEN]
     json.dump(order, open(os.path.join(root, 'packs', 'index.json'), 'w', encoding='utf-8'), ensure_ascii=False)
 
 
