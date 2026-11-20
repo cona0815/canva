@@ -5,10 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
-<!-- 主播描述詞產生器 v1.0 2026-11-20 · Cona 老師的資訊教室
-     五年級 Canva 虛擬主播課：學生用勾選的方式組出描述詞，貼到 Canva「夢想實驗室」生成自己的主播。
-     v1.0：風格、男生女生、飾品（最多 4）、服裝（最多 3）、衣服顏色、年紀、髮型髮色、表情、動作、主播類型、構圖、背景、其他設定、自己補充；
-           中文／英文描述詞、隨機、清除、複製；選類型自動配背景；選項存在這台電腦 -->
+<!-- 主播描述詞產生器 v1.1 2026-11-20 · Cona 老師的資訊教室
+     五年級 Canva 虛擬主播課：學生用勾選的方式組出描述詞，貼到 Canva 生成自己的主播，再讓主播動起來說話。
+     v1.1：新增「② 讓主播說話」：給 Canva「將影像製作成影片」（自訂）用的動態描述詞——說話的樣子、頭和臉、手、鏡頭、保持不變；
+           附上影片沒有聲音、一段 5 秒要接起來的做法
+     v1.0：「① 生成主播圖片」：風格、男生女生、飾品（最多 4）、服裝（最多 3）、衣服顏色、年紀、髮型髮色、表情、動作、主播類型、構圖、背景、其他設定、自己補充；
+           中文／英文描述詞、隨機、清除、複製；選主播類型自動配背景；選項存在這台電腦 -->
 <title>主播描述詞產生器</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Huninn&family=Noto+Sans+TC:wght@400;500;700&display=swap">
 <style>
@@ -90,20 +92,30 @@ footer{color:var(--muted);font-size:12px;text-align:right}
   .tips{overflow:visible}
 }
 @media (max-width:420px){.btns{grid-template-columns:1fr 1fr}.btns .primary{grid-column:1/-1}}
+.modes{display:inline-flex;gap:6px;margin-left:auto}
+.mode{border:2px solid var(--navy);background:var(--paper);color:var(--navy);border-radius:999px;padding:4px 14px;cursor:pointer;font-weight:700;font-size:15px}
+.mode[aria-pressed="true"]{background:var(--navy);color:var(--paper)}
+.mode:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.teacher{color:var(--muted);font-size:13px;border-top:1px dashed var(--line);padding-top:6px;margin:8px 0 0}
+@media (max-width:1000px){.modes{margin-left:0;width:100%}.mode{flex:1}}
 </style>
 
 <div class="app">
   <header>
     <span class="live">LIVE</span>
     <h1>主播描述詞產生器</h1>
-    <span class="sub">勾一勾，組出你的主播，再貼到 Canva「夢想實驗室」生成圖片。</span>
+    <span class="sub" id="sub"></span>
+    <div class="modes" role="group" aria-label="要做什麼">
+      <button class="mode" id="mImg" aria-pressed="true">① 生成主播圖片</button>
+      <button class="mode" id="mVid" aria-pressed="false">② 讓主播說話</button>
+    </div>
   </header>
   <div class="main">
     <section class="opts" id="opts" aria-label="選項"></section>
     <aside>
       <div class="card outcard">
         <div class="outhead">
-          <h2>你的描述詞</h2>
+          <h2 id="outTitle">你的描述詞</h2>
           <div class="seg" role="group" aria-label="語言">
             <button id="lzh" aria-pressed="true">中文</button><button id="len" aria-pressed="false">英文</button>
           </div>
@@ -117,7 +129,7 @@ footer{color:var(--muted);font-size:12px;text-align:right}
         </div>
         <div class="warn" id="warn"></div>
       </div>
-      <div class="card tips">
+      <div class="card tips" id="tipsImg">
         <h3>到 Canva 這樣做</h3>
         <ol>
           <li>按「複製描述詞」。</li>
@@ -126,19 +138,31 @@ footer{color:var(--muted);font-size:12px;text-align:right}
           <li>從生成的幾張圖裡挑一張最喜歡的。</li>
           <li>不滿意？回來只改一、兩個勾選，再生成一次。</li>
         </ol>
-        <div class="talk"><b>要做會說話的主播？</b><br>勾「嘴巴閉著」。生成後在 Canva 用深紅色橢圓畫一個張開的嘴巴蓋上去，做成「閉嘴」「張嘴」兩頁輪流播放，主播就會說話了。</div>
+        <div class="talk"><b>下一步：讓主播說話</b><br>圖片做好後，按上面的「② 讓主播說話」，用 Canva 把圖片變成會講話的影片。</div>
         <p class="no"><b>不要打</b>真人的名字、卡通角色或球隊的名字。AI 會拒絕，也可能侵權。<br>標題和台名之後在 Canva 自己加字，AI 畫出來的字常常是亂的。</p>
+      </div>
+      <div class="card tips" id="tipsVid" hidden>
+        <h3>到 Canva 這樣做</h3>
+        <ol>
+          <li>點一下你的主播圖片，上方按「編輯」→「將影像製作成影片」。<br>（去背後透明的圖片不能用，要用有背景的那張。）</li>
+          <li>選「自訂」，把描述詞貼進框裡，按「生成 5 秒影片」。</li>
+          <li>影片<b>沒有聲音</b>：再加上文字轉語音，或自己錄的聲音。</li>
+          <li>一段影片只有 5 秒：講比較久就把影片複製幾份接在一起；沒講話的地方放原本的圖片。</li>
+          <li>嘴巴沒動、臉變奇怪？再生成一次。每次都會用掉 AI 次數，不要一直按。</li>
+        </ol>
+        <div class="talk"><b>小提醒</b><br>嘴型不會和聲音一個字一個字對上，看起來像在講話就可以了。勾「最後回到一開始的姿勢」，影片接起來比較不會跳。</div>
+        <p class="teacher">老師注意：Canva 教育版的學生帳號，「將影像製作成影片」預設是關閉的，要由學校的 Canva 管理員開啟。</p>
       </div>
     </aside>
   </div>
-  <footer>Cona 老師的資訊教室 · 主播描述詞產生器 v1.0 · 2026-11-20</footer>
+  <footer>Cona 老師的資訊教室 · 主播描述詞產生器 v1.1 · 2026-11-20</footer>
 </div>
 <div class="toast" id="toast"></div>
 
 <script>
 (()=>{
-/* 每個選項：[中文, 英文]；single=單選（再按一次可取消），max=最多勾幾個 */
-const G=[
+/* ===== ① 生成主播圖片 ===== 每個選項：[中文, 英文, (描述詞裡用的中文)]；single=單選，max=最多勾幾個 */
+const G_IMG=[
  {id:'kind',t:'主播類型',hint:'你要報什麼？',single:true,o:[
   ['新聞主播','a news anchor'],['體育主播','a sports anchor'],['氣象主播','a weather presenter'],
   ['美食節目主持人','a food show host'],['旅遊節目主持人','a travel show host'],['科學小主播','a science show host'],
@@ -193,29 +217,68 @@ const G=[
   ['角色在畫面中間','character centered'],['明亮燈光','bright lighting'],['高畫質細節','high quality, detailed']]}
 ];
 /* 排列順序：老師指定的 風格、男生女生、飾品、服裝 排最前面 */
+
 const ORD=['style','gender','acc','outfit','color','age','hair','hairc','face','pose','kind','frame','bg','extra'];
-G.sort((x,y)=>ORD.indexOf(x.id)-ORD.indexOf(y.id));
+G_IMG.sort((x,y)=>ORD.indexOf(x.id)-ORD.indexOf(y.id));
 const BG_OF={'新聞主播':'新聞攝影棚','體育主播':'體育攝影棚','氣象主播':'氣象台','美食節目主持人':'廚房攝影棚',
   '旅遊節目主持人':'城市街景','科學小主播':'科學實驗室','動物頻道主持人':'動物園','校園小記者':'教室','直播主':'直播房間'};
-const PERSON={zh:{kid:'小學生年紀的',teen:'國高中生年紀的',adult:'年輕大人'},
+const PERSON={zh:{kid:'小學生年紀的',teen:'國高中生年紀的'},
   en:{boy:{kid:'a boy about 10 years old',teen:'a teenage boy',adult:'a young man',_:'a boy'},
       girl:{kid:'a girl about 10 years old',teen:'a teenage girl',adult:'a young woman',_:'a girl'}}};
-const DEF={kind:['新聞主播'],frame:['半身'],extra:['畫面不要出現文字','嘴巴閉著（好做說話動畫）','角色在畫面中間']};
-const KEY='dq-anchor-prompt-v1';
-const $=id=>document.getElementById(id);
-const byId=Object.fromEntries(G.map(g=>[g.id,g]));
-let sel={}, lang='zh', free='', bgTouched=false;
 
-function load(){try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s&&s.sel){sel=s.sel;lang=s.lang==='en'?'en':'zh';free=String(s.free||'').slice(0,40);bgTouched=!!s.bgTouched;return;}}catch(e){}
-  reset();}
-function save(){try{localStorage.setItem(KEY,JSON.stringify({sel,lang,free,bgTouched}));}catch(e){}}
-function reset(){sel=JSON.parse(JSON.stringify(DEF));sel.bg=[BG_OF[sel.kind[0]]];free='';bgTouched=false;}
-function clean(){for(const g of G){const ok=new Set(g.o.map(o=>o[0]));sel[g.id]=(sel[g.id]||[]).filter(v=>ok.has(v));if(g.single)sel[g.id]=sel[g.id].slice(0,1);if(g.max)sel[g.id]=sel[g.id].slice(0,g.max);}}
+/* ===== ② 讓主播說話（Canva「將影像製作成影片」自訂） ===== */
+const G_VID=[
+ {id:'vtalk',t:'說話的樣子',single:true,req:true,o:[
+  ['平穩播報','talking calmly and steadily like a news anchor','像新聞主播一樣平穩地播報'],
+  ['開心熱情','talking cheerfully and enthusiastically','開心又熱情地說話'],
+  ['溫柔親切','talking gently and warmly','溫柔親切地說話'],
+  ['興奮報好消息','talking excitedly, sharing good news','很興奮地報告好消息'],
+  ['認真解說','explaining seriously','認真地解說']]},
+ {id:'vcam',t:'鏡頭',single:true,o:[
+  ['鏡頭固定不動','the camera stays completely still'],['鏡頭慢慢拉近','the camera slowly zooms in']]},
+ {id:'vhead',t:'頭和臉',hint:'可以勾很多個',wide:true,o:[
+  ['輕輕點頭','nodding gently'],['自然眨眼','blinking naturally'],['頭微微左右轉','turning the head slightly left and right'],
+  ['眉毛跟著表情動','eyebrows moving with the expression'],['一直保持微笑','keeping a smile']]},
+ {id:'vhand',t:'手',single:true,wide:true,o:[
+  ['手不要動','hands stay still','雙手不要動'],['一隻手輕輕比手勢','one hand making small gestures','一隻手輕輕比手勢'],
+  ['雙手攤開介紹','opening both hands to introduce something','雙手攤開像在介紹'],
+  ['開頭揮手打招呼','waving hello at the beginning','一開始揮手打招呼'],['最後比讚','giving a thumbs up at the end','最後比一個讚']]},
+ {id:'vlock',t:'保持不變',hint:'建議全部勾',wide:true,o:[
+  ['臉和髮型不要變','keep the same face and hairstyle'],['衣服和飾品不要變','keep the same clothes and accessories'],
+  ['背景不要動','the background stays still'],['最後回到一開始的姿勢（好接下一段）','end in the same pose as the start so the clip can loop','最後回到一開始的姿勢'],
+  ['不要出現文字','no text or letters']]}
+];
+
+const MODES={
+ img:{G:G_IMG,sub:'勾一勾，組出你的主播，再貼到 Canva「夢想實驗室」生成圖片。',title:'你的描述詞',
+   def:()=>{const d={kind:['新聞主播'],frame:['半身'],extra:['畫面不要出現文字','嘴巴閉著（好做說話動畫）','角色在畫面中間']};d.bg=[BG_OF[d.kind[0]]];return d;}},
+ vid:{G:G_VID,sub:'先用 ① 做好主播圖片，再用這組描述詞，在 Canva「將影像製作成影片」讓主播開口說話。',title:'動態描述詞',
+   def:()=>({vtalk:['平穩播報'],vcam:['鏡頭固定不動'],vhead:['輕輕點頭','自然眨眼'],vhand:['手不要動'],
+     vlock:['臉和髮型不要變','衣服和飾品不要變','背景不要動','最後回到一開始的姿勢（好接下一段）','不要出現文字']})}
+};
+const KEY='dq-anchor-prompt-v2', OLDKEY='dq-anchor-prompt-v1';
+const $=id=>document.getElementById(id);
+let mode='img', lang='zh', data={img:{sel:MODES.img.def(),free:'',bgTouched:false},vid:{sel:MODES.vid.def(),free:''}};
+const cur=()=>data[mode], G=()=>MODES[mode].G, byId=()=>Object.fromEntries(G().map(g=>[g.id,g]));
+
+function load(){
+  try{const s=JSON.parse(localStorage.getItem(KEY)||'null');
+    if(s&&s.data){for(const m of ['img','vid'])if(s.data[m]&&s.data[m].sel)data[m]=Object.assign(data[m],s.data[m]);mode=s.mode==='vid'?'vid':'img';lang=s.lang==='en'?'en':'zh';return;}
+    const o=JSON.parse(localStorage.getItem(OLDKEY)||'null');
+    if(o&&o.sel){data.img={sel:o.sel,free:String(o.free||''),bgTouched:!!o.bgTouched};lang=o.lang==='en'?'en':'zh';}
+  }catch(e){}
+}
+function save(){try{localStorage.setItem(KEY,JSON.stringify({data,mode,lang}));}catch(e){}}
+function clean(){
+  for(const m of ['img','vid']){const d=data[m];d.free=String(d.free||'').slice(0,40);
+    for(const g of MODES[m].G){const ok=new Set(g.o.map(o=>o[0]));let a=(d.sel[g.id]||[]).filter(v=>ok.has(v));
+      if(g.single)a=a.slice(0,1);if(g.max)a=a.slice(0,g.max);d.sel[g.id]=a;}}
+}
 
 /* 畫選項 */
 function build(){
-  const box=$('opts');box.innerHTML='';
-  G.forEach((g,i)=>{
+  const box=$('opts');box.innerHTML='';box.scrollTop=0;
+  G().forEach((g,i)=>{
     const d=document.createElement('div');d.className='grp'+(g.wide?' wide':'')+(g.single?' single':'');d.id='g-'+g.id;
     d.innerHTML=`<div class="gh"><span class="num">${i+1}</span><h2>${g.t}</h2>${g.req?'<span class="req">必選</span>':''}<span class="hint">${g.single?'選一個':g.hint||'可以勾很多個'}${g.single&&g.hint?'・'+g.hint:''}</span></div><div class="chips" role="group" aria-label="${g.t}"></div>`;
     const c=d.querySelector('.chips');
@@ -223,29 +286,35 @@ function build(){
       b.innerHTML=`<span class="box" aria-hidden="true"></span>${o[0]}`;b.addEventListener('click',()=>toggle(g,o[0]));c.appendChild(b);});
     box.appendChild(d);
   });
+  const ex=mode==='img'?'臉上有小雀斑、旁邊有一隻小柴犬':'說到一半笑出來、頭髮被風吹動';
   const f=document.createElement('div');f.className='grp wide';
-  f.innerHTML=`<div class="gh"><span class="num">${G.length+1}</span><h2>自己補充</h2><span class="hint">想加的特色，40 字內，可以不寫（例：臉上有小雀斑、旁邊有一隻小柴犬）</span></div><input class="free" id="free" maxlength="40" autocomplete="off" placeholder="想加什麼就打在這裡">`;
+  f.innerHTML=`<div class="gh"><span class="num">${G().length+1}</span><h2>自己補充</h2><span class="hint">40 字內，可以不寫（例：${ex}）</span></div><input class="free" id="free" maxlength="40" autocomplete="off" placeholder="想加什麼就打在這裡">`;
   box.appendChild(f);
-  $('free').addEventListener('input',e=>{free=e.target.value.slice(0,40);update();});
+  $('free').addEventListener('input',e=>{cur().free=e.target.value.slice(0,40);update();});
+  $('sub').textContent=MODES[mode].sub;$('outTitle').textContent=MODES[mode].title;
+  $('tipsImg').hidden=mode!=='img';$('tipsVid').hidden=mode!=='vid';
+  $('mImg').setAttribute('aria-pressed',mode==='img');$('mVid').setAttribute('aria-pressed',mode==='vid');
 }
 function toggle(g,v){
-  const a=sel[g.id]||(sel[g.id]=[]);const i=a.indexOf(v);
+  const s=cur().sel;const a=s[g.id]||(s[g.id]=[]);const i=a.indexOf(v);
   if(i>=0)a.splice(i,1);
   else if(g.single){a.length=0;a.push(v);}
   else{if(g.max&&a.length>=g.max){toast(`${g.t}最多選 ${g.max} 個，先取消一個`);return;}a.push(v);}
-  if(g.id==='bg')bgTouched=true;
-  if(g.id==='kind'&&!bgTouched&&a.length)sel.bg=[BG_OF[a[0]]];
+  if(mode==='img'){if(g.id==='bg')cur().bgTouched=true;if(g.id==='kind'&&!cur().bgTouched&&a.length)s.bg=[BG_OF[a[0]]];}
   update();
 }
 
 /* 組描述詞 */
-const zhOf=(id,v)=>{const o=byId[id].o.find(o=>o[0]===v);return o?(o[2]||o[0]):v;};
-const enOf=(id,v)=>{const o=byId[id].o.find(o=>o[0]===v);return o?o[1]:v;};
-const one=id=>(sel[id]||[])[0];
-const list=id=>sel[id]||[];
+const zhOf=(id,v)=>{const o=byId()[id].o.find(o=>o[0]===v);return o?(o[2]||o[0]):v;};
+const enOf=(id,v)=>{const o=byId()[id].o.find(o=>o[0]===v);return o?o[1]:v;};
+const one=id=>(cur().sel[id]||[])[0];
+const list=id=>cur().sel[id]||[];
 const joinZh=a=>a.length<2?a.join(''):a.slice(0,-1).join('、')+'和'+a[a.length-1];
 const joinEn=a=>a.length<2?a.join(''):a.length===2?a.join(' and '):a.slice(0,-1).join(', ')+', and '+a[a.length-1];
-function compose(){
+const cap=t=>t.charAt(0).toUpperCase()+t.slice(1);
+const freeTxt=()=>cur().free.trim();
+
+function composeImg(){
   const kind=one('kind'),style=one('style'),gender=one('gender'),age=one('age'),hair=one('hair'),hairc=one('hairc'),
     face=one('face'),color=one('color'),pose=one('pose'),bg=one('bg'),frame=one('frame');
   const outfit=list('outfit'),acc=list('acc'),extra=list('extra');
@@ -263,46 +332,67 @@ function compose(){
     if(pose)s.push(pose+'。');
     if(bg)s.push(`背景是${bg==='純色背景（方便去背）'?'單純的純色背景':bg}。`);
     const tail=[frame?frame+'構圖':'',...ex];if(tail.length)s.push(tail.join('，')+'。');
-    if(free.trim())s.push(free.trim().replace(/[。.]?$/,'。'));
+    if(freeTxt())s.push(freeTxt().replace(/[。.]?$/,'。'));
     return s.join('');
-  }else{
-    const s=[];
-    s.push(`${cap(enOf('kind',kind||'新聞主播'))}${style?', '+enOf('style',style):''}.`);
-    let who='';
-    if(gender){const g=PERSON.en[enOf('gender',gender)];who=age?g[enOf('age',age)]:g._;}
-    else if(age)who={kid:'a kid about 10 years old',teen:'a teenager',adult:'a young adult'}[enOf('age',age)];
-    const hairTxt=hairc&&hair?`${enOf('hairc',hairc)} ${enOf('hair',hair).replace(/^an? /,'')}`:hairc?`${enOf('hairc',hairc)} hair`:hair?enOf('hair',hair).replace(/^an? /,''):'';
-    const parts=[];
-    if(who)parts.push(`The anchor is ${who}`);
-    if(hairTxt)parts.push(`${who?'with ':'With '}${hairTxt}`);
-    const faceTxt=[face?enOf('face',face):'',closed?'mouth closed':''].filter(Boolean).join(', ');
-    if(faceTxt)parts.push(`${parts.length?'':'With '}${parts.length?'and ':''}${faceTxt}`);
-    if(parts.length)s.push(parts.join(' ')+'.');
-    if(outfit.length)s.push(`Wearing ${joinEn(outfit.map(v=>enOf('outfit',v)))}${color?`, mainly ${enOf('color',color)}`:''}.`);else if(color)s.push(`Clothes mainly ${enOf('color',color)}.`);
-    if(acc.length)s.push(`Accessories: ${acc.map(v=>enOf('acc',v)).join(', ')}.`);
-    if(pose)s.push(cap(enOf('pose',pose))+'.');
-    if(bg)s.push(`Background: ${enOf('bg',bg)}.`);
-    const tail=[frame?enOf('frame',frame)+' shot':'',...ex.map(v=>enOf('extra',v))];if(tail.length)s.push(cap(tail.join(', '))+'.');
-    if(free.trim())s.push(free.trim());
-    return s.join(' ');
   }
+  const s=[];
+  s.push(`${cap(enOf('kind',kind||'新聞主播'))}${style?', '+enOf('style',style):''}.`);
+  let who='';
+  if(gender){const g=PERSON.en[enOf('gender',gender)];who=age?g[enOf('age',age)]:g._;}
+  else if(age)who={kid:'a kid about 10 years old',teen:'a teenager',adult:'a young adult'}[enOf('age',age)];
+  const hairTxt=hairc&&hair?`${enOf('hairc',hairc)} ${enOf('hair',hair).replace(/^an? /,'')}`:hairc?`${enOf('hairc',hairc)} hair`:hair?enOf('hair',hair).replace(/^an? /,''):'';
+  const parts=[];
+  if(who)parts.push(`The anchor is ${who}`);
+  if(hairTxt)parts.push(`${who?'with ':'With '}${hairTxt}`);
+  const faceTxt=[face?enOf('face',face):'',closed?'mouth closed':''].filter(Boolean).join(', ');
+  if(faceTxt)parts.push(`${parts.length?'and ':'With '}${faceTxt}`);
+  if(parts.length)s.push(parts.join(' ')+'.');
+  if(outfit.length)s.push(`Wearing ${joinEn(outfit.map(v=>enOf('outfit',v)))}${color?`, mainly ${enOf('color',color)}`:''}.`);else if(color)s.push(`Clothes mainly ${enOf('color',color)}.`);
+  if(acc.length)s.push(`Accessories: ${acc.map(v=>enOf('acc',v)).join(', ')}.`);
+  if(pose)s.push(cap(enOf('pose',pose))+'.');
+  if(bg)s.push(`Background: ${enOf('bg',bg)}.`);
+  const tail=[frame?enOf('frame',frame)+' shot':'',...ex.map(v=>enOf('extra',v))];if(tail.length)s.push(cap(tail.join(', '))+'.');
+  if(freeTxt())s.push(freeTxt());
+  return s.join(' ');
 }
-const cap=t=>t.charAt(0).toUpperCase()+t.slice(1);
+function composeVid(){
+  const talk=one('vtalk'),cam=one('vcam'),hand=one('vhand'),head=list('vhead'),lock=list('vlock');
+  if(lang==='zh'){
+    const s=[];
+    s.push(`主播看著鏡頭，${talk?zhOf('vtalk',talk):'說話'}，嘴巴自然地一張一合，像正在講話。`);
+    if(head.length)s.push(head.join('、')+'。');
+    if(hand)s.push(zhOf('vhand',hand)+'。');
+    if(cam)s.push(cam+'。');
+    if(lock.length)s.push(lock.map(v=>zhOf('vlock',v)).join('，')+'。');
+    if(freeTxt())s.push(freeTxt().replace(/[。.]?$/,'。'));
+    return s.join('');
+  }
+  const s=[];
+  s.push(`The anchor looks at the camera, ${talk?enOf('vtalk',talk):'talking'}, mouth opening and closing naturally as if speaking.`);
+  if(head.length)s.push(cap(joinEn(head.map(v=>enOf('vhead',v))))+'.');
+  if(hand)s.push(cap(enOf('vhand',hand))+'.');
+  if(cam)s.push(cap(enOf('vcam',cam))+'.');
+  if(lock.length)s.push(cap(lock.map(v=>enOf('vlock',v)).join(', '))+'.');
+  if(freeTxt())s.push(freeTxt());
+  return s.join(' ');
+}
+const compose=()=>mode==='img'?composeImg():composeVid();
 
 /* 更新畫面 */
 function update(){
-  for(const g of G){
-    const el=$('g-'+g.id);const a=sel[g.id]||[];
+  const s=cur().sel;
+  for(const g of G()){
+    const el=$('g-'+g.id);const a=s[g.id]||[];
     el.querySelectorAll('.chip').forEach(b=>b.setAttribute('aria-pressed',a.includes(b.dataset.v)?'true':'false'));
     el.classList.toggle('need',!!g.req&&!a.length);
   }
-  if($('free').value!==free)$('free').value=free;
+  if($('free').value!==cur().free)$('free').value=cur().free;
   $('lzh').setAttribute('aria-pressed',lang==='zh');$('len').setAttribute('aria-pressed',lang==='en');
-  const miss=G.filter(g=>g.req&&!(sel[g.id]||[]).length).map(g=>g.t);
+  const miss=G().filter(g=>g.req&&!(s[g.id]||[]).length).map(g=>g.t);
   const txt=compose();
-  const out=$('out');out.textContent=txt;out.classList.remove('empty');
+  $('out').textContent=txt;
   $('cnt').textContent=lang==='zh'?`${[...txt].length} 字`:`${txt.split(/\s+/).filter(Boolean).length} 個英文字`;
-  $('picked').textContent=`已選 ${G.reduce((n,g)=>n+(sel[g.id]||[]).length,0)} 項`;
+  $('picked').textContent=`已選 ${G().reduce((n,g)=>n+(s[g.id]||[]).length,0)} 項`;
   $('warn').textContent=miss.length?`還沒選：${miss.join('、')}`:'';
   save();
 }
@@ -310,30 +400,39 @@ function update(){
 /* 按鈕 */
 function toast(m){const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('on'),1800);}
 async function copy(){
-  const miss=G.filter(g=>g.req&&!(sel[g.id]||[]).length);
+  const miss=G().filter(g=>g.req&&!(cur().sel[g.id]||[]).length);
   if(miss.length){toast('先選好：'+miss.map(g=>g.t).join('、'));$('g-'+miss[0].id).scrollIntoView({behavior:'smooth',block:'center'});return;}
-  const t=compose();
-  try{await navigator.clipboard.writeText(t);toast('複製好了！到 Canva 貼上');}
-  catch(e){const r=document.createRange();r.selectNodeContents($('out'));const s=getSelection();s.removeAllRanges();s.addRange(r);
-    try{document.execCommand('copy');toast('複製好了！到 Canva 貼上');}catch(_){toast('請按 Ctrl＋C 複製反白的文字');}}
+  const t=compose(),ok=mode==='img'?'複製好了！到夢想實驗室貼上':'複製好了！到「將影像製作成影片」貼上';
+  try{await navigator.clipboard.writeText(t);toast(ok);}
+  catch(e){const r=document.createRange();r.selectNodeContents($('out'));const sl=getSelection();sl.removeAllRanges();sl.addRange(r);
+    try{document.execCommand('copy');toast(ok);}catch(_){toast('請按 Ctrl＋C 複製反白的文字');}}
 }
 const pick=a=>a[Math.floor(Math.random()*a.length)];
-const pickN=(a,n)=>{const b=[...a].sort(()=>Math.random()-.5);return b.slice(0,n);};
+const pickN=(a,n)=>[...a].sort(()=>Math.random()-.5).slice(0,n);
 function random(){
-  const v=id=>byId[id].o.map(o=>o[0]);
-  sel={kind:[pick(v('kind'))],style:[pick(v('style'))],gender:[pick(v('gender'))],age:[pick(v('age'))],hair:[pick(v('hair'))],
-    hairc:[pick(v('hairc'))],face:[pick(v('face'))],outfit:pickN(v('outfit'),1+Math.floor(Math.random()*2)),color:[pick(v('color'))],
-    acc:pickN(v('acc'),1+Math.floor(Math.random()*3)),pose:[pick(v('pose'))],frame:['半身'],extra:[...DEF.extra]};
-  sel.bg=[BG_OF[sel.kind[0]]];bgTouched=false;update();toast('換了一個新主播！不喜歡的地方再改');
+  const v=id=>byId()[id].o.map(o=>o[0]);
+  if(mode==='img'){
+    const s={kind:[pick(v('kind'))],style:[pick(v('style'))],gender:[pick(v('gender'))],age:[pick(v('age'))],hair:[pick(v('hair'))],
+      hairc:[pick(v('hairc'))],face:[pick(v('face'))],outfit:pickN(v('outfit'),1+Math.floor(Math.random()*2)),color:[pick(v('color'))],
+      acc:pickN(v('acc'),1+Math.floor(Math.random()*3)),pose:[pick(v('pose'))],frame:['半身'],extra:[...MODES.img.def().extra]};
+    s.bg=[BG_OF[s.kind[0]]];data.img.sel=s;data.img.bgTouched=false;toast('換了一個新主播！不喜歡的地方再改');
+  }else{
+    data.vid.sel={vtalk:[pick(v('vtalk'))],vcam:['鏡頭固定不動'],vhead:pickN(v('vhead'),2),vhand:[pick(v('vhand'))],vlock:[...MODES.vid.def().vlock]};
+    toast('換了一種說話方式！');
+  }
+  update();
 }
+function setMode(m){if(m===mode)return;mode=m;build();update();}
 $('bCopy').addEventListener('click',copy);
 $('bRand').addEventListener('click',random);
-$('bClear').addEventListener('click',()=>{reset();update();toast('已經清除，重新選吧');});
+$('bClear').addEventListener('click',()=>{data[mode]=mode==='img'?{sel:MODES.img.def(),free:'',bgTouched:false}:{sel:MODES.vid.def(),free:''};update();toast('已經清除，重新選吧');});
 $('lzh').addEventListener('click',()=>{lang='zh';update();});
 $('len').addEventListener('click',()=>{lang='en';update();});
+$('mImg').addEventListener('click',()=>setMode('img'));
+$('mVid').addEventListener('click',()=>setMode('vid'));
 
-load();build();clean();update();
-window.__anchor={get sel(){return sel;},compose,setLang:l=>{lang=l;update();},random};
+load();clean();build();update();
+window.__anchor={get mode(){return mode;},get sel(){return cur().sel;},compose,setMode,setLang:l=>{lang=l;update();},random};
 })();
 </script>
 
