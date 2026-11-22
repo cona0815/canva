@@ -342,17 +342,18 @@ function hatCut(o,strip=true){
   const m=Math.round((R-L)*.07);   /* 兩側只擦貼著帽子的一小條（雙馬尾等從旁邊垂下來的頭髮保留）；帽子那一側翹高（斜戴的貝雷帽）就不擦，頭髮本來就會露出來 */
   /* 斜戴的貝雷帽翹高那一側（11-22 老師截圖：清爽短髮、刺蝟頭會從帽子左邊冒出一撮被切斷的髮尖）：也擦，但只擦到那一側帽子自己的下緣，帽子底下露出來的頭髮保留 */
   const beret=/貝雷/.test(o.name),okL=strip&&(yl0>lo||beret),okR=strip&&(yr0>lo||beret),eyl=yl0>lo?yl:yl0,eyr=yr0>lo?yr:yr0;
-  if(okL)g.fillRect(o.x+L-m,0,m,o.y+eyl);if(okR)g.fillRect(o.x+R+1,0,m,o.y+eyr);
+  const mL=yl0>lo?m:0,mR=yr0>lo?m:0;   /* 翹高那側不留直條（會切出一段平平的頭髮），斜線直接從帽子尖端開始 */
+  if(okL)g.fillRect(o.x+L-mL,0,mL,o.y+eyl);if(okR)g.fillRect(o.x+R+1,0,mR,o.y+eyr);
   /* 帽子兩側更外面、帽緣以上的頭髮也擦掉，不然捲髮、刺蝟頭、馬尾從帽子旁邊翹出來，被直直切一刀像鹿角或碎髮（11-22 起所有畫風都這樣；手遊風頭小、多擦到帽緣下 6%）；帽緣以下（耳朵旁）的頭髮留著 */
   /* 擦除區的下緣從帽緣往外斜斜往下（約 40°），頭髮像從帽子底下往外散開；用水平一刀，大波浪長髮會被切成方塊 */
   {const dy=style==='game'?h*.06:0,sl=.85,poly=(pts)=>{g.beginPath();pts.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y));g.closePath();g.fill();};
-   const xl=o.x+L-m,xr=o.x+R+1+m,bl=o.y+eyl+dy,br=o.y+eyr+dy;
-   const sL=yl0>lo?sl:1.8,sR=yr0>lo?sl:1.8;   /* 貝雷帽翹高那側斜得陡一點：旁邊的包包頭（雙丸子）整顆擦掉，不留半塊 */
-   if(okL)poly([[xl,0],[xl,bl],[0,bl+xl*sL],[0,0]]);
-   if(okR)poly([[xr,0],[xr,br],[W,br+(W-xr)*sR],[W,0]]);}
+   const xl=o.x+L-mL,xr=o.x+R+1+mR,bl=o.y+eyl+dy,br=o.y+eyr+dy;
+   if(okL)poly([[xl,0],[xl,bl],[0,bl+xl*sl],[0,0]]);
+   if(okR)poly([[xr,0],[xr,br],[W,br+(W-xr)*sl],[W,0]]);}
   const wide=/草帽/.test(o.name);   /* 寬帽簷（草帽）：馬尾在帽簷上方的部分也擦，讓馬尾從帽簷底下垂出來 */
   const run=i=>{let j=h-1;while(j>=0&&!on(i,j))j--;while(j>0&&on(i,j-1))j--;return Math.max(j,top[i]);};   /* 最下面那一段的上緣：魔術師高帽帽身上寬下窄，帽身和帽緣中間的空隙也要擦到帽緣 */
-  for(let i=L;i<=R;i++)if(top[i]>=0&&(strip||wide||top[i]<h*.5))g.fillRect(o.x+i,0,1,o.y+run(i)+3);
+  /* 兩側不擦的髮型（雙馬尾、雙丸子）：帽子範圍內也不擦（帽子本身蓋在頭髮上面）；擦了會把帽子後面的包包頭切成直直的一刀（11-22） */
+  for(let i=L;i<=R;i++)if(top[i]>=0&&(strip||wide))g.fillRect(o.x+i,0,1,o.y+run(i)+3);
   c.brim=o.y+Math.max(yl,yr);return CUT[k]=c;
 }
 /* 原尺寸的頭髮先擦好帽子遮住的部分，存起來（每種髮型＋帽子＋髮色一張） */
@@ -361,7 +362,18 @@ function cutHairImg(name,m,hat,src,col,cut){
   const k=style+'/'+name+'/'+hat.id+'/'+col;if(HCUT[k])return HCUT[k];
   if(++HCN>80){for(const q in HCUT)delete HCUT[q];HCN=1;}
   const c=document.createElement('canvas');c.width=Math.ceil(m.w);c.height=Math.ceil(m.h);const g=c.getContext('2d');
-  g.drawImage(src,0,0,m.w,m.h);g.globalCompositeOperation='destination-out';g.drawImage(cut,-m.x,-m.y);return HCUT[k]=c;
+  g.drawImage(src,0,0,m.w,m.h);g.globalCompositeOperation='destination-out';g.drawImage(cut,-m.x,-m.y);g.globalCompositeOperation='source-over';
+  /* 切口補外框（11-22）：被帽子擦掉的地方沒有原圖那圈深色外框，看起來像剪刀剪的；切口旁 2px 的頭髮換成同色系深色，像本來畫好的髮尾。
+     只算「大片擦掉」的切口（擦除區侵蝕 3px 後還在的），清掉細髮絲留下的小洞旁邊不補，不然會出現小黑點 */
+  {const w=c.width,h=c.height,d=g.getImageData(0,0,w,h),D=d.data,t=document.createElement('canvas');t.width=w;t.height=h;
+   const tg=t.getContext('2d');tg.drawImage(src,0,0,m.w,m.h);const O=tg.getImageData(0,0,w,h).data;
+   let E=new Uint8Array(w*h);for(let i=0;i<w*h;i++)E[i]=O[i*4+3]>128&&D[i*4+3]<100?1:0;
+   const pass=(a,r,isMin,horiz)=>{const o=new Uint8Array(w*h);for(let y=0;y<h;y++)for(let x=0;x<w;x++){let v=isMin?1:0;
+     for(let k=-r;k<=r;k++){const xx=horiz?x+k:x,yy=horiz?y:y+k;const b=xx<0||yy<0||xx>=w||yy>=h?(isMin?0:0):a[yy*w+xx];if(isMin?!b:b){v=isMin?0:1;break;}}o[y*w+x]=v;}return o;};
+   E=pass(pass(E,3,true,true),3,true,false);E=pass(pass(E,5,false,true),5,false,false);   /* 侵蝕 3 再膨脹 5：大片擦除區往外 2px */
+   for(let i=0;i<w*h;i++)if(E[i]&&D[i*4+3]>=100){D[i*4]*=.38;D[i*4+1]*=.32;D[i*4+2]*=.3;D[i*4+3]=255;}
+   g.putImageData(d,0,0);}
+  return HCUT[k]=c;
 }
 /* 擦完後，帽緣以上、和頭髮主體不相連的碎塊（例如丸子頭被切剩的邊）也一起擦掉 */
 function hairCut(m,name,hat){
