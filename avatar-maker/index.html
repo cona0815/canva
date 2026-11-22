@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<!-- 紙娃娃角色產生器 v1.5.1 2026-11-22 · Cona 老師的資訊教室
+<!-- 紙娃娃角色產生器 v1.6 2026-11-22 · Cona 老師的資訊教室
      這個檔案是 tools/build.py 由 src/app.html 產生的，要改請改 src/app.html 再執行：python tools/build.py
      v0.5：改用 AI 畫的圖（Codex 生圖、tools/make_raster_pack.py 拆圖層），畫風只留老師選的三種：日式可愛、日式漫畫、韓系貼圖；
            canvas 疊圖，膚色、髮色、衣服、褲子、鞋子用程式換色；舊的 SVG 版保留在 紙娃娃角色產生器_v0.4_2026-11-15.html（原始檔 src/app_svg_v0.4.html）
@@ -110,7 +110,7 @@ h1 small{font-family:var(--f-b);font-size:12px;color:var(--muted);margin-left:6p
 <div class="loading" id="loading">載入圖片中…</div>
 <div class="app">
   <header>
-    <h1>紙娃娃角色產生器<small>v1.5.1</small></h1>
+    <h1>紙娃娃角色產生器<small>v1.6</small></h1>
     <span class="lbl" id="sexLbl">角色</span>
     <span class="seg" role="group" aria-labelledby="sexLbl" id="sexSeg"><button type="button" data-sex="m">男生</button><button type="button" data-sex="f">女生</button><button type="button" data-sex="">全部</button><button type="button" id="heroPet" hidden>動物</button></span>
     <span class="lbl" id="styleLbl">畫風</span>
@@ -168,7 +168,7 @@ h1 small{font-family:var(--f-b);font-size:12px;color:var(--muted);margin-left:6p
         <p class="hint">主播包：閉嘴、張嘴、眨眼三張圖＋會說話的 GIF＋角色代碼。</p>
         <div id="results" aria-live="polite"></div>
       </section>
-      <div class="foot">Cona 老師的資訊教室 · v1.5.1 · 2026-11-22 · 圖：Codex 生成</div>
+      <div class="foot">Cona 老師的資訊教室 · v1.6 · 2026-11-22 · 圖：Codex 生成</div>
     </div>
   </div>
 </div>
@@ -177,7 +177,7 @@ h1 small{font-family:var(--f-b);font-size:12px;color:var(--muted);margin-left:6p
 <script>
 (function(){
 'use strict';
-const VERSION='1.5.1', DATE='2026-11-22';
+const VERSION='1.6', DATE='2026-11-22';
 const EMBED=/*@@EMBED@@*/null;   /* 離線版：{畫風:{pack, img:{名稱:dataURL}}} */
 const $=id=>document.getElementById(id);
 const CAT_ORDER=['face','hair','top','bottom','shoes','hat','glasses','hand','pet'];

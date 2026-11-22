@@ -22,8 +22,8 @@ PETS = ['橘白小貓', '賓士貓', '虎斑貓', '三花貓', '柴犬', '柯基
 STYLES = ('kawaii', 'anime', 'sticker')
 MIN_OPTS = int(os.environ.get('PET_MIN', 1))
 # 線上那一版用的動物（make_raster_pack 自動呼叫時沒帶參數就用這組）；換新動物上線時改這兩行
-LIVE_SRC = None                                # 例如 'R14/mochi'；None ＝ 各畫風用 art/R13/<畫風>
-LIVE_ONLY = ['pet_01', 'pet_05', 'pet_09']     # None ＝ 12 隻全部   # 測試時可設 PET_MIN=1
+LIVE_SRC = 'R14/mochi'   # 11-22 軟萌貼圖風，三畫風共用；None ＝ 各畫風用 art/R13/<畫風>
+LIVE_ONLY = None         # None ＝ 12 隻全部；測試時可設 PET_MIN=1
 
 
 def main():
@@ -62,8 +62,11 @@ def main():
                         continue
                     v = imgs[k]; d = np.abs(v - base_).max(-1) > 30
                     d[head_bot:] = False
-                    d = cv2.dilate(d.astype(np.uint8), np.ones((9, 9), np.uint8))
-                    w = cv2.GaussianBlur(d.astype(np.float32), (0, 0), 3)[..., None]
+                    # 有變的地方（再外擴一點）一定完全用新圖，柔化只在外圈；不然閉嘴「ω」的嘴角會淡淡透出來（R14 小貓）
+                    d = d.astype(np.uint8)
+                    core = cv2.dilate(d, np.ones((7, 7), np.uint8)).astype(np.float32)
+                    soft = cv2.GaussianBlur(cv2.dilate(d, np.ones((15, 15), np.uint8)).astype(np.float32), (0, 0), 3)
+                    w = np.maximum(core, soft)[..., None]
                     imgs[k] = base_ * (1 - w) + v * w
             m = np.zeros(imgs['closed'].shape[:2], bool)
             for v in imgs.values():
