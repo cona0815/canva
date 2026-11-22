@@ -5,6 +5,7 @@
 這支程式去綠底、裁切，放進 packs/<畫風>/pet_NN.webp，並在 parts.json 加「動物主角」類別（11-22 老師：不要動物夥伴，只當主角；x,y,w,h、half 留著沒用到）：
   x,y,w,h ＝ 當夥伴、全身時的位置（角色右手邊、腳邊地上）；half ＝ 半身時的位置（畫面右下角、肩膀旁邊，放大一點）。
 用法：python tools/make_pets.py <AVA-03 案件資料夾> [畫風 ...] [--only=pet_01,pet_05]
+  --src=R14/mochi：三個畫風共用同一套動物（11-22 老師要「軟萌貼圖風」，動物只當主角，不用配合人台畫風）
   --only：只收驗收過的那幾隻（例如 11-22 先上線三隻樣品：PET_MIN=1 --only=pet_01,pet_05,pet_09）
 make_raster_pack.py 做完畫風包也會自動呼叫（只收 R13 驗收過的圖）。
 """
@@ -19,15 +20,21 @@ from raster_parts import load, chroma
 
 PETS = ['橘白小貓', '賓士貓', '虎斑貓', '三花貓', '柴犬', '柯基', '白色小狗', '黃金獵犬', '小暴龍', '三角龍', '長頸龍', '劍龍']
 STYLES = ('kawaii', 'anime', 'sticker')
-MIN_OPTS = int(os.environ.get('PET_MIN', 3))   # 測試時可設 PET_MIN=1
+MIN_OPTS = int(os.environ.get('PET_MIN', 1))
+# 線上那一版用的動物（make_raster_pack 自動呼叫時沒帶參數就用這組）；換新動物上線時改這兩行
+LIVE_SRC = None                                # 例如 'R14/mochi'；None ＝ 各畫風用 art/R13/<畫風>
+LIVE_ONLY = ['pet_01', 'pet_05', 'pet_09']     # None ＝ 12 隻全部   # 測試時可設 PET_MIN=1
 
 
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith('--')]
     case, styles = args[0], [s for s in (args[1:] or STYLES) if s in STYLES]
-    only = next((a.split('=', 1)[1].split(',') for a in sys.argv[1:] if a.startswith('--only=')), None)
+    shared = next((a.split('=', 1)[1] for a in sys.argv[1:] if a.startswith('--src=')), LIVE_SRC)
+    only = next((a.split('=', 1)[1].split(',') for a in sys.argv[1:] if a.startswith('--only=')), LIVE_ONLY)
+    if only == ['all']:
+        only = None
     for st in styles:
-        src = os.path.join(case, 'art', 'R13', st)
+        src = os.path.join(case, 'art', *shared.split('/')) if shared else os.path.join(case, 'art', 'R13', st)
         pj = os.path.join(ROOT, 'packs', st, 'parts.json')
         if not os.path.isdir(src) or not os.path.exists(pj):
             continue
