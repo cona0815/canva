@@ -316,7 +316,7 @@ function drawFx(ctx,off,fx){
 }
 /* 會蓋住頭頂的帽子（名稱是「…帽」）：做一張「頭髮擦除區」＝帽子上緣以上＋緊貼帽子兩側、帽緣高度以上的一小條 */
 const CUT={};
-const NO_STRIP=['高雙馬尾＋髮圈','雙馬尾','側邊單馬尾','雙麻花辮'];   /* 兩側綁馬尾：只擦帽子圓頂那段，帽緣兩側留著，馬尾像從帽子底下鑽出來（整欄擦會切出缺口） */
+const NO_STRIP=['高雙馬尾＋髮圈','雙馬尾'];   /* 頭頂兩側高綁的雙馬尾：只擦帽子圓頂那段，帽緣兩側留著，馬尾像從帽子旁邊鑽出來（整欄擦會切出缺口）。11-22：側邊單馬尾、雙麻花辮改成照一般髮型擦（不然帽子兩側會冒出弧形頭髮） */
 function hatCut(o,strip=true){
   const k=style+'/'+o.id+(strip?'':'/ns');if(k in CUT)return CUT[k];
   if(!/帽$/.test(o.name||''))return CUT[k]=null;
@@ -328,12 +328,17 @@ function hatCut(o,strip=true){
   if(L<0)return CUT[k]=null;
   const side=(i0,i1)=>{let s=0,n=0;for(let i=i0;i<=i1;i++){let y0=-1,y1=-1;for(let j=0;j<h;j++)if(on(i,j)){if(y0<0)y0=j;y1=j;}if(y0>=0){s+=y1;n++;}}return n?s/n:h/2;};   /* 帽子最外側的下緣＝帽緣高度 */
   const yl0=side(L,Math.min(R,L+5)),yr0=side(Math.max(L,R-5),R),yl=Math.max(yl0,yr0*.6+yl0*.4),yr=Math.max(yr0,yl0*.6+yr0*.4);   /* 斜戴（貝雷帽）時高的那邊往下拉一些 */
-  const W=PACK.canvas[0],c=document.createElement('canvas');c.width=W;c.height=Math.ceil(o.y+h);
+  const W=PACK.canvas[0],c=document.createElement('canvas');c.width=W;c.height=PACK.canvas[1];   /* 整張高：斜擦區會超過帽子底部 */
   const g=c.getContext('2d');g.fillStyle='#000';
+  const lo=/貝雷/.test(o.name)?h*.7:h*.55;   /* 帽子側邊下緣夠低才擦兩側：斜戴的貝雷帽高的那一側不擦；報童帽、機長帽帽頂比較寬、側邊下緣在 6～7 成高，也要擦（11-22） */
   const m=Math.round((R-L)*.07);   /* 兩側只擦貼著帽子的一小條（雙馬尾等從旁邊垂下來的頭髮保留）；帽子那一側翹高（斜戴的貝雷帽）就不擦，頭髮本來就會露出來 */
-  if(strip&&yl0>h*.7)g.fillRect(o.x+L-m,0,m,o.y+yl);if(strip&&yr0>h*.7)g.fillRect(o.x+R+1,0,m,o.y+yr);
-  /* 手遊風（頭小、捲髮蓬）：帽子兩側更外面、帽緣以上的頭髮也擦掉，不然捲髮從帽子旁邊翹出來像鹿角；帽緣以下（耳朵旁）的頭髮留著 */
-  if(style==='game'){if(strip&&yl0>h*.7)g.fillRect(0,0,o.x+L-m,o.y+yl+h*.06);if(strip&&yr0>h*.7)g.fillRect(o.x+R+1+m,0,W,o.y+yr+h*.06);}
+  if(strip&&yl0>lo)g.fillRect(o.x+L-m,0,m,o.y+yl);if(strip&&yr0>lo)g.fillRect(o.x+R+1,0,m,o.y+yr);
+  /* 帽子兩側更外面、帽緣以上的頭髮也擦掉，不然捲髮、刺蝟頭、馬尾從帽子旁邊翹出來，被直直切一刀像鹿角或碎髮（11-22 起所有畫風都這樣；手遊風頭小、多擦到帽緣下 6%）；帽緣以下（耳朵旁）的頭髮留著 */
+  /* 擦除區的下緣從帽緣往外斜斜往下（約 40°），頭髮像從帽子底下往外散開；用水平一刀，大波浪長髮會被切成方塊 */
+  {const dy=style==='game'?h*.06:0,sl=.85,poly=(pts)=>{g.beginPath();pts.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y));g.closePath();g.fill();};
+   const xl=o.x+L-m,xr=o.x+R+1+m,bl=o.y+yl+dy,br=o.y+yr+dy;
+   if(strip&&yl0>lo)poly([[xl,0],[xl,bl],[0,bl+xl*sl],[0,0]]);
+   if(strip&&yr0>lo)poly([[xr,0],[xr,br],[W,br+(W-xr)*sl],[W,0]]);}
   const wide=/草帽/.test(o.name);   /* 寬帽簷（草帽）：馬尾在帽簷上方的部分也擦，讓馬尾從帽簷底下垂出來 */
   const run=i=>{let j=h-1;while(j>=0&&!on(i,j))j--;while(j>0&&on(i,j-1))j--;return Math.max(j,top[i]);};   /* 最下面那一段的上緣：魔術師高帽帽身上寬下窄，帽身和帽緣中間的空隙也要擦到帽緣 */
   for(let i=L;i<=R;i++)if(top[i]>=0&&(strip||wide||top[i]<h*.5))g.fillRect(o.x+i,0,1,o.y+run(i)+3);
