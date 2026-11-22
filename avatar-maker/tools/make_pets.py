@@ -2,7 +2,7 @@
 """動物夥伴（貓、狗、恐龍）圖層 v1.0 2026-11-22
 11-22 老師：「多一個類別是可愛的貓狗還有恐龍」。R13 每隻動物三張表情 pet_NN_closed／open／blink（1024×1024 綠底，沒有人台），
 動物也可以當主角（網頁 state.hero＝pet：畫面中間只畫這隻動物、會說話）；
-這支程式去綠底、裁切，放進 packs/<畫風>/pet_NN.webp，並在 parts.json 加「動物夥伴」類別：
+這支程式去綠底、裁切，放進 packs/<畫風>/pet_NN.webp，並在 parts.json 加「動物主角」類別（11-22 老師：不要動物夥伴，只當主角；x,y,w,h、half 留著沒用到）：
   x,y,w,h ＝ 當夥伴、全身時的位置（角色右手邊、腳邊地上）；half ＝ 半身時的位置（畫面右下角、肩膀旁邊，放大一點）。
 用法：python tools/make_pets.py <AVA-03 案件資料夾> [畫風 ...] [--only=pet_01,pet_05]
   --only：只收驗收過的那幾隻（例如 11-22 先上線三隻樣品：PET_MIN=1 --only=pet_01,pet_05,pet_09）
@@ -82,11 +82,11 @@ def main():
             opts.append({'id': pid, 'name': name, 'x': round(fx, 1), 'y': round(fy, 1), 'w': round(fw, 1), 'h': round(fh, 1),
                          'half': {'x': round(hx, 1), 'y': round(hy, 1), 'w': round(hw, 1), 'h': round(hh, 1)}})
         if len(opts) >= MIN_OPTS:
-            P['cats']['pet'] = {'name': '動物夥伴', 'opts': opts, 'none': '不要'}
+            P['cats']['pet'] = {'name': '動物主角', 'opts': opts}   # 11-22 老師：不要動物夥伴，動物只當主角
         else:
             P['cats'].pop('pet', None)
         json.dump(P, open(pj, 'w', encoding='utf-8'), ensure_ascii=False, separators=(',', ':'))
-        print(st, '動物夥伴', len(opts), '隻')
+        print(st, '動物主角', len(opts), '隻')
 
 
 if __name__ == '__main__':

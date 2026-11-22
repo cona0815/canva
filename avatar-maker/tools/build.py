@@ -11,7 +11,7 @@ v0.4 以前的 SVG 版：src/app_svg_v0.4.html，產生程式 make_flat.py／mak
 """
 import base64, json, os
 
-VERSION = '1.5'
+VERSION = '1.5.1'
 DATE = '2026-11-22'
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

@@ -293,7 +293,7 @@ function draw(ctx,s,pose,mode,withBg){
   ['top','bottom','shoes','hat'].forEach(c=>{if(mode!=='full'&&c==='shoes')return;const r=rectOf(c,s,pose);if(r&&r[0].erase){const e=r[0].erase;o.drawImage(IMGS[style][r[1]+'_erase'],e.x,e.y,e.w,e.h);}});
   o.globalCompositeOperation='source-over';
   LAYERS.forEach(c=>{
-    if(c==='base'||(mode!=='full'&&c==='shoes'))return;
+    if(c==='base'||c==='pet'||(mode!=='full'&&c==='shoes'))return;   /* 11-22 老師：不要動物夥伴，動物只當主角（上面的「動物」按鈕） */
     const r=rectOf(c,s,pose);if(!r)return;const name=r[1],m=(c==='pet'&&mode!=='full'&&r[0].half)?r[0].half:r[0];   /* 動物夥伴：半身放右下角（half），全身在腳邊 */
     const hr=c==='hair'&&rectOf('hat',s,pose),cut=hr&&hairCut(m,name,hr[0]);
     if(cut){o.drawImage(cutHairImg(name,m,hr[0],img(c,name),s.hairC||'',cut),m.x,m.y,m.w,m.h);return;}   /* 戴帽子：用原尺寸擦好的頭髮（縮小後才擦會漏擦出殘線） */
@@ -458,8 +458,8 @@ function thumb(s,c){
 }
 function renderTabs(){
   const box=$('tabs');box.innerHTML='';if(!PACK.cats[tab])tab='face';
-  const hero=!!isHero(state);if(hero)tab='pet';
-  CAT_ORDER.filter(c=>PACK.cats[c]&&(!hero||c==='pet')).forEach(c=>{const b=document.createElement('button');b.type='button';b.className='tab';b.setAttribute('role','tab');b.textContent=hero?'動物主角':PACK.cats[c].name.replace('帽子頭飾','帽子');
+  const hero=!!isHero(state);if(hero)tab='pet';else if(tab==='pet')tab='face';
+  CAT_ORDER.filter(c=>PACK.cats[c]&&(hero?c==='pet':c!=='pet')).forEach(c=>{const b=document.createElement('button');b.type='button';b.className='tab';b.setAttribute('role','tab');b.textContent=hero?'動物主角':PACK.cats[c].name.replace('帽子頭飾','帽子');
     b.setAttribute('aria-selected',c===tab);if(FULL_ONLY.includes(c)&&effMode()==='half')b.classList.add('dim');
     b.addEventListener('click',()=>{tab=c;renderTabs();renderOpts();});box.append(b);});
 }
@@ -516,7 +516,7 @@ function commit(patch){history.push(JSON.stringify(state));if(history.length>40)
 /* ================= 按鈕 ================= */
 const pick=a=>a[Math.floor(Math.random()*a.length)];
 const NONE_P={hair:.03,hat:.55,glasses:.75,hand:.5,pet:.6};
-function randomize(){const p={};CAT_ORDER.forEach(c=>{const C=PACK.cats[c];if(!C)return;p[c]=(C.none&&Math.random()<(NONE_P[c]||.3))?'':pick(optsOf(c)).id;});
+function randomize(){const p={};CAT_ORDER.forEach(c=>{const C=PACK.cats[c];if(!C||c==='pet')return;p[c]=(C.none&&Math.random()<(NONE_P[c]||.3))?'':pick(optsOf(c)).id;});
   if(isHero(state))p.pet=pick(PACK.cats.pet.opts).id;   /* 動物主角：一定換一隻動物 */
   p.skinC=pick(SKIN);p.hairC=pick(HAIRC);p.topC=pick(CLOTH);p.pantsC=pick(PANTS);p.shoeC=pick(SHOE);commit(p);}
 $('bRandom').onclick=()=>{randomize();flash('換一個新造型！');};
