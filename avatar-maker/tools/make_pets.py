@@ -18,7 +18,8 @@ HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 from raster_parts import load, chroma
 
-PETS = ['橘白小貓', '賓士貓', '虎斑貓', '三花貓', '柴犬', '柯基', '白色小狗', '黃金獵犬', '小暴龍', '三角龍', '長頸龍', '劍龍']
+PETS = ['橘白小貓', '賓士貓', '虎斑貓', '三花貓', '柴犬', '柯基', '白色小狗', '黃金獵犬', '小暴龍', '三角龍', '長頸龍', '劍龍',
+        '垂耳兔', '倉鼠', '熊貓', '企鵝寶寶', '小狐狸', '海豹寶寶', '水獺', '小綿羊', '小豬', '無尾熊', '翼龍', '甲龍']   # 13～24：11-23 R15 擴充
 STYLES = ('kawaii', 'anime', 'sticker')
 MIN_OPTS = int(os.environ.get('PET_MIN', 1))
 # 線上那一版用的動物（make_raster_pack 自動呼叫時沒帶參數就用這組）；換新動物上線時改這兩行
