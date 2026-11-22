@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<!-- 紙娃娃角色產生器 v1.6 2026-11-22 · Cona 老師的資訊教室
+<!-- 紙娃娃角色產生器 v1.6.1 2026-11-22 · Cona 老師的資訊教室
      這個檔案是 tools/build.py 由 src/app.html 產生的，要改請改 src/app.html 再執行：python tools/build.py
      v0.5：改用 AI 畫的圖（Codex 生圖、tools/make_raster_pack.py 拆圖層），畫風只留老師選的三種：日式可愛、日式漫畫、韓系貼圖；
            canvas 疊圖，膚色、髮色、衣服、褲子、鞋子用程式換色；舊的 SVG 版保留在 紙娃娃角色產生器_v0.4_2026-11-15.html（原始檔 src/app_svg_v0.4.html）
@@ -110,7 +110,7 @@ h1 small{font-family:var(--f-b);font-size:12px;color:var(--muted);margin-left:6p
 <div class="loading" id="loading">載入圖片中…</div>
 <div class="app">
   <header>
-    <h1>紙娃娃角色產生器<small>v1.6</small></h1>
+    <h1>紙娃娃角色產生器<small>v1.6.1</small></h1>
     <span class="lbl" id="sexLbl">角色</span>
     <span class="seg" role="group" aria-labelledby="sexLbl" id="sexSeg"><button type="button" data-sex="m">男生</button><button type="button" data-sex="f">女生</button><button type="button" data-sex="">全部</button><button type="button" id="heroPet" hidden>動物</button></span>
     <span class="lbl" id="styleLbl">畫風</span>
@@ -168,7 +168,7 @@ h1 small{font-family:var(--f-b);font-size:12px;color:var(--muted);margin-left:6p
         <p class="hint">主播包：閉嘴、張嘴、眨眼三張圖＋會說話的 GIF＋角色代碼。</p>
         <div id="results" aria-live="polite"></div>
       </section>
-      <div class="foot">Cona 老師的資訊教室 · v1.6 · 2026-11-22 · 圖：Codex 生成</div>
+      <div class="foot">Cona 老師的資訊教室 · v1.6.1 · 2026-11-22 · 圖：Codex 生成</div>
     </div>
   </div>
 </div>
@@ -177,7 +177,7 @@ h1 small{font-family:var(--f-b);font-size:12px;color:var(--muted);margin-left:6p
 <script>
 (function(){
 'use strict';
-const VERSION='1.6', DATE='2026-11-22';
+const VERSION='1.6.1', DATE='2026-11-22';
 const EMBED=/*@@EMBED@@*/null;   /* 離線版：{畫風:{pack, img:{名稱:dataURL}}} */
 const $=id=>document.getElementById(id);
 const CAT_ORDER=['face','hair','top','bottom','shoes','hat','glasses','hand','pet'];
@@ -324,7 +324,7 @@ function drawFx(ctx,off,fx){
 }
 /* 會蓋住頭頂的帽子（名稱是「…帽」）：做一張「頭髮擦除區」＝帽子上緣以上＋緊貼帽子兩側、帽緣高度以上的一小條 */
 const CUT={};
-const NO_STRIP=['高雙馬尾＋髮圈','雙馬尾'];   /* 頭頂兩側高綁的雙馬尾：只擦帽子圓頂那段，帽緣兩側留著，馬尾像從帽子旁邊鑽出來（整欄擦會切出缺口）。11-22：側邊單馬尾、雙麻花辮改成照一般髮型擦（不然帽子兩側會冒出弧形頭髮） */
+const NO_STRIP=['高雙馬尾＋髮圈','雙馬尾','雙丸子長辮'];   /* 雙丸子：包包頭在頭兩側，擦兩側會剩半截像天線（11-22 貝雷帽、機長帽），整顆留著 */   /* 頭頂兩側高綁的雙馬尾：只擦帽子圓頂那段，帽緣兩側留著，馬尾像從帽子旁邊鑽出來（整欄擦會切出缺口）。11-22：側邊單馬尾、雙麻花辮改成照一般髮型擦（不然帽子兩側會冒出弧形頭髮） */
 function hatCut(o,strip=true){
   const k=style+'/'+o.id+(strip?'':'/ns');if(k in CUT)return CUT[k];
   if(!/帽$/.test(o.name||''))return CUT[k]=null;
@@ -340,13 +340,16 @@ function hatCut(o,strip=true){
   const g=c.getContext('2d');g.fillStyle='#000';
   const lo=/貝雷/.test(o.name)?h*.7:h*.55;   /* 帽子側邊下緣夠低才擦兩側：斜戴的貝雷帽高的那一側不擦；報童帽、機長帽帽頂比較寬、側邊下緣在 6～7 成高，也要擦（11-22） */
   const m=Math.round((R-L)*.07);   /* 兩側只擦貼著帽子的一小條（雙馬尾等從旁邊垂下來的頭髮保留）；帽子那一側翹高（斜戴的貝雷帽）就不擦，頭髮本來就會露出來 */
-  if(strip&&yl0>lo)g.fillRect(o.x+L-m,0,m,o.y+yl);if(strip&&yr0>lo)g.fillRect(o.x+R+1,0,m,o.y+yr);
+  /* 斜戴的貝雷帽翹高那一側（11-22 老師截圖：清爽短髮、刺蝟頭會從帽子左邊冒出一撮被切斷的髮尖）：也擦，但只擦到那一側帽子自己的下緣，帽子底下露出來的頭髮保留 */
+  const beret=/貝雷/.test(o.name),okL=strip&&(yl0>lo||beret),okR=strip&&(yr0>lo||beret),eyl=yl0>lo?yl:yl0,eyr=yr0>lo?yr:yr0;
+  if(okL)g.fillRect(o.x+L-m,0,m,o.y+eyl);if(okR)g.fillRect(o.x+R+1,0,m,o.y+eyr);
   /* 帽子兩側更外面、帽緣以上的頭髮也擦掉，不然捲髮、刺蝟頭、馬尾從帽子旁邊翹出來，被直直切一刀像鹿角或碎髮（11-22 起所有畫風都這樣；手遊風頭小、多擦到帽緣下 6%）；帽緣以下（耳朵旁）的頭髮留著 */
   /* 擦除區的下緣從帽緣往外斜斜往下（約 40°），頭髮像從帽子底下往外散開；用水平一刀，大波浪長髮會被切成方塊 */
   {const dy=style==='game'?h*.06:0,sl=.85,poly=(pts)=>{g.beginPath();pts.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y));g.closePath();g.fill();};
-   const xl=o.x+L-m,xr=o.x+R+1+m,bl=o.y+yl+dy,br=o.y+yr+dy;
-   if(strip&&yl0>lo)poly([[xl,0],[xl,bl],[0,bl+xl*sl],[0,0]]);
-   if(strip&&yr0>lo)poly([[xr,0],[xr,br],[W,br+(W-xr)*sl],[W,0]]);}
+   const xl=o.x+L-m,xr=o.x+R+1+m,bl=o.y+eyl+dy,br=o.y+eyr+dy;
+   const sL=yl0>lo?sl:1.8,sR=yr0>lo?sl:1.8;   /* 貝雷帽翹高那側斜得陡一點：旁邊的包包頭（雙丸子）整顆擦掉，不留半塊 */
+   if(okL)poly([[xl,0],[xl,bl],[0,bl+xl*sL],[0,0]]);
+   if(okR)poly([[xr,0],[xr,br],[W,br+(W-xr)*sR],[W,0]]);}
   const wide=/草帽/.test(o.name);   /* 寬帽簷（草帽）：馬尾在帽簷上方的部分也擦，讓馬尾從帽簷底下垂出來 */
   const run=i=>{let j=h-1;while(j>=0&&!on(i,j))j--;while(j>0&&on(i,j-1))j--;return Math.max(j,top[i]);};   /* 最下面那一段的上緣：魔術師高帽帽身上寬下窄，帽身和帽緣中間的空隙也要擦到帽緣 */
   for(let i=L;i<=R;i++)if(top[i]>=0&&(strip||wide||top[i]<h*.5))g.fillRect(o.x+i,0,1,o.y+run(i)+3);
