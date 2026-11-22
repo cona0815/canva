@@ -112,7 +112,7 @@ h1 small{font-family:var(--f-b);font-size:12px;color:var(--muted);margin-left:6p
   <header>
     <h1>紙娃娃角色產生器<small>v@@VERSION@@</small></h1>
     <span class="lbl" id="sexLbl">角色</span>
-    <span class="seg" role="group" aria-labelledby="sexLbl" id="sexSeg"><button type="button" data-sex="m">男生</button><button type="button" data-sex="f">女生</button><button type="button" data-sex="">全部</button></span>
+    <span class="seg" role="group" aria-labelledby="sexLbl" id="sexSeg"><button type="button" data-sex="m">男生</button><button type="button" data-sex="f">女生</button><button type="button" data-sex="">全部</button><button type="button" id="heroPet" hidden>動物</button></span>
     <span class="lbl" id="styleLbl">畫風</span>
     <span class="seg" role="group" aria-labelledby="styleLbl" id="styleSeg"></span>
     <span class="lbl" id="modeLbl">身體</span>
@@ -181,7 +181,7 @@ const VERSION='@@VERSION@@', DATE='@@DATE@@';
 const EMBED=/*@@EMBED@@*/null;   /* 離線版：{畫風:{pack, img:{名稱:dataURL}}} */
 const $=id=>document.getElementById(id);
 const CAT_ORDER=['face','hair','top','bottom','shoes','hat','glasses','hand','pet'];
-const FULL_ONLY=['bottom','shoes','pet'];
+const FULL_ONLY=['bottom','shoes'];   /* 11-22 動物夥伴半身也看得到（在右下角），不算只有全身 */
 const LAYERS=['base','bottom','shoes','top','face','hair','glasses','hat','hand','pet'];   /* 疊圖順序（底→頂） */
 const SKIN=[null,'#ffe3cf','#f6c7a4','#e0a878','#b97a4f','#7d4b2e'];
 const HAIRC=[null,'#2b2b33','#5a3a28','#b5651d','#e8b84a','#d9462f','#ff8fb3','#3f7fd9','#3faa6b','#8a5fd3','#c9ccd6'];
@@ -219,19 +219,19 @@ async function loadPack(id){
   if(EMBED&&EMBED[id]){p=EMBED[id].pack;src=n=>EMBED[id].img[n];}
   else{p=await (await fetch(`packs/${id}/parts.json`,{cache:'no-cache'})).json();src=n=>`packs/${id}/${n}.webp`;}
   const names=['base'];
-  Object.entries(p.cats).forEach(([c,C])=>C.opts.forEach(o=>{if(c==='face')['closed','open','blink'].forEach(s=>names.push(`face_${o.id}_${s}`));else{names.push(o.id);if(o.erase)names.push(o.id+'_erase');}}));
+  Object.entries(p.cats).forEach(([c,C])=>C.opts.forEach(o=>{if(c==='face')['closed','open','blink'].forEach(s=>names.push(`face_${o.id}_${s}`));else if(c==='pet')['closed','open','blink'].forEach(s=>names.push(`${o.id}_${s}`));else{names.push(o.id);if(o.erase)names.push(o.id+'_erase');}}));
   const im={};await Promise.all(names.map(n=>loadImg(src(n)).then(i=>{im[n]=i;})));
   PACKS[id]=p;IMGS[id]=im;
 }
 function defaults(p){const d={};CAT_ORDER.forEach(c=>{const C=p.cats[c];d[c]=C?(C.none?'':C.opts[0].id):'';});
-  return Object.assign({v:5,style:p.id,mode:'half',name:'小橋',flip:false,bg:'none',bgOut:false,sex:'',fx:''},d,{skinC:null,hairC:null,topC:null,pantsC:null,shoeC:null});}
+  return Object.assign({v:5,style:p.id,mode:'half',name:'小橋',flip:false,bg:'none',bgOut:false,sex:'',fx:'',hero:''},d,{skinC:null,hairC:null,topC:null,pantsC:null,shoeC:null});}
 const isHex=v=>/^#[0-9a-f]{6}$/i.test(v||'');
 function sanitize(s,p){
   const o=defaults(p);if(!s||typeof s!=='object')return o;
   CAT_ORDER.forEach(c=>{const C=p.cats[c];if(!C)return;const v=s[c];if(v===''&&C.none)o[c]='';else if(C.opts.some(x=>x.id===v))o[c]=v;});
   CKEYS.forEach(k=>{o[k]=isHex(s[k])?s[k].toLowerCase():null;});
   if(typeof s.name==='string')o.name=s.name.replace(/[\u0000-\u001f]/g,'').slice(0,10);
-  o.flip=!!s.flip;o.bgOut=!!s.bgOut;if(BGS.some(b=>b[0]===s.bg))o.bg=s.bg;if(s.mode==='full'||s.mode==='half')o.mode=s.mode;if(s.sex==='m'||s.sex==='f')o.sex=s.sex;if(FXS.some(f=>f[0]===s.fx))o.fx=s.fx;
+  o.flip=!!s.flip;o.bgOut=!!s.bgOut;if(BGS.some(b=>b[0]===s.bg))o.bg=s.bg;if(s.mode==='full'||s.mode==='half')o.mode=s.mode;if(s.sex==='m'||s.sex==='f')o.sex=s.sex;if(FXS.some(f=>f[0]===s.fx))o.fx=s.fx;if(s.hero==='pet'&&p.cats.pet)o.hero='pet';
   return o;
 }
 
@@ -267,8 +267,13 @@ function rectOf(c,s,pose){
   if(c==='base')return [PACK.base,'base'];
   const C=PACK.cats[c];if(!C||!s[c])return null;const o=C.opts.find(x=>x.id===s[c]);if(!o)return null;
   if(c==='face'){const st=pose.mouth==='open'?'open':pose.eyes==='blink'?'blink':'closed';return [o[st],`face_${o.id}_${st}`];}
+  if(c==='pet')return [o,o.id+'_closed'];   /* 站在人物旁邊當夥伴：不跟著講話 */
   return [o,o.id];
 }
+/* 動物主角（11-22 老師：動物夥伴是獨立的類別，也是主角之一）：state.hero==='pet' 時角色換成一隻動物 */
+function isHero(s){if(s.hero!=='pet'||!PACK.cats.pet)return null;const os=PACK.cats.pet.opts;return os.find(x=>x.id===s.pet)||os[0];}
+function heroRect(o,mode){const W=PACK.canvas[0],H=mode==='full'?PACK.canvas[1]:PACK.halfH,r=o.w/o.h;
+  let h=H*(mode==='full'?.6:.9),w=h*r;if(w>W*.92){w=W*.92;h=w/r;}return {x:(W-w)/2,y:H-h-H*(mode==='full'?.05:.02),w,h};}
 const OFF=document.createElement('canvas');
 function draw(ctx,s,pose,mode,withBg){
   pose=pose||{};const W=PACK.canvas[0];
@@ -278,6 +283,9 @@ function draw(ctx,s,pose,mode,withBg){
   const k=ctx.canvas.width/W;OFF.width=ctx.canvas.width;OFF.height=ctx.canvas.height;const o=OFF.getContext('2d');
   o.save();o.scale(k,k);if(mode!=='full'&&PACK.halfBox){const [hx,hy,hw]=PACK.halfBox;o.scale(W/hw,W/hw);o.translate(-hx,-hy);}   /* 頭身比高的畫風：半身放大取景 */
   if(s.flip){o.translate(W,0);o.scale(-1,1);}
+  const hp=isHero(s);
+  if(hp){const st=pose.mouth==='open'?'open':pose.eyes==='blink'?'blink':'closed',r=heroRect(hp,mode);   /* 動物主角：只畫這隻動物，放大在中間，會說話、眨眼 */
+    o.drawImage(IMGS[style][hp.id+'_'+st]||IMGS[style][hp.id+'_closed'],r.x,r.y,r.w,r.h);o.restore();drawFx(ctx,OFF,s.fx);return;}
   const rcmode={base:s.skinC&&['skin',s.skinC],hair:s.hairC&&['all',s.hairC],top:s.topC&&['main',s.topC],bottom:s.pantsC&&['main',s.pantsC],shoes:s.shoeC&&['main',s.shoeC]};
   const img=(c,name)=>rcmode[c]?recolor(name,rcmode[c][1],rcmode[c][0]):IMGS[style][name];
   o.drawImage(img('base','base'),PACK.base.x,PACK.base.y,PACK.base.w,PACK.base.h);
@@ -285,8 +293,8 @@ function draw(ctx,s,pose,mode,withBg){
   ['top','bottom','shoes','hat'].forEach(c=>{if(mode!=='full'&&c==='shoes')return;const r=rectOf(c,s,pose);if(r&&r[0].erase){const e=r[0].erase;o.drawImage(IMGS[style][r[1]+'_erase'],e.x,e.y,e.w,e.h);}});
   o.globalCompositeOperation='source-over';
   LAYERS.forEach(c=>{
-    if(c==='base'||(mode!=='full'&&(c==='shoes'||c==='pet')))return;
-    const r=rectOf(c,s,pose);if(!r)return;const [m,name]=r;
+    if(c==='base'||(mode!=='full'&&c==='shoes'))return;
+    const r=rectOf(c,s,pose);if(!r)return;const name=r[1],m=(c==='pet'&&mode!=='full'&&r[0].half)?r[0].half:r[0];   /* 動物夥伴：半身放右下角（half），全身在腳邊 */
     const hr=c==='hair'&&rectOf('hat',s,pose),cut=hr&&hairCut(m,name,hr[0]);
     if(cut){o.drawImage(cutHairImg(name,m,hr[0],img(c,name),s.hairC||'',cut),m.x,m.y,m.w,m.h);return;}   /* 戴帽子：用原尺寸擦好的頭髮（縮小後才擦會漏擦出殘線） */
     o.drawImage(img(c,name),m.x,m.y,m.w,m.h);});
@@ -433,6 +441,10 @@ function renderStage(){
 /* 縮圖範圍：[x, y, 邊長]，都是畫布寬度的比例 */
 const VIEWS={top:[.2,.28,.6],bottom:[.2,.5,.6],shoes:[.28,.74,.44],hand:[.4,.34,.6],pet:[.45,.55,.55]};
 function viewOf(c){if(['face','hair','hat','glasses'].includes(c)&&PACK.headBox){const [x,y,s]=PACK.headBox;return [x,y*PACK.canvas[1]/PACK.canvas[0],s];}
+  if(c==='pet'&&isHero(state)){const W=PACK.canvas[0],r=heroRect(isHero(state),'full'),sz=Math.max(r.w,r.h)*1.06;return [(r.x+r.w/2-sz/2)/W,(r.y+r.h/2-sz/2)/W,sz/W];}
+  if(c==='pet'&&PACK.cats.pet){const W=PACK.canvas[0],os=PACK.cats.pet.opts,med=a=>a.sort((p,q)=>p-q)[a.length>>1];   /* 動物夥伴：框住腳邊那隻 */
+    const x0=med(os.map(o=>o.x)),y0=med(os.map(o=>o.y)),x1=med(os.map(o=>o.x+o.w)),y1=med(os.map(o=>o.y+o.h)),sz=Math.max(x1-x0,y1-y0)*1.25;
+    return [((x0+x1)/2-sz/2)/W,((y0+y1)/2-sz/2)/W,sz/W];}
   if((c==='top'||c==='bottom')&&PACK.cats[c]){   /* 上衣、下身：照這個畫風所有款式的實際範圍取景（日式可愛頭大，固定比例會框到一堆臉） */
     const W=PACK.canvas[0],os=PACK.cats[c].opts,med=a=>a.sort((p,q)=>p-q)[a.length>>1];
     const x0=med(os.map(o=>o.x)),y0=med(os.map(o=>o.y)),x1=med(os.map(o=>o.x+o.w)),y1=med(os.map(o=>o.y+o.h)),sz=Math.max(x1-x0,y1-y0)*1.08;
@@ -446,18 +458,19 @@ function thumb(s,c){
 }
 function renderTabs(){
   const box=$('tabs');box.innerHTML='';if(!PACK.cats[tab])tab='face';
-  CAT_ORDER.filter(c=>PACK.cats[c]).forEach(c=>{const b=document.createElement('button');b.type='button';b.className='tab';b.setAttribute('role','tab');b.textContent=PACK.cats[c].name.replace('帽子頭飾','帽子');
+  const hero=!!isHero(state);if(hero)tab='pet';
+  CAT_ORDER.filter(c=>PACK.cats[c]&&(!hero||c==='pet')).forEach(c=>{const b=document.createElement('button');b.type='button';b.className='tab';b.setAttribute('role','tab');b.textContent=hero?'動物主角':PACK.cats[c].name.replace('帽子頭飾','帽子');
     b.setAttribute('aria-selected',c===tab);if(FULL_ONLY.includes(c)&&effMode()==='half')b.classList.add('dim');
     b.addEventListener('click',()=>{tab=c;renderTabs();renderOpts();});box.append(b);});
 }
 function renderOpts(){
   const C=PACK.cats[tab],box=$('opts');box.innerHTML='';
-  $('catTitle').textContent=C.name;const OP=optsOf(tab);$('catCount').textContent=OP.length+' 款';
+  const hero=!!isHero(state);$('catTitle').textContent=hero?'動物主角':C.name;const OP=optsOf(tab);$('catCount').textContent=OP.length+' 款';
   const note=$('note');
   if(FULL_ONLY.includes(tab)&&effMode()==='half'){note.hidden=false;note.innerHTML='';const t=document.createElement('span');t.textContent=C.name+'要「全身」才看得清楚。';
     const b=document.createElement('button');b.type='button';b.className='btn';b.textContent='切換到全身';b.onclick=()=>commit({mode:'full'});note.append(t,b);}
   else note.hidden=true;
-  const list=(C.none?[{id:'',name:C.none}]:[]).concat(OP);
+  const list=(C.none&&!hero?[{id:'',name:C.none}]:[]).concat(OP);
   const hide=tab==='top'?{hand:''}:tab==='bottom'?{hand:'',pet:''}:tab==='hair'?{hat:''}:{};
   list.forEach(o=>{const b=document.createElement('button');b.type='button';b.className='opt';b.setAttribute('aria-pressed',state[tab]===o.id);b.title=o.name;
     b.append(thumb(Object.assign({},state,hide,{[tab]:o.id,flip:false}),tab));const sp=document.createElement('span');sp.textContent=o.name;b.append(sp);
@@ -489,7 +502,8 @@ function renderStyles(){const box=$('styleSeg');box.innerHTML='';STYLES.forEach(
   b.onclick=()=>{if(x.id!==style){history=[];setStyle(x.id);}};box.append(b);});}
 function renderAll(){
   renderStage();renderTabs();renderOpts();renderBgs();renderStyles();fitStage();
-  document.querySelectorAll('#sexSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.sex===(state.sex||'')));
+  const hero=!!isHero(state);document.querySelectorAll('#sexSeg button[data-sex]').forEach(b=>b.setAttribute('aria-pressed',!hero&&b.dataset.sex===(state.sex||'')));
+  $('heroPet').hidden=!PACK.cats.pet;$('heroPet').setAttribute('aria-pressed',hero);
   $('bFlip').setAttribute('aria-pressed',state.flip);const full=effMode()==='full';
   $('mHalf').setAttribute('aria-pressed',!full);$('mFull').setAttribute('aria-pressed',full);
   if(document.activeElement!==$('nameInput'))$('nameInput').value=state.name;
@@ -503,6 +517,7 @@ function commit(patch){history.push(JSON.stringify(state));if(history.length>40)
 const pick=a=>a[Math.floor(Math.random()*a.length)];
 const NONE_P={hair:.03,hat:.55,glasses:.75,hand:.5,pet:.6};
 function randomize(){const p={};CAT_ORDER.forEach(c=>{const C=PACK.cats[c];if(!C)return;p[c]=(C.none&&Math.random()<(NONE_P[c]||.3))?'':pick(optsOf(c)).id;});
+  if(isHero(state))p.pet=pick(PACK.cats.pet.opts).id;   /* 動物主角：一定換一隻動物 */
   p.skinC=pick(SKIN);p.hairC=pick(HAIRC);p.topC=pick(CLOTH);p.pantsC=pick(PANTS);p.shoeC=pick(SHOE);commit(p);}
 $('bRandom').onclick=()=>{randomize();flash('換一個新造型！');};
 $('bCatRandom').onclick=()=>{const p={[tab]:pick(optsOf(tab)).id};(COLORS[tab]||[]).forEach(([k,,l])=>p[k]=pick(l));commit(p);};
@@ -510,16 +525,17 @@ function stopTalk(){if(talking){clearTimeout(talking);talking=null;talkOpen=fals
 $('bTalk').onclick=()=>{if(talking){stopTalk();renderStage();return;}let i=0;const step=()=>{const [k,ms]=TALK[i++%TALK.length];talkOpen=k==='o';talkBlink=k==='b';renderStage();talking=setTimeout(step,ms);};step();$('bTalk').setAttribute('aria-pressed','true');$('bTalk').textContent='停止說話';};
 setInterval(()=>{if(talking||document.hidden||!PACK)return;blinkNow=true;renderStage();setTimeout(()=>{blinkNow=false;renderStage();},150);},4200);
 $('bFlip').onclick=()=>commit({flip:!state.flip});
-document.querySelectorAll('#sexSeg button').forEach(b=>b.onclick=()=>{if((state.sex||'')!==b.dataset.sex){commit(sexPatch(b.dataset.sex));flash(b.dataset.sex?'只列出'+b.textContent+'的款式':'所有款式都列出來了');}});
+$('heroPet').onclick=()=>{if(isHero(state))return;const p={hero:'pet'};if(!state.pet)p.pet=PACK.cats.pet.opts[0].id;commit(p);flash('主角換成動物了！選一隻當你的主播');};
+document.querySelectorAll('#sexSeg button[data-sex]').forEach(b=>b.onclick=()=>{if(state.hero){commit(Object.assign({hero:''},(state.sex||'')!==b.dataset.sex?sexPatch(b.dataset.sex):{}));return;}if((state.sex||'')!==b.dataset.sex){commit(sexPatch(b.dataset.sex));flash(b.dataset.sex?'只列出'+b.textContent+'的款式':'所有款式都列出來了');}});
 $('mHalf').onclick=()=>commit({mode:'half'});$('mFull').onclick=()=>commit({mode:'full'});
 $('bUndo').onclick=()=>{if(!history.length){flash('沒有可以復原的步驟');return;}state=sanitize(JSON.parse(history.pop()),PACK);save();renderAll();};
-$('bReset').onclick=()=>{{const sx=state.sex,d=Object.assign(defaults(PACK),{name:state.name,mode:state.mode,sex:sx});CAT_ORDER.forEach(c=>{const C=PACK.cats[c],n=sx&&SEX_DEF[sx][c],o=C&&n&&C.opts.find(x=>x.name===n);if(o)d[c]=o.id;});commit(d);}flash('回到預設角色了，按「復原」可以救回來');};
+$('bReset').onclick=()=>{{const sx=state.sex,d=Object.assign(defaults(PACK),{name:state.name,mode:state.mode,sex:sx,hero:state.hero||''});CAT_ORDER.forEach(c=>{const C=PACK.cats[c],n=sx&&SEX_DEF[sx][c],o=C&&n&&C.opts.find(x=>x.name===n);if(o)d[c]=o.id;});commit(d);}flash('回到預設角色了，按「復原」可以救回來');};
 $('nameInput').addEventListener('input',()=>{state.name=$('nameInput').value.slice(0,10);save();});
 $('bgOut').addEventListener('change',()=>{state.bgOut=$('bgOut').checked;save();});
 window.addEventListener('resize',fitStage);
 
 /* ================= 角色代碼 DQ5 ================= */
-const CODE_KEYS=['style','mode','name','flip','bg','bgOut',...CAT_ORDER,...CKEYS,'sex','fx'];   /* sex、fx 放最後，舊代碼少這格也能讀 */
+const CODE_KEYS=['style','mode','name','flip','bg','bgOut',...CAT_ORDER,...CKEYS,'sex','fx','hero'];   /* sex、fx、hero 放最後，舊代碼少這格也能讀 */
 const b64e=t=>btoa(unescape(encodeURIComponent(t))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 const b64d=t=>decodeURIComponent(escape(atob(t.replace(/-/g,'+').replace(/_/g,'/'))));
 const enc=s=>'DQ5-'+b64e(JSON.stringify(CODE_KEYS.map(k=>typeof s[k]==='boolean'?(s[k]?1:0):(CKEYS.includes(k)?(s[k]?s[k].slice(1):0):s[k]))));

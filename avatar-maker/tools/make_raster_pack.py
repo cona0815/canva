@@ -86,6 +86,8 @@ def main():
     # 日式漫畫要加上從手遊風搬過來的造型服（需要 packs/game 已經做好）
     if 'anime' in styles and os.path.exists(os.path.join(root, 'packs', 'game', 'parts.json')):
         subprocess.run([sys.executable, os.path.join(here, 'port_tops.py')], check=True, env=dict(os.environ, PYTHONIOENCODING='utf-8'))
+    # 動物夥伴（R13，每張只有一隻動物，不走人台拆圖）
+    subprocess.run([sys.executable, os.path.join(here, 'make_pets.py'), case] + styles, check=True, env=dict(os.environ, PYTHONIOENCODING='utf-8'))
     allidx = {x['id']: x for x in json.load(open(os.path.join(root, 'packs', 'index.json'), encoding='utf-8')) if x['id'] in STYLES} if os.path.exists(os.path.join(root, 'packs', 'index.json')) else {}
     for x in index:
         allidx[x['id']] = x
