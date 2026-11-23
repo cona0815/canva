@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<!-- 紙娃娃角色產生器 v1.7 2026-11-23 · Cona 老師的資訊教室
+<!-- 紙娃娃角色產生器 v1.7.1 2026-11-23 · Cona 老師的資訊教室
      這個檔案是 tools/build.py 由 src/app.html 產生的，要改請改 src/app.html 再執行：python tools/build.py
      v0.5：改用 AI 畫的圖（Codex 生圖、tools/make_raster_pack.py 拆圖層），畫風只留老師選的三種：日式可愛、日式漫畫、韓系貼圖；
            canvas 疊圖，膚色、髮色、衣服、褲子、鞋子用程式換色；舊的 SVG 版保留在 紙娃娃角色產生器_v0.4_2026-11-15.html（原始檔 src/app_svg_v0.4.html）
@@ -110,7 +110,7 @@ h1 small{font-family:var(--f-b);font-size:12px;color:var(--muted);margin-left:6p
 <div class="loading" id="loading">載入圖片中…</div>
 <div class="app">
   <header>
-    <h1>紙娃娃角色產生器<small>v1.7</small></h1>
+    <h1>紙娃娃角色產生器<small>v1.7.1</small></h1>
     <span class="lbl" id="sexLbl">角色</span>
     <span class="seg" role="group" aria-labelledby="sexLbl" id="sexSeg"><button type="button" data-sex="m">男生</button><button type="button" data-sex="f">女生</button><button type="button" data-sex="">全部</button><button type="button" id="heroPet" hidden>動物</button></span>
     <span class="lbl" id="styleLbl">畫風</span>
@@ -168,7 +168,7 @@ h1 small{font-family:var(--f-b);font-size:12px;color:var(--muted);margin-left:6p
         <p class="hint">主播包：閉嘴、張嘴、眨眼三張圖＋會說話的 GIF＋角色代碼。</p>
         <div id="results" aria-live="polite"></div>
       </section>
-      <div class="foot">Cona 老師的資訊教室 · v1.7 · 2026-11-23 · 圖：Codex 生成</div>
+      <div class="foot">Cona 老師的資訊教室 · v1.7.1 · 2026-11-23 · 圖：Codex 生成</div>
     </div>
   </div>
 </div>
@@ -177,7 +177,7 @@ h1 small{font-family:var(--f-b);font-size:12px;color:var(--muted);margin-left:6p
 <script>
 (function(){
 'use strict';
-const VERSION='1.7', DATE='2026-11-23';
+const VERSION='1.7.1', DATE='2026-11-23';
 const EMBED=/*@@EMBED@@*/null;   /* 離線版：{畫風:{pack, img:{名稱:dataURL}}} */
 const $=id=>document.getElementById(id);
 const CAT_ORDER=['face','hair','top','bottom','shoes','hat','glasses','hand','pet'];
@@ -209,7 +209,8 @@ function sexPatch(sx){   /* 換性別：身上不屬於這個性別的款式，�
   return p;}
 let STYLES=[],PACKS={},IMGS={},PACK,style,state,history=[],tab='face',talking=null,talkOpen=false,talkBlink=false,blinkNow=false;
 /* 說話節奏（預覽和 GIF 共用）：o 張嘴、c 閉嘴、b 閉嘴眨眼；長短不一、中間有停頓，約每秒 2 下，像一般講話 */
-const TALK=[['o',260],['c',200],['o',300],['c',180],['o',240],['c',260],['o',320],['c',450],['o',280],['c',200],['o',260],['b',150],['c',400]];
+/* v1.7.1：嘴巴開合速度改成接近一般人說話（約每秒 3 次，張嘴 0.14～0.17 秒、閉嘴 0.1～0.13 秒，偶爾停頓和眨眼） */
+const TALK=[['o',150],['c',110],['o',170],['c',100],['o',140],['c',130],['o',160],['c',100],['o',150],['c',300],['o',150],['c',110],['o',170],['b',140],['c',120],['o',150],['c',110],['o',160],['c',350]];
 
 /* ================= 載入 ================= */
 function loadImg(src){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=src;});}

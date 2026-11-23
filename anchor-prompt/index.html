@@ -5,8 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
-<!-- 主播描述詞產生器 v1.2 2026-11-22 · Cona 老師的資訊教室
+<!-- 主播描述詞產生器 v1.3 2026-11-23 · Cona 老師的資訊教室
      五年級 Canva 虛擬主播課：學生用勾選的方式組出描述詞，貼到 Canva 生成自己的主播，再讓主播動起來說話。
+     v1.3：② 讓主播說話：嘴巴開合的速度要和一般人說話一樣，不要太快也不要太慢（一定會加在描述詞裡）
      v1.2：更豐富——
            ① 生成主播圖片：8 個快速範本；分成「角色、穿搭、臉和頭髮、動作和夥伴、場景」五區；新增膚色、眼睛、眼睛顏色、衣服圖案、
               奇幻元素、夥伴、燈光氣氛、鏡頭角度；風格 18 種、服裝 30 種、飾品 27 種、背景 24 種、主播類型 13 種等全部擴充
@@ -180,7 +181,7 @@ details.favs summary{cursor:pointer;color:var(--navy);font-weight:700}
       </div>
     </aside>
   </div>
-  <footer>Cona 老師的資訊教室 · 主播描述詞產生器 v1.2 · 2026-11-22</footer>
+  <footer>Cona 老師的資訊教室 · 主播描述詞產生器 v1.3 · 2026-11-23</footer>
 </div>
 <div class="toast" id="toast"></div>
 
@@ -513,7 +514,7 @@ function composeVid(){
   const v=id=>one(id), L=id=>list(id);
   if(lang==='zh'){
     const s=[];
-    s.push(`主播看著鏡頭，${v('vtalk')?zhOf('vtalk',v('vtalk')):'說話'}，嘴巴自然地一張一合，像正在講話。`);
+    s.push(`主播看著鏡頭，${v('vtalk')?zhOf('vtalk',v('vtalk')):'說話'}，嘴巴自然地一張一合，像正在講話。嘴巴開合的速度和一般人說話一樣，不要太快也不要太慢。`);
     for(const id of ['vface','vhead','vbody'])if(L(id).length)s.push(L(id).join('、')+'。');
     if(v('vhand'))s.push(zhOf('vhand',v('vhand'))+'。');
     if(L('vhair').length)s.push(L('vhair').join('、')+'。');
@@ -524,7 +525,7 @@ function composeVid(){
     return s.join('');
   }
   const s=[];
-  s.push(`The anchor looks at the camera, ${v('vtalk')?enOf('vtalk',v('vtalk')):'talking'}, mouth opening and closing naturally as if speaking.`);
+  s.push(`The anchor looks at the camera, ${v('vtalk')?enOf('vtalk',v('vtalk')):'talking'}, mouth opening and closing naturally as if speaking, at the same speed as a normal person talking, not too fast and not too slow.`);
   for(const id of ['vface','vhead','vbody','vhair','vbg'])if(L(id).length)s.push(cap(joinEn(L(id).map(x=>enOf(id,x))))+'.');
   if(v('vhand'))s.push(cap(enOf('vhand',v('vhand')))+'.');
   if(v('vcam'))s.push(cap(enOf('vcam',v('vcam')))+'.');

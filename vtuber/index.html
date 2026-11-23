@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
-<!-- 我是虛擬主播 v1.0 2026-11-22 · Cona 老師的資訊教室（五年級 Canva）
+<!-- 我是虛擬主播 v1.1 2026-11-23 · Cona 老師的資訊教室（五年級 Canva）
      流程：台詞稿（Google 文件副本）→ Google AI 模式寫台詞 → 改成自己的話 → 做主播外型（A 紙娃娃／B Canva 夢想實驗室）
            → 讓主播說話（A 說話 GIF／B 圖片轉影片）→ 配音 → 合成 → 檢查繳交
+     v1.1：台詞稿改成「標題＋貼上台詞」就好；AI 台詞每一句一行（方便配音），數字用國字；節目名稱、主播名字必填；長度只留 30 秒、60 秒
      v1.0：8 步驟＋進度條＋快速連結；台詞提示詞產生器（沿用「我的主題大探索」40 類主題清單、節目類型、長度、語氣、修改小幫手）；
            唸稿碼表；兩條外型路線切換；老師注意事項 -->
 <title>我是虛擬主播</title>
@@ -158,9 +159,9 @@ footer{margin-top:20px;text-align:center;color:var(--muted);font-size:13px}
       <div class="shead"><span class="num">1</span><h3>建立我的台詞稿</h3><span class="seal">ON AIR</span></div>
       <p>每個人都要有一份自己的台詞稿，放在你的 Google 雲端硬碟。</p>
       <ol class="do">
-        <li>按下面的按鈕，再按藍色的 <span class="ui">建立副本</span>。</li>
-        <li>檔名改成「<b>座號 姓名 主播台詞稿</b>」，例如「05 王小明 主播台詞稿」，按 <span class="ui">建立副本</span>。</li>
-        <li>在最上面的表格填好班級座號和姓名。節目名稱、主播名字可以等一下再填。</li>
+        <li>按下面的按鈕，會出現「建立副本」的畫面。</li>
+        <li>檔名改成「<b>座號 姓名 主播台詞稿</b>」，例如「05 王小明 主播台詞稿」，再按藍色的 <span class="ui">建立副本</span>。</li>
+        <li>打開後只有一個標題「我的主播台詞稿」，等一下 AI 寫好的台詞就貼在標題下面。</li>
       </ol>
       <div class="btnrow"><a class="btn sun" id="copyDoc" href="https://docs.google.com/document/d/1xVYRzr5T2W3XEtZojBGU1stI1WTPaP5z3FdO9R2vsM0/copy" target="_blank" rel="noopener">開啟台詞稿範本（建立副本）</a></div>
       <div class="tip">這個分頁先不要關，等一下 AI 寫好的台詞要貼進去。</div>
@@ -186,8 +187,8 @@ footer{margin-top:20px;text-align:center;color:var(--muted);font-size:13px}
           <div class="chips" id="showChips"></div>
         </div>
         <div class="two">
-          <div class="q"><div class="qh"><b>④ 節目名稱</b><small>可以不寫</small></div><input class="txt" id="show" maxlength="12" autocomplete="off" placeholder="例如：大橋新聞台"></div>
-          <div class="q"><div class="qh"><b>⑤ 主播名字</b><small>可以用綽號</small></div><input class="txt" id="anchor" maxlength="10" autocomplete="off" placeholder="例如：小橋"></div>
+          <div class="q"><div class="qh"><b>④ 節目名稱</b><span class="req" style="color:var(--live);font-size:14px;font-weight:700">必填</span></div><input class="txt" id="show" maxlength="12" autocomplete="off" placeholder="例如：大橋新聞台"></div>
+          <div class="q"><div class="qh"><b>⑤ 主播名字</b><span class="req" style="color:var(--live);font-size:14px;font-weight:700">必填</span><small>可以用綽號</small></div><input class="txt" id="anchor" maxlength="10" autocomplete="off" placeholder="例如：小橋"></div>
         </div>
         <div class="two">
           <div class="q"><div class="qh"><b>⑥ 要講多久？</b></div><div class="chips" id="lenChips"></div></div>
@@ -204,7 +205,7 @@ footer{margin-top:20px;text-align:center;color:var(--muted);font-size:13px}
         <li>打開 Google，點上方的 <span class="ui">AI 模式</span>。</li>
         <li>把剛剛複製的話貼進框框（<span class="key">Ctrl</span>＋<span class="key">V</span>），按 <span class="key">Enter</span>。</li>
         <li>AI 寫好後，選取整段台詞，按 <span class="key">Ctrl</span>＋<span class="key">C</span> 複製。</li>
-        <li>回到台詞稿第一部分，按 <span class="key">Ctrl</span>＋<span class="key">Shift</span>＋<span class="key">V</span> 貼上（純文字，字才不會亂掉）。</li>
+        <li>回到台詞稿，點在標題下面，按 <span class="key">Ctrl</span>＋<span class="key">Shift</span>＋<span class="key">V</span> 貼上（純文字，字才不會亂掉）。</li>
       </ol>
       <h4 style="font-size:19px;margin-top:12px">不滿意？用修改小幫手</h4>
       <p style="font-size:16px;color:var(--muted)">在同一個 AI 模式對話裡，接著貼上這幾句：</p>
@@ -217,11 +218,10 @@ footer{margin-top:20px;text-align:center;color:var(--muted);font-size:13px}
     <li class="step" id="step3" data-t="改成我的話">
       <div class="shead"><span class="num">3</span><h3>改成我的話，唸唸看</h3><span class="seal">ON AIR</span></div>
       <ol class="do">
-        <li>在台詞稿第二部分的表格，一格寫一段：開場、重點一、重點二、重點三、我的感想、結尾。</li>
-        <li><b>「我的感想」一定要自己寫</b>，一句就好，例如「我最喜歡他的⋯⋯，因為⋯⋯」。</li>
-        <li>唸起來卡卡的地方，改成你平常說話的方式。</li>
+        <li>直接在台詞稿裡改。<b>保持一句一行</b>，等一下配音時一行就是一段聲音。</li>
+        <li>在「謝謝收看」前面，<b>加一句自己的感想</b>，例如「我最喜歡他的⋯⋯，因為⋯⋯」。</li>
+        <li>唸起來卡卡的地方，改成你平常說話的方式；看不懂的字換掉。</li>
         <li>用下面的碼表，照著台詞稿唸一次，看看有沒有超過時間。</li>
-        <li>最後把整段台詞依順序貼到第四部分「配音用的全文」。</li>
       </ol>
       <div class="timer">
         <span class="clock" id="clock">0.0</span>
@@ -296,7 +296,7 @@ footer{margin-top:20px;text-align:center;color:var(--muted);font-size:13px}
       <div class="shead"><span class="num">6</span><h3>幫主播配音</h3><span class="seal">ON AIR</span></div>
       <ol class="do">
         <li>左邊點 <span class="ui">應用程式</span>，找 <span class="ui">文字轉語音</span>。</li>
-        <li>把台詞稿第四部分「配音用的全文」貼上去，一句一句分開加比較好對嘴。</li>
+        <li>從台詞稿<b>一次複製一行</b>貼上去，加到設計裡；再做下一行。一行一段聲音，之後比較好對嘴，也好剪掉停頓。</li>
         <li>選一個適合你的主播的聲音，按加到設計。</li>
       </ol>
       <p>想用自己的聲音：左邊 <span class="ui">上傳</span> → <span class="ui">錄製自己</span>，照著台詞稿唸。</p>
@@ -349,13 +349,13 @@ footer{margin-top:20px;text-align:center;color:var(--muted);font-size:13px}
   <details class="teacher">
     <summary>老師注意（上課前）</summary>
     <ol class="do">
-      <li>台詞稿範本要先在 Google 文件右上角 <span class="ui">共用</span> 改成「知道連結的使用者都能檢視」（或開放給學校網域），學生才能建立副本。</li>
+      <li>台詞稿範本（擁有者 cona0815@gmail.com）要先在 Google 文件右上角 <span class="ui">共用</span> 改成「知道連結的任何人．檢視者」，學生（和你的學校帳號）才能建立副本。</li>
       <li>Canva 教育版的學生帳號，「圖片轉影片」預設是關閉的，要由學校的 Canva 管理員開啟。上課前先用學生帳號試一次。</li>
       <li>夢想實驗室和圖片轉影片都會用掉每月的 AI 額度，提醒學生不要一直重按。</li>
       <li>圖片轉影片沒有聲音；Canva 說明臉部的動作不一定穩定，嘴巴沒動就重新產生一次。</li>
     </ol>
   </details>
-  <footer><a href="../">← 回 Canva 課程首頁</a>　·　Cona 老師的資訊教室 · 我是虛擬主播 v1.0 · 2026-11-22</footer>
+  <footer><a href="../">← 回 Canva 課程首頁</a>　·　Cona 老師的資訊教室 · 我是虛擬主播 v1.1 · 2026-11-23</footer>
 </div>
 <div class="toast" id="toast"></div>
 
@@ -367,13 +367,14 @@ const SHOWS=[['新聞快報','新聞'],['體育新聞','體育新聞'],['娛樂�
 const SHOW_OF=c=>/足球|籃球|棒球|運動/.test(c)?'體育新聞':/韓團|歌手|直播|動畫|漫畫|電影|英雄|可愛角色|爆笑|玩具/.test(c)?'娛樂新聞':
   /美食|小吃/.test(c)?'美食節目':/景點|古蹟|火車|交通/.test(c)?'旅遊節目':/太空|恐龍|科學|植物|昆蟲|職業|樂器|車子/.test(c)?'科學小教室':
   /動物|海洋|鳥類/.test(c)?'動物頻道':'新聞快報';
-const LENS=[['30 秒',30,130],['45 秒',45,190],['60 秒',60,250]];
+const LENS=[['30 秒',30,130],['60 秒',60,250]];
 const TONES=[['專業穩重','專業又穩重'],['活潑熱情','活潑又熱情'],['溫柔親切','溫柔又親切'],['幽默有趣','幽默有趣']];
 const CHECKS=['嘴巴有跟著聲音動','沒講話時主播閉嘴','聲音聽得清楚','人名數字都正確','有節目名稱和主播名字','影片不超過規定時間'];
 const STEPS=8, KEY='dq-vtuber-v1';
 const $=id=>document.getElementById(id);
 let st={done:[],route:'a',cat:'',topic:'',showType:'',showTouched:false,show:'',anchor:'',len:30,tone:'活潑熱情',checks:[]};
 try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s)st=Object.assign(st,s);}catch(e){}
+if(st.len!==30&&st.len!==60)st.len=30;
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(st));}catch(e){}};
 function toast(m){const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('on'),1800);}
 async function copyText(t,ok){
@@ -430,15 +431,16 @@ function prompt(){
   const topic=st.topic.trim()||'（報導主題）';
   return `請上網查最新、最正確的資料，名字、數字、日期都要正確。幫我寫一段${type}的主播台詞，報導的主題是「${topic}」${st.cat&&st.cat!=='其他'?`（${st.cat}）`:''}。節目名稱是「${show}」，主播是「${anc}」。`+
     `台詞要給國小五年級學生自己唸，長度大約 ${L[1]} 秒、${L[2]} 字左右，語氣${tone}。`+
-    `請分成五段：開場（打招呼、說節目名稱、介紹自己）、重點一、重點二、重點三、結尾（謝謝收看、下次見）。`+
-    `每一句不超過 20 個字，用五年級看得懂的話，不要用難字和英文縮寫。如果主題是一種動物、食物或東西，就介紹它本身的特點。`+
+    `內容照這個順序：開場（打招呼、說節目名稱、介紹自己）、三個重點、結尾（謝謝收看、下次見）。`+
+    `每一句單獨一行，一句不超過 20 個字，不要寫「開場」「重點一」這些段落名稱。`+
+    `數字和年份用國字寫（例如：二零二六年、三十九歲），配音才唸得對。用五年級看得懂的話，不要用難字和英文縮寫。如果主題是一種動物、食物或東西，就介紹它本身的特點。`+
     `只要台詞文字，不要附連結、不要表情符號、不要加註解。`;
 }
 function helpers(){
   const L=LENS.find(l=>l[1]===st.len)||LENS[0];
   return [
-    ['太長了','請把剛剛的台詞縮短到 '+Math.round(L[2]*0.75)+' 字左右，保留最重要的內容，一樣分段，不要附連結。'],
-    ['太難唸','請把剛剛的台詞改得更口語、更好唸，換掉難的字和長句子，讓國小五年級學生唸起來很順，不要附連結。'],
+    ['太長了','請把剛剛的台詞縮短到 '+Math.round(L[2]*0.75)+' 字左右，保留最重要的內容，一樣每一句一行，不要附連結。'],
+    ['太難唸','請把剛剛的台詞改得更口語、更好唸，換掉難的字和長句子，讓國小五年級學生唸起來很順，一樣每一句一行，不要附連結。'],
     ['開場想更吸引人','請幫我想 3 種不一樣的開場白，每種不超過 30 字，要讓觀眾想繼續看。'],
     ['幫我查證','請檢查剛剛台詞裡的人名、數字、日期是不是最新、正確的。有錯的幫我改好，並用一句話說明改了哪裡。']
   ];
@@ -459,12 +461,13 @@ function renderGen(full=true){
   }
   if(!st.showType)st.showType='新聞快報';
   $('prompt').textContent=prompt();
-  const miss=[];if(!st.topic.trim())miss.push('報導的主題');
-  $('need').textContent=miss.length?'還沒填：'+miss.join('、'):(!st.show.trim()||!st.anchor.trim()?'節目名稱或主播名字沒填，AI 會先用「○○」代替，之後再改。':'');
+  const miss=missing();
+  $('need').textContent=miss.length?'還沒填：'+miss.join('、'):'';
   save();
 }
+function missing(){const m=[];if(!st.topic.trim())m.push('報導的主題');if(!st.show.trim())m.push('節目名稱');if(!st.anchor.trim())m.push('主播名字');return m;}
 $('copyPrompt').addEventListener('click',()=>{
-  if(!st.topic.trim()){toast('先填報導的主題');$('topic').focus();return;}
+  const m=missing();if(m.length){toast('先填：'+m.join('、'));$({'報導的主題':'topic','節目名稱':'show','主播名字':'anchor'}[m[0]]).focus();return;}
   copyText(prompt(),'複製好了！到 Google AI 模式貼上');
 });
 

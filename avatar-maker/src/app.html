@@ -209,7 +209,8 @@ function sexPatch(sx){   /* 換性別：身上不屬於這個性別的款式，�
   return p;}
 let STYLES=[],PACKS={},IMGS={},PACK,style,state,history=[],tab='face',talking=null,talkOpen=false,talkBlink=false,blinkNow=false;
 /* 說話節奏（預覽和 GIF 共用）：o 張嘴、c 閉嘴、b 閉嘴眨眼；長短不一、中間有停頓，約每秒 2 下，像一般講話 */
-const TALK=[['o',260],['c',200],['o',300],['c',180],['o',240],['c',260],['o',320],['c',450],['o',280],['c',200],['o',260],['b',150],['c',400]];
+/* v1.7.1：嘴巴開合速度改成接近一般人說話（約每秒 3 次，張嘴 0.14～0.17 秒、閉嘴 0.1～0.13 秒，偶爾停頓和眨眼） */
+const TALK=[['o',150],['c',110],['o',170],['c',100],['o',140],['c',130],['o',160],['c',100],['o',150],['c',300],['o',150],['c',110],['o',170],['b',140],['c',120],['o',150],['c',110],['o',160],['c',350]];
 
 /* ================= 載入 ================= */
 function loadImg(src){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=src;});}
