@@ -152,12 +152,16 @@ h1 small{font-family:var(--f-b);font-size:12px;color:var(--muted);margin-left:6p
       <section class="card">
         <h2>名字和角色代碼</h2>
         <div class="row"><label for="nameInput" class="lbl">名字</label><input class="txt" id="nameInput" maxlength="10" style="flex:1" autocomplete="off" placeholder="10 個字以內"></div>
-        <div class="row" style="margin-top:6px"><button class="btn" type="button" id="bCopyCode">複製角色代碼</button></div>
+        <div class="row" style="margin-top:6px;gap:6px"><button class="btn" type="button" id="bCopyCode">複製角色代碼</button><button class="btn" type="button" id="bMakeLink">產生連結</button></div>
+        <div class="row" id="linkRow" style="margin-top:6px" hidden>
+          <input class="txt" id="linkInput" readonly style="flex:1;min-width:0" aria-label="角色連結">
+          <button class="btn" type="button" id="bCopyLink">複製</button>
+        </div>
         <div class="row" style="margin-top:6px">
           <input class="txt" id="codeInput" placeholder="貼上角色代碼" style="flex:1" autocomplete="off" aria-label="貼上角色代碼">
           <button class="btn" type="button" id="bLoadCode">還原</button>
         </div>
-        <p class="hint">角色會自動存在這台電腦。換電腦或電腦被還原時，貼上代碼再按「還原」。</p>
+        <p class="hint">角色會自動存在這台電腦。換電腦時：按「產生連結」複製起來，之後點連結就會打開這個角色；或貼上代碼再按「還原」。</p>
       </section>
       <section class="card">
         <h2>下載，帶去 Canva</h2>
@@ -559,6 +563,18 @@ function decRaw(t){t=String(t).replace(/\s+/g,'');if(!t.startsWith('DQ5-'))throw
   CODE_KEYS.forEach((k,i)=>{let v=a[i];if(k==='flip'||k==='bgOut')v=!!v;else if(CKEYS.includes(k))v=v?'#'+v:null;o[k]=v;});return o;}
 $('bCopyCode').onclick=()=>{const code=enc(state),inp=$('codeInput');const fb=()=>{inp.value=code;inp.select();flash('代碼在下面的框裡，按 Ctrl+C 複製');};
   if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(code).then(()=>{inp.value=code;flash('角色代碼複製好了！');},fb);else fb();};
+/* 11-24 老師：產生「網址＋角色代碼」的連結，學生之後一按連結就打開自己的角色（離線版、本機測試也產生線上網址） */
+const SITE='https://cona0815.github.io/canva/avatar-maker/';
+const linkOf=s=>SITE+'#c='+enc(s);
+function copyText(t,inp,ok){inp.value=t;const fb=()=>{inp.select();flash('在框裡按 Ctrl+C 複製');};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(()=>flash(ok),fb);else fb();}
+$('bMakeLink').onclick=()=>{$('linkRow').hidden=false;copyText(linkOf(state),$('linkInput'),'連結產生好了，也已經複製！貼到 Classroom 或記事本存起來');};
+$('bCopyLink').onclick=()=>copyText(linkOf(state),$('linkInput'),'連結複製好了！');
+$('linkInput').onfocus=e=>e.target.select();
+function codeFromHash(){const m=/^#c=(DQ5-[\w-]+)/.exec(location.hash||'');if(!m)return null;try{return decRaw(m[1]);}catch(e){return null;}}
+function clearHash(){try{window.history.replaceState(null,'',location.pathname+location.search);}catch(e){}}
+window.addEventListener('hashchange',()=>{const raw=codeFromHash();if(!raw)return;clearHash();history=[];
+  const id=STYLES.some(x=>x.id===raw.style)?raw.style:STYLES[0].id;setStyle(id,raw).then(()=>flash('從連結打開你的角色了！'));});
 $('bLoadCode').onclick=()=>{let raw;try{raw=decRaw($('codeInput').value);}catch(e){flash('這不是正確的角色代碼（舊版的代碼不能用在新畫風）');return;}
   history=[];const id=STYLES.some(x=>x.id===raw.style)?raw.style:STYLES[0].id;setStyle(id,raw).then(()=>{$('codeInput').value='';flash('角色還原成功！');});};
 
@@ -635,8 +651,9 @@ window.__avatar={get state(){return state;},get PACK(){return PACK;},draw,enc,de
   STYLES=STYLES.filter(x=>x&&x.id);
   if(!STYLES.length){$('loading').textContent='找不到畫風，請重新整理';return;}
   let saved=null;try{saved=JSON.parse(localStorage.getItem(KEY)||'null');}catch(e){}
+  const fromLink=codeFromHash();if(fromLink){saved=fromLink;clearHash();}   /* 從「產生連結」的網址打開：用連結裡的角色（之後重新整理就用存在這台電腦的） */
   const id=saved&&STYLES.some(x=>x.id===saved.style)?saved.style:STYLES[0].id;
-  await setStyle(id,saved);
+  await setStyle(id,saved);if(fromLink)flash('從連結打開你的角色了！');
   requestAnimationFrame(fitStage);
 })();
 })();
