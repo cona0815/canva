@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""點陣部件處理 v1.4 2026-11-16（頭髮補洞不補進臉；--fine-faces：手遊風表情的細閉眼線另外加回來；帽子也做擦除遮罩；鞋子門檻降到 12，白襪不會被當成淺膚色；對位會和「不移動」比較取好的；細線部件不被當雜點）：把 Codex 生的「人台＋某部件」圖，去背、對齊人台、減掉人台，拆出單一部件圖層。
+"""點陣部件處理 v1.5 2026-11-24（帽子：額頭上被包住的白色洞補回（廚師帽、安全帽）；眼鏡臉飾拆出來幾乎是空的（雀斑小點）就用細門檻在臉裡再拆一次；頭髮補洞不補進臉；--fine-faces：手遊風表情的細閉眼線另外加回來；帽子也做擦除遮罩；鞋子門檻降到 12，白襪不會被當成淺膚色；對位會和「不移動」比較取好的；細線部件不被當雜點）：把 Codex 生的「人台＋某部件」圖，去背、對齊人台、減掉人台，拆出單一部件圖層。
 用法：python tools/raster_parts.py <Codex 圖資料夾> <輸出資料夾> [--debug <除錯圖資料夾>]
 輸入（1024×1536、純綠底）：base.png、hair_N.png、top_N.png、face_X_closed|open|blink.png；items.png（1024×1024 四格）
 輸出：base.webp＋每個部件裁切後的 webp，以及 parts.json（每張的位置 x, y, w, h）
@@ -115,6 +115,40 @@ def extract(img, base, region, thresh=22, min_area=600, grow=3, open_k=5, fill=T
     out[..., 3] = img[..., 3] * np.clip(soft * 1.4, 0, 1)
     return out
 
+
+def fill_hat_holes(part, img, base, R):
+    """11-24：廚師帽的白帽圍、安全帽的白色前片和人台淺膚色太像，拆圖時不見（戴上去會透出額頭和瀏海）；
+    韓系貼圖的粗咖啡外框又被「同色相陰影」那條規則當成帽簷陰影去掉。
+    頭上人台不透明的地方：原圖是「白／很淡、不飽和」或「比人台暗很多的線」→ 候選，只收和帽子連在一起的；
+    再把額頭上半（頭高 45% 以上）帽子輪廓裡被包住的洞（和人台差 8 以上）補起來。皮膚色、淡淡的帽簷陰影不收，免得帽子帶一塊皮膚蓋住瀏海。"""
+    from scipy import ndimage
+    a = part[..., 3] > 128
+    if not a.any():
+        return part
+    yy = np.mgrid[0:img.shape[0], 0:img.shape[1]][0]
+    lim = R['top'] + (R['neck'] - R['top']) * .45
+    Li, Lb = lab(img[..., :3]), lab(base[..., :3])
+    d = np.linalg.norm(Li - Lb, axis=2)
+    rgb = img[..., :3]; mx, mn = rgb.max(-1), rgb.min(-1)
+    whiteish = (mx > 215) & ((mx - mn) < .10 * mx)
+    dark = (Lb[..., 0] - Li[..., 0]) > 30
+    zone = (img[..., 3] > 200) & (base[..., 3] > 128) & (yy < lim)
+    head = (img[..., 3] > 200) & (base[..., 3] > 128) & (yy < R['neck'] + 30)   # 安全帽下巴扣帶：連到帽子的白色／深色線一路收到下巴
+    cand = head & ((whiteish & (d > 6)) | dark) & ~a
+    m = (a | cand).astype(np.uint8)
+    n, lb = cv2.connectedComponents(m, connectivity=8)
+    hit = np.zeros(n, bool); hit[np.unique(lb[a])] = True; hit[0] = False
+    add = cand & hit[lb]
+    whole = a | add
+    k = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 9))
+    filled = ndimage.binary_fill_holes(cv2.morphologyEx(whole.astype(np.uint8), cv2.MORPH_CLOSE, k) > 0)
+    add |= filled & ~whole & zone & (whiteish | (d > 8))
+    nn, lb2, st, _ = cv2.connectedComponentsWithStats(add.astype(np.uint8), 8)
+    keep = np.zeros(nn, bool); keep[1:] = st[1:, cv2.CC_STAT_AREA] >= 30
+    add = keep[lb2]
+    if add.any():
+        part = part.copy(); part[add, :3] = img[add, :3]; part[add, 3] = 255
+    return part
 
 def add_dark_lines(part, img, base, region, dl=12, min_area=30):
     """臉裡面比人台暗很多的細線（閉眼線、眉毛、小嘴）→ 併進部件；只看暗的，避免把皮膚明暗差異當成部件"""
@@ -237,6 +271,10 @@ def main():
         al = warp_rgba(img, M, base.shape)
         thin = n.startswith(('glasses_', 'hat_'))   # 細鏡框、耳麥線：開運算用小核、小塊也留
         part = extract(al, base, region, th, min_area=300 if n.startswith('face_') else 150 if thin else 1500, open_k=3 if thin else 5, fill=not thin, same_hue=n.startswith('hat_'), protect=face_big if n.startswith('hair_') else None)
+        if n.startswith('hat_'):
+            part = fill_hat_holes(part, al, base, R)
+        if n.startswith('glasses_') and (part[..., 3] > 128).sum() < 400:   # 11-24 雀斑：小小淡淡的點，一般門檻全被當雜點去掉 → 只在臉裡用細門檻再拆一次
+            part = extract(al, base, face_inner & region, 8, min_area=4, open_k=1, fill=False, grow=1)
         if a.fine_faces and n.startswith('face_'):   # 手遊風閉眼線、眉毛很細：開運算會把它們當雜點去掉 → 另外把臉內「變深的細線」加回來
             part = add_dark_lines(part, al, base, face_inner)
         meta['parts'][n] = bbox_save(part, os.path.join(a.out, n + '.webp'))

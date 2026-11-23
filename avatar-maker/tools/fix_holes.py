@@ -27,7 +27,7 @@ CLOSE = {'top': 25, 'bottom': 25, 'shoes': 11, 'hat': 11}   # 閉運算直徑：
 def raw_path(case, st, pid):
     """和 make_raster_pack 一樣的輪次順序：後面的輪次蓋前面的"""
     hit = None
-    for r in os.environ.get('ROUNDS', 'R2,R3,R3b,R4,R5,R6,R7,R8,R9,R11,R12').split(','):
+    for r in os.environ.get('ROUNDS', 'R2,R3,R3b,R4,R5,R6,R7,R8,R9,R11,R12,R16').split(','):
         f = os.path.join(case, 'art', r, st, pid + '.png')
         if os.path.exists(f) and not pid.startswith(MRP.DROP) and not pid.startswith(MRP.SKIP.get((st, r), ())):
             hit = f
