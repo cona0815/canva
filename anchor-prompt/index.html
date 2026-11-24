@@ -5,8 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
-<!-- 主播描述詞產生器 v1.5 2026-11-24 · Cona 老師的資訊教室
+<!-- 主播描述詞產生器 v1.5.1 2026-11-24 · Cona 老師的資訊教室
      五年級 Canva 虛擬主播課：學生用勾選的方式組出描述詞，貼到 Canva 生成自己的主播，再讓主播動起來說話。
+     v1.5.1：「動物主播」改成風格區最後一張卡片（20 動物主播，一個角色），點了就切換成動物主播；拿掉快速範本裡的動物主播
      v1.5：新增「主角是誰」：人物／可愛動物；動物主播 24 種（和紙娃娃的動物主角一樣），選動物就不用選男生女生、年紀、膚色、頭髮；
            新增風格 19「Q 版貼紙小人」（兩頭身全身小人＋白色貼紙描邊，選了自動改成全身）；快速範本加「動物主播」；③ 加「換成動物」
      v1.4.1：補上風格樣張 07～12、17、18（13～16 還沒有）
@@ -198,7 +199,7 @@ details.favs summary{cursor:pointer;color:var(--navy);font-weight:700}
       </div>
     </aside>
   </div>
-  <footer>Cona 老師的資訊教室 · 主播描述詞產生器 v1.5 · 2026-11-24</footer>
+  <footer>Cona 老師的資訊教室 · 主播描述詞產生器 v1.5.1 · 2026-11-24</footer>
 </div>
 <div class="toast" id="toast"></div>
 <div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="風格大圖">
@@ -315,7 +316,11 @@ const G_IMG=[
 ];
 const MOUTH='嘴巴閉著（好做說話動畫）';
 /* 風格樣張：老師用「風格樣張描述詞」在夢想實驗室生成，檔名是風格的編號（01＝第一個風格）。有圖的編號列在這裡 */
-const STICKER='Q 版貼紙小人';
+const STICKER='Q 版貼紙小人', ANIMAL_CARD='動物主播';
+function pickAnimalCard(){const s=data.img.sel;
+  if(isAnimal()){s.who=['人物'];update();toast('改回人物主播');return;}
+  s.who=['可愛動物'];if(!(s.style||[]).length)s.style=['可愛 Q 版'];update();toast('變成動物主播！往下選一種動物');
+  const el=$('g-animal');if(el)setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'center'}),150);}
 const isAnimal=()=>one('who',data.img.sel)==='可愛動物';
 /* 人物才有的分類（男生女生、年紀、膚色、頭髮），動物主播時藏起來；動物種類只在選動物時出現 */
 const active=g=>mode!=='img'||!(g.human&&isAnimal())&&!(g.animalOnly&&!isAnimal());
@@ -332,7 +337,6 @@ const PRESETS=[
  ['🔬 科學博士',{kind:'科學小主播',style:'3D 動畫電影',outfit:['實驗袍'],color:'白色',pattern:'素面',acc:['圓框眼鏡'],fantasy:[],face:'驚喜',pose:'雙手攤開介紹',buddy:'小機器人',light:'明亮攝影棚燈'}],
  ['🦁 動物探險家',{kind:'動物頻道主持人',style:'水彩繪本',outfit:['探險背心'],color:'綠色',pattern:'素面',acc:['探險帽','背包'],fantasy:[],face:'活力滿滿',pose:'揮手打招呼',buddy:'小狗',light:'溫暖陽光',bg:'森林'}],
  ['🎤 偶像直播主',{kind:'直播主',style:'日系動漫',outfit:['舞台表演服'],color:'粉彩色系',pattern:'星星',acc:['耳機麥克風','星星髮夾'],fantasy:['閃亮星星特效'],face:'開心微笑',pose:'雙手比愛心',buddy:'',light:'霓虹夜晚',bg:'表演舞台'}],
- ['🐶 動物主播',{who:'可愛動物',animal:'柴犬',kind:'新聞主播',style:'可愛 Q 版',outfit:['西裝外套'],color:'深藍色',pattern:'素面',acc:['領結','耳機麥克風'],fantasy:[],face:'開心微笑',pose:'雙手放在主播台上',buddy:'',light:'明亮攝影棚燈'}],
  ['🚀 太空特派員',{kind:'太空特派員',style:'3D 動畫電影',outfit:['太空衣'],color:'白色',pattern:'素面',acc:['耳機麥克風'],fantasy:[],face:'自信',pose:'揮手打招呼',buddy:'小機器人',light:'夢幻粉彩'}]
 ];
 const PERSON={zh:{kid:'小學生年紀的',teen:'國高中生年紀的'},
@@ -468,7 +472,9 @@ function build(){
     const d=document.createElement('div');d.className='grp'+(g.wide?' wide':'')+(g.single?' single':'');d.id='g-'+g.id;
     d.innerHTML=`<div class="gh"><span class="num">${n}</span><h2>${g.t}</h2>${g.req?'<span class="req">必選</span>':''}<span class="hint">${g.single?'選一個':g.hint||'可以勾很多個'}${g.single&&g.hint?'・'+g.hint:''}</span></div><div class="chips" role="group" aria-label="${g.t}"></div>${g.note?`<p class="note">${g.note}</p>`:''}`;
     const c=d.querySelector('.chips');
-    if(g.cards){c.classList.add('scards');g.o.forEach((o,i)=>c.appendChild(styleCard(o[0],String(i+1).padStart(2,'0'),()=>toggle(g,o[0]))));}
+    if(g.cards){c.classList.add('scards');g.o.forEach((o,i)=>c.appendChild(styleCard(o[0],String(i+1).padStart(2,'0'),()=>toggle(g,o[0]))));
+      /* 20 動物主播：是一個角色，不是畫法。點了切換成動物主播（沒選風格就先用可愛 Q 版） */
+      c.appendChild(styleCard(ANIMAL_CARD,String(g.o.length+1).padStart(2,'0'),pickAnimalCard));}
     else g.o.forEach(o=>c.appendChild(chip(o[0],false,()=>toggle(g,o[0]))));
     box.appendChild(d);
   });
@@ -621,6 +627,7 @@ function update(){
     el.querySelectorAll('.chip').forEach(b=>b.setAttribute('aria-pressed',a.includes(b.dataset.v)?'true':'false'));
     el.classList.toggle('need',!!g.req&&!a.length&&!(g.id==='evalue'&&freeTxt()));
   }
+  const ac=document.querySelector(`.scard[data-v="${ANIMAL_CARD}"]`);if(ac)ac.setAttribute('aria-pressed',isAnimal()?'true':'false');
   if($('free').value!==cur().free)$('free').value=cur().free;
   $('lzh').setAttribute('aria-pressed',lang==='zh');$('len').setAttribute('aria-pressed',lang==='en');
   const miss=missing().map(g=>g.t);
