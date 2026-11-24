@@ -5,8 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
-<!-- 主播描述詞產生器 v1.5.2 2026-11-24 · Cona 老師的資訊教室
+<!-- 主播描述詞產生器 v1.6 2026-11-24 · Cona 老師的資訊教室
      五年級 Canva 虛擬主播課：學生用勾選的方式組出描述詞，貼到 Canva 生成自己的主播，再讓主播動起來說話。
+     v1.6：「20 動物主播」變成風格選項之一，畫法固定用日式 Q 版可愛（軟萌動物角色）；拿掉「主角是誰」，選 20 就是動物主播、選其他風格就是人物
      v1.5.2：補齊風格樣張 13～16、19、20（全部 20 張都有樣張了）
      v1.5.1：「動物主播」改成風格區最後一張卡片（20 動物主播，一個角色），點了就切換成動物主播；拿掉快速範本裡的動物主播
      v1.5：新增「主角是誰」：人物／可愛動物；動物主播 24 種（和紙娃娃的動物主角一樣），選動物就不用選男生女生、年紀、膚色、頭髮；
@@ -200,7 +201,7 @@ details.favs summary{cursor:pointer;color:var(--navy);font-weight:700}
       </div>
     </aside>
   </div>
-  <footer>Cona 老師的資訊教室 · 主播描述詞產生器 v1.5.2 · 2026-11-24</footer>
+  <footer>Cona 老師的資訊教室 · 主播描述詞產生器 v1.6 · 2026-11-24</footer>
 </div>
 <div class="toast" id="toast"></div>
 <div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="風格大圖">
@@ -231,8 +232,8 @@ const G_IMG=[
   ['普普藝術','pop art style with bold colors','普普藝術風格，顏色大膽'],
   ['油畫','oil painting style','油畫風格'],
   ['未來霓虹','futuristic neon cyberpunk style','未來科技霓虹風格'],
-  ['Q 版貼紙小人','two-heads-tall chibi sticker style, full-body mini character with a thick white sticker outline','兩頭身Q版貼紙風格，大頭小身體的全身小人，外面有白色貼紙描邊']]},
- {id:'who',t:'主角是誰',single:true,req:true,o:[['人物','a person'],['可愛動物','a cute animal']]},
+  ['Q 版貼紙小人','two-heads-tall chibi sticker style, full-body mini character with a thick white sticker outline','兩頭身Q版貼紙風格，大頭小身體的全身小人，外面有白色貼紙描邊'],
+  ['動物主播','Japanese kawaii chibi style, soft and fluffy cute animal character, big head, small body, big round sparkling eyes','日式Q版可愛風格，軟萌的動物角色，大頭小身體、圓滾滾的閃亮大眼睛']]},
  {id:'animal',t:'動物主播',hint:'選一種動物來當主播',single:true,req:true,wide:true,animalOnly:true,o:[
   ['橘白小貓','orange-and-white kitten'],['賓士貓','tuxedo cat'],['虎斑貓','tabby cat'],['三花貓','calico cat'],
   ['柴犬','Shiba Inu puppy'],['柯基','corgi puppy'],['白色小狗','little white puppy'],['黃金獵犬','golden retriever puppy'],
@@ -318,11 +319,8 @@ const G_IMG=[
 const MOUTH='嘴巴閉著（好做說話動畫）';
 /* 風格樣張：老師用「風格樣張描述詞」在夢想實驗室生成，檔名是風格的編號（01＝第一個風格）。有圖的編號列在這裡 */
 const STICKER='Q 版貼紙小人', ANIMAL_CARD='動物主播';
-function pickAnimalCard(){const s=data.img.sel;
-  if(isAnimal()){s.who=['人物'];update();toast('改回人物主播');return;}
-  s.who=['可愛動物'];if(!(s.style||[]).length)s.style=['可愛 Q 版'];update();toast('變成動物主播！往下選一種動物');
-  const el=$('g-animal');if(el)setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'center'}),150);}
-const isAnimal=()=>one('who',data.img.sel)==='可愛動物';
+/* 選了風格「動物主播」就是動物主播（畫法固定日式 Q 版可愛），選其他風格就是人物 */
+const isAnimal=()=>one('style',data.img.sel)===ANIMAL_CARD;
 /* 人物才有的分類（男生女生、年紀、膚色、頭髮），動物主播時藏起來；動物種類只在選動物時出現 */
 const active=g=>mode!=='img'||!(g.human&&isAnimal())&&!(g.animalOnly&&!isAnimal());
 const STYLE_IMG=Array.from({length:20},(_,i)=>String(i+1).padStart(2,'0'));
@@ -398,7 +396,7 @@ const EDIT_T=[
  ['背景','bg','把背景換成{v}','Change the background to {v}'],
  ['燈光','light','把燈光改成{v}','Change the lighting to {v}'],
  ['畫風','style','把整張圖改成{v}','Change the whole image to {v}'],
- ['換成動物','animal','把主播換成一隻可愛的{v}，像人一樣坐著','Change the anchor into a cute {v}, sitting like a person'],
+ ['換成動物','animal','把主播換成一隻日式Q版可愛風格的{v}，軟萌、大頭小身體、圓圓的大眼睛，像人一樣坐著','Change the anchor into a Japanese kawaii chibi {v}, soft and fluffy, big head, small body, big round eyes, sitting like a person'],
  ['拿掉東西','','把{v}拿掉','Remove {v}']
 ];
 const IMG_BY=Object.fromEntries(G_IMG.map(g=>[g.id,g]));
@@ -406,13 +404,13 @@ function editGroups(){
   const t=EDIT_T.find(x=>x[0]===one('etarget',data.edit.sel));
   const gs=[{id:'etarget',sec:'要改哪裡？',t:'選一個地方',single:true,req:true,wide:true,o:EDIT_T.map(x=>[x[0],x[3]])}];
   if(t&&t[1]){const src=IMG_BY[t[1]];gs.push({id:'evalue',sec:'改成什麼？',t:src.t,single:true,req:true,wide:true,
-    note:'沒有想要的，就打在下面的「自己補充」',o:src.o.filter(o=>o[0]!==MOUTH)});}
+    note:'沒有想要的，就打在下面的「自己補充」',o:src.o.filter(o=>o[0]!==MOUTH&&o[0]!==ANIMAL_CARD)});}
   return gs;
 }
 
 const MODES={
  img:{G:()=>G_IMG,sub:'勾一勾，組出你的主播，再貼到 Canva「夢想實驗室」生成圖片。',title:'你的描述詞',freeEx:'臉上有小雀斑、拿著一本書',
-   def:()=>{const d={who:['人物'],kind:['新聞主播'],frame:['半身'],angle:['正面'],extra:['畫面不要出現文字',MOUTH,'角色在畫面中間']};d.bg=[BG_OF[d.kind[0]]];return d;}},
+   def:()=>{const d={kind:['新聞主播'],frame:['半身'],angle:['正面'],extra:['畫面不要出現文字',MOUTH,'角色在畫面中間']};d.bg=[BG_OF[d.kind[0]]];return d;}},
  vid:{G:()=>G_VID,sub:'先用 ① 做好主播圖片，再用這組描述詞，在 Canva「圖片轉影片」讓主播開口說話。',title:'動態描述詞',freeEx:'說到一半眨一下眼睛',
    def:()=>({vtalk:['平穩播報'],vface:['自然眨眼'],vhead:['輕輕點頭'],vbody:['自然呼吸起伏'],vhand:['手不要動'],vcam:['鏡頭固定不動'],
      vlock:['臉和髮型不要變','衣服和飾品不要變',NOBG,'最後回到一開始的姿勢（好接下一段）','不要出現文字']})},
@@ -441,7 +439,7 @@ function clean(){
     if(!gs){d.sel.etarget=(d.sel.etarget||[]).filter(v=>EDIT_T.some(x=>x[0]===v)).slice(0,1);d.sel.evalue=(d.sel.evalue||[]).slice(0,1);continue;}
     for(const g of gs){const ok=new Set(g.o.map(o=>o[0]));let a=(d.sel[g.id]||[]).filter(v=>ok.has(v));
       if(g.single)a=a.slice(0,1);if(g.max)a=a.slice(0,g.max);d.sel[g.id]=a;}}
-  if(!(data.img.sel.who||[]).length)data.img.sel.who=['人物'];
+  delete data.img.sel.who;
 }
 
 /* 畫選項 */
@@ -474,8 +472,7 @@ function build(){
     d.innerHTML=`<div class="gh"><span class="num">${n}</span><h2>${g.t}</h2>${g.req?'<span class="req">必選</span>':''}<span class="hint">${g.single?'選一個':g.hint||'可以勾很多個'}${g.single&&g.hint?'・'+g.hint:''}</span></div><div class="chips" role="group" aria-label="${g.t}"></div>${g.note?`<p class="note">${g.note}</p>`:''}`;
     const c=d.querySelector('.chips');
     if(g.cards){c.classList.add('scards');g.o.forEach((o,i)=>c.appendChild(styleCard(o[0],String(i+1).padStart(2,'0'),()=>toggle(g,o[0]))));
-      /* 20 動物主播：是一個角色，不是畫法。點了切換成動物主播（沒選風格就先用可愛 Q 版） */
-      c.appendChild(styleCard(ANIMAL_CARD,String(g.o.length+1).padStart(2,'0'),pickAnimalCard));}
+}
     else g.o.forEach(o=>c.appendChild(chip(o[0],false,()=>toggle(g,o[0]))));
     box.appendChild(d);
   });
@@ -493,6 +490,8 @@ function toggle(g,v){
   if(i>=0)a.splice(i,1);
   else if(g.single){a.length=0;a.push(v);}
   else{if(g.max&&a.length>=g.max){toast(`${g.t}最多選 ${g.max} 個，先取消一個`);return;}a.push(v);}
+  if(mode==='img'&&g.id==='style'&&v===ANIMAL_CARD&&a.includes(v)){toast('變成動物主播！往下選一種動物');
+    setTimeout(()=>{const el=$('g-animal');if(el)el.scrollIntoView({behavior:'smooth',block:'center'});},150);}
   if(mode==='img'&&g.id==='style'&&v===STICKER&&a.includes(v)){s.frame=['全身'];toast('Q 版貼紙小人是全身的，構圖已改成全身');}
   if(mode==='img'){if(g.id==='bg')cur().bgTouched=true;if(g.id==='kind'&&!cur().bgTouched&&a.length)s.bg=[BG_OF[a[0]]];}
   if(mode==='vid'){
@@ -628,7 +627,6 @@ function update(){
     el.querySelectorAll('.chip').forEach(b=>b.setAttribute('aria-pressed',a.includes(b.dataset.v)?'true':'false'));
     el.classList.toggle('need',!!g.req&&!a.length&&!(g.id==='evalue'&&freeTxt()));
   }
-  const ac=document.querySelector(`.scard[data-v="${ANIMAL_CARD}"]`);if(ac)ac.setAttribute('aria-pressed',isAnimal()?'true':'false');
   if($('free').value!==cur().free)$('free').value=cur().free;
   $('lzh').setAttribute('aria-pressed',lang==='zh');$('len').setAttribute('aria-pressed',lang==='en');
   const miss=missing().map(g=>g.t);
@@ -672,7 +670,8 @@ function random(){
       outfit:pickN(v('outfit'),1+Math.floor(Math.random()*2)),color:[pick(v('color'))],pattern:maybe(v('pattern'),.5),
       acc:pickN(v('acc'),1+Math.floor(Math.random()*3)),fantasy:Math.random()<.3?pickN(v('fantasy'),1):[],
       pose:[pick(v('pose'))],buddy:maybe(v('buddy'),.35),light:[pick(v('light'))],frame:['半身'],angle:['正面'],extra:[...MODES.img.def().extra]};
-    if(Math.random()<.25){s.who=['可愛動物'];s.animal=[pick(v('animal'))];for(const k of ['gender','age','skin','hair','hairc'])s[k]=[];}else s.who=['人物'];
+    if(Math.random()<.25){s.style=[ANIMAL_CARD];s.animal=[pick(v('animal'))];for(const k of ['gender','age','skin','hair','hairc'])s[k]=[];}
+    else s.style=[pick(v('style').filter(x=>x!==ANIMAL_CARD))];
     if(s.style[0]===STICKER)s.frame=['全身'];
     s.bg=[BG_OF[s.kind[0]]];data.img.sel=s;data.img.bgTouched=false;toast('換了一個新主播！不喜歡的地方再改');
   }else if(mode==='vid'){
