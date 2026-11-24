@@ -5,9 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
-<!-- 我是虛擬主播 v1.1 2026-11-23 · Cona 老師的資訊教室（五年級 Canva）
+<!-- 我是虛擬主播 v1.2 2026-11-24 · Cona 老師的資訊教室（五年級 Canva）
      流程：台詞稿（Google 文件副本）→ Google AI 模式寫台詞 → 改成自己的話 → 做主播外型（A 紙娃娃／B Canva 夢想實驗室）
            → 讓主播說話（A 說話 GIF／B 圖片轉影片）→ 配音 → 合成 → 檢查繳交
+     v1.2：修改小幫手在 Google AI 模式會把主播開場弄不見 → 每一句都寫明「開場要有節目名稱和主播名字、結尾要有謝謝收看」，
+           並帶入學生填的節目名稱、主播名字；改完要整段重給、一句一行、數字用國字；主提示詞也寫清楚第一句的開場
      v1.1：台詞稿改成「標題＋貼上台詞」就好；AI 台詞每一句一行（方便配音），數字用國字；節目名稱、主播名字必填；長度只留 30 秒、60 秒
      v1.0：8 步驟＋進度條＋快速連結；台詞提示詞產生器（沿用「我的主題大探索」40 類主題清單、節目類型、長度、語氣、修改小幫手）；
            唸稿碼表；兩條外型路線切換；老師注意事項 -->
@@ -208,7 +210,7 @@ footer{margin-top:20px;text-align:center;color:var(--muted);font-size:13px}
         <li>回到台詞稿，點在標題下面，按 <span class="key">Ctrl</span>＋<span class="key">Shift</span>＋<span class="key">V</span> 貼上（純文字，字才不會亂掉）。</li>
       </ol>
       <h4 style="font-size:19px;margin-top:12px">不滿意？用修改小幫手</h4>
-      <p style="font-size:16px;color:var(--muted)">在同一個 AI 模式對話裡，接著貼上這幾句：</p>
+      <p style="font-size:16px;color:var(--muted)">在同一個 AI 模式對話裡，接著貼上這幾句。改好的台詞會整段重給一次，開場和結尾都會保留，直接換掉台詞稿裡舊的那段。</p>
       <div class="helpers" id="helpers"></div>
       <div class="warn"><b>AI 也會出錯！</b>人名、數字、日期要自己再看一次。不確定的地方，用 Google 搜尋查查看。</div>
       <button class="donebtn" type="button">✓ 這一步完成了</button>
@@ -355,7 +357,7 @@ footer{margin-top:20px;text-align:center;color:var(--muted);font-size:13px}
       <li>圖片轉影片沒有聲音；Canva 說明臉部的動作不一定穩定，嘴巴沒動就重新產生一次。</li>
     </ol>
   </details>
-  <footer><a href="../">← 回 Canva 課程首頁</a>　·　Cona 老師的資訊教室 · 我是虛擬主播 v1.1 · 2026-11-23</footer>
+  <footer><a href="../">← 回 Canva 課程首頁</a>　·　Cona 老師的資訊教室 · 我是虛擬主播 v1.2 · 2026-11-24</footer>
 </div>
 <div class="toast" id="toast"></div>
 
@@ -431,19 +433,29 @@ function prompt(){
   const topic=st.topic.trim()||'（報導主題）';
   return `請上網查最新、最正確的資料，名字、數字、日期都要正確。幫我寫一段${type}的主播台詞，報導的主題是「${topic}」${st.cat&&st.cat!=='其他'?`（${st.cat}）`:''}。節目名稱是「${show}」，主播是「${anc}」。`+
     `台詞要給國小五年級學生自己唸，長度大約 ${L[1]} 秒、${L[2]} 字左右，語氣${tone}。`+
-    `內容照這個順序：開場（打招呼、說節目名稱、介紹自己）、三個重點、結尾（謝謝收看、下次見）。`+
+    `內容照這個順序：開場、三個重點、結尾。開場一定要打招呼，並說出節目名稱「${show}」和主播名字「${anc}」；結尾要說謝謝收看、我們下次見。`+
     `每一句單獨一行，一句不超過 20 個字，不要寫「開場」「重點一」這些段落名稱。`+
     `數字和年份用國字寫（例如：二零二六年、三十九歲），配音才唸得對。用五年級看得懂的話，不要用難字和英文縮寫。如果主題是一種動物、食物或東西，就介紹它本身的特點。`+
     `只要台詞文字，不要附連結、不要表情符號、不要加註解。`;
 }
 function helpers(){
   const L=LENS.find(l=>l[1]===st.len)||LENS[0];
+  const show=st.show.trim()||'（節目名稱）',anc=st.anchor.trim()||'（主播名字）';
+  /* AI 模式接著改的時候常常把開場和結尾弄丟，所以每一句都把規則重說一次 */
+  const keep=`第一句一定要是主播開場：打招呼，說出節目名稱「${show}」和主播名字「${anc}」；最後一句要說謝謝收看、我們下次見。改好後把整段台詞完整再給我一次，每一句單獨一行，數字用國字寫，不要段落名稱，不要附連結。`;
   return [
-    ['太長了','請把剛剛的台詞縮短到 '+Math.round(L[2]*0.75)+' 字左右，保留最重要的內容，一樣每一句一行，不要附連結。'],
-    ['太難唸','請把剛剛的台詞改得更口語、更好唸，換掉難的字和長句子，讓國小五年級學生唸起來很順，一樣每一句一行，不要附連結。'],
-    ['開場想更吸引人','請幫我想 3 種不一樣的開場白，每種不超過 30 字，要讓觀眾想繼續看。'],
-    ['幫我查證','請檢查剛剛台詞裡的人名、數字、日期是不是最新、正確的。有錯的幫我改好，並用一句話說明改了哪裡。']
+    ['太長了',`請把剛剛的主播台詞縮短到 ${Math.round(L[2]*0.75)} 字左右，保留最重要的內容。${keep}`],
+    ['太難唸',`請把剛剛的主播台詞改得更口語、更好唸，換掉難的字和長句子，讓國小五年級學生唸起來很順。${keep}`],
+    ['開場想更吸引人',`請幫我把剛剛主播台詞的開場改得更吸引人，讓觀眾想繼續看，開場一樣要說出節目名稱「${show}」和主播名字「${anc}」，不超過 40 字。其他句子不要改。改好後把整段台詞完整再給我一次，每一句單獨一行，不要附連結。`],
+    ['幫我查證',`請檢查剛剛主播台詞裡的人名、數字、日期是不是最新、正確的，有錯的幫我改好，先用一句話說明改了哪裡。${keep}`]
   ];
+}
+function renderHelpers(){
+  const hb=$('helpers');hb.innerHTML='';
+  helpers().forEach(([t,p])=>{const d=document.createElement('div');d.className='helper';d.innerHTML=`<span><b>${t}</b>：${p}</span>`;
+    const b=document.createElement('button');b.type='button';b.className='btn ghost';b.textContent='複製';
+    b.addEventListener('click',()=>{const m=missing();if(m.length){toast('先在上面填：'+m.join('、'));return;}copyText(helpers().find(h=>h[0]===t)[1],'複製好了！貼到 AI 模式');});
+    d.appendChild(b);hb.appendChild(d);});
 }
 function renderGen(full=true){
   if(full){
@@ -453,14 +465,11 @@ function renderGen(full=true){
     chipRow($('showChips'),SHOWS.map(s=>({label:s[0]})),it=>it.label===st.showType,it=>{st.showType=it.label;st.showTouched=true;renderGen();});
     chipRow($('lenChips'),LENS.map(l=>({label:l[0],v:l[1]})),it=>it.v===st.len,it=>{st.len=it.v;renderGen();renderTimer();});
     chipRow($('toneChips'),TONES.map(t=>({label:t[0]})),it=>it.label===st.tone,it=>{st.tone=it.label;renderGen();});
-    const hb=$('helpers');hb.innerHTML='';
-    helpers().forEach(([t,p])=>{const d=document.createElement('div');d.className='helper';d.innerHTML=`<span><b>${t}</b>：${p}</span>`;
-      const b=document.createElement('button');b.type='button';b.className='btn ghost';b.textContent='複製';b.addEventListener('click',()=>copyText(p,'複製好了！貼到 AI 模式'));d.appendChild(b);hb.appendChild(d);});
   }else{
     [...$('topicChips').children].forEach(b=>b.setAttribute('aria-pressed',b.textContent===st.topic.trim()?'true':'false'));
   }
   if(!st.showType)st.showType='新聞快報';
-  $('prompt').textContent=prompt();
+  $('prompt').textContent=prompt();renderHelpers();
   const miss=missing();
   $('need').textContent=miss.length?'還沒填：'+miss.join('、'):'';
   save();
