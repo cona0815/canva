@@ -5,8 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
-<!-- 主播描述詞產生器 v1.5.1 2026-11-24 · Cona 老師的資訊教室
+<!-- 主播描述詞產生器 v1.5.2 2026-11-24 · Cona 老師的資訊教室
      五年級 Canva 虛擬主播課：學生用勾選的方式組出描述詞，貼到 Canva 生成自己的主播，再讓主播動起來說話。
+     v1.5.2：補齊風格樣張 13～16、19、20（全部 20 張都有樣張了）
      v1.5.1：「動物主播」改成風格區最後一張卡片（20 動物主播，一個角色），點了就切換成動物主播；拿掉快速範本裡的動物主播
      v1.5：新增「主角是誰」：人物／可愛動物；動物主播 24 種（和紙娃娃的動物主角一樣），選動物就不用選男生女生、年紀、膚色、頭髮；
            新增風格 19「Q 版貼紙小人」（兩頭身全身小人＋白色貼紙描邊，選了自動改成全身）；快速範本加「動物主播」；③ 加「換成動物」
@@ -129,7 +130,7 @@ details.favs summary{cursor:pointer;color:var(--navy);font-weight:700}
 .lightbox{position:fixed;inset:0;background:rgba(10,18,30,.8);display:grid;place-items:center;z-index:20;padding:16px}
 .lightbox[hidden]{display:none}
 .lightbox figure{margin:0;width:min(1100px,96vw);background:var(--paper);border-radius:14px;overflow:hidden}
-.lightbox img{width:100%;display:block;aspect-ratio:2399/1355;background:var(--navy-soft)}
+.lightbox img{width:100%;display:block;aspect-ratio:16/9;object-fit:cover;background:var(--navy-soft)}
 .lightbox figcaption{padding:8px 14px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px}
 </style>
 
@@ -199,7 +200,7 @@ details.favs summary{cursor:pointer;color:var(--navy);font-weight:700}
       </div>
     </aside>
   </div>
-  <footer>Cona 老師的資訊教室 · 主播描述詞產生器 v1.5.1 · 2026-11-24</footer>
+  <footer>Cona 老師的資訊教室 · 主播描述詞產生器 v1.5.2 · 2026-11-24</footer>
 </div>
 <div class="toast" id="toast"></div>
 <div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="風格大圖">
@@ -324,7 +325,7 @@ function pickAnimalCard(){const s=data.img.sel;
 const isAnimal=()=>one('who',data.img.sel)==='可愛動物';
 /* 人物才有的分類（男生女生、年紀、膚色、頭髮），動物主播時藏起來；動物種類只在選動物時出現 */
 const active=g=>mode!=='img'||!(g.human&&isAnimal())&&!(g.animalOnly&&!isAnimal());
-const STYLE_IMG=['01','02','03','04','05','06','07','08','09','10','11','12','17','18'];
+const STYLE_IMG=Array.from({length:20},(_,i)=>String(i+1).padStart(2,'0'));
 const BG_OF={'新聞主播':'新聞攝影棚','體育主播':'體育攝影棚','氣象主播':'氣象台','美食節目主持人':'廚房攝影棚','旅遊節目主持人':'城市街景',
   '科學小主播':'科學實驗室','動物頻道主持人':'動物園','校園小記者':'教室','直播主':'直播房間','音樂節目主持人':'表演舞台',
   '太空特派員':'太空站','歷史故事主播':'古色古香的老街','益智問答主持人':'益智節目舞台'};
