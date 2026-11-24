@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
-<!-- 我是虛擬主播 v1.2 2026-11-24 · Cona 老師的資訊教室（五年級 Canva）
+<!-- 我是虛擬主播 v1.3 2026-11-24 · Cona 老師的資訊教室（五年級 Canva）
      流程：台詞稿（Google 文件副本）→ Google AI 模式寫台詞 → 改成自己的話 → 做主播外型（A 紙娃娃／B Canva 夢想實驗室）
            → 讓主播說話（A 說話 GIF／B 圖片轉影片）→ 配音 → 合成 → 檢查繳交
+     v1.3：修正滑鼠滾輪往下捲時頁面抖動、跳回去（快速連結列自動置中改成只橫向捲動）
      v1.2：修改小幫手在 Google AI 模式會把主播開場弄不見 → 每一句都寫明「開場要有節目名稱和主播名字、結尾要有謝謝收看」，
            並帶入學生填的節目名稱、主播名字；改完要整段重給、一句一行、數字用國字；主提示詞也寫清楚第一句的開場
      v1.1：台詞稿改成「標題＋貼上台詞」就好；AI 台詞每一句一行（方便配音），數字用國字；節目名稱、主播名字必填；長度只留 30 秒、60 秒
@@ -357,7 +358,7 @@ footer{margin-top:20px;text-align:center;color:var(--muted);font-size:13px}
       <li>圖片轉影片沒有聲音；Canva 說明臉部的動作不一定穩定，嘴巴沒動就重新產生一次。</li>
     </ol>
   </details>
-  <footer><a href="../">← 回 Canva 課程首頁</a>　·　Cona 老師的資訊教室 · 我是虛擬主播 v1.2 · 2026-11-24</footer>
+  <footer><a href="../">← 回 Canva 課程首頁</a>　·　Cona 老師的資訊教室 · 我是虛擬主播 v1.3 · 2026-11-24</footer>
 </div>
 <div class="toast" id="toast"></div>
 
@@ -407,7 +408,10 @@ function paint(){
   save();
 }
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){const i=steps.indexOf(e.target);
-  [...nav.children].forEach((a,j)=>a.classList.toggle('here',j===i));nav.children[i].scrollIntoView({block:'nearest',inline:'nearest'});}}),{rootMargin:'-40% 0px -55% 0px'});
+  [...nav.children].forEach((a,j)=>a.classList.toggle('here',j===i));navTo(nav.children[i]);}}),{rootMargin:'-40% 0px -55% 0px'});
+/* v1.3：只橫向捲動快速連結列，不能用 scrollIntoView（會拉動整頁，滾輪往下時頁面會抖、跳回去） */
+function navTo(a){const nr=nav.getBoundingClientRect(),ar=a.getBoundingClientRect();
+  const x=nav.scrollLeft+(ar.left-nr.left)-(nr.width-ar.width)/2;if(Math.abs(x-nav.scrollLeft)>4)nav.scrollTo({left:x,behavior:'smooth'});}
 steps.forEach(s=>io.observe(s));
 document.querySelectorAll('.route').forEach(b=>b.addEventListener('click',()=>{st.route=b.dataset.route;paint();}));
 

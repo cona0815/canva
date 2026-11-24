@@ -1,0 +1,503 @@
+<!-- 我是虛擬主播 v1.3 2026-11-24 · Cona 老師的資訊教室（五年級 Canva）
+     流程：台詞稿（Google 文件副本）→ Google AI 模式寫台詞 → 改成自己的話 → 做主播外型（A 紙娃娃／B Canva 夢想實驗室）
+           → 讓主播說話（A 說話 GIF／B 圖片轉影片）→ 配音 → 合成 → 檢查繳交
+     v1.3：修正滑鼠滾輪往下捲時頁面抖動、跳回去（快速連結列自動置中改成只橫向捲動）
+     v1.2：修改小幫手在 Google AI 模式會把主播開場弄不見 → 每一句都寫明「開場要有節目名稱和主播名字、結尾要有謝謝收看」，
+           並帶入學生填的節目名稱、主播名字；改完要整段重給、一句一行、數字用國字；主提示詞也寫清楚第一句的開場
+     v1.1：台詞稿改成「標題＋貼上台詞」就好；AI 台詞每一句一行（方便配音），數字用國字；節目名稱、主播名字必填；長度只留 30 秒、60 秒
+     v1.0：8 步驟＋進度條＋快速連結；台詞提示詞產生器（沿用「我的主題大探索」40 類主題清單、節目類型、長度、語氣、修改小幫手）；
+           唸稿碼表；兩條外型路線切換；老師注意事項 -->
+<title>我是虛擬主播</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Huninn&family=Noto+Sans+TC:wght@400;500;700&family=Baloo+2:wght@600;800&display=swap">
+<style>
+/* 版面概念：一張「節目流程表」——每一步是一個播出段落，完成就亮起 ON AIR */
+:root{
+  --bg:#eef2fa; --paper:#ffffff; --ink:#18263b; --muted:#56677e; --line:#cdd8e8;
+  --navy:#1d3a6e; --navy-soft:#dde7f7; --live:#e23b3b; --live-soft:#fde3e3;
+  --sun:#ffc531; --sun-soft:#fff3cf; --ok:#2f9e5b; --ok-soft:#dcf3e5; --chip:#f4f7fc;
+  --f-display:"Huninn","Noto Sans TC",system-ui,sans-serif;
+  --f-body:"Noto Sans TC",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;
+  --f-num:"Baloo 2","Huninn",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0e1622; --paper:#162234; --ink:#e8eef8; --muted:#9fb0c6; --line:#2b3c55;
+  --navy:#8fb4ff; --navy-soft:#22355a; --live:#ff6b6b; --live-soft:#3b1d22;
+  --sun:#ffd25a; --sun-soft:#3a3218; --ok:#5cd08d; --ok-soft:#173a28; --chip:#1b2a40; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1622; --paper:#162234; --ink:#e8eef8; --muted:#9fb0c6; --line:#2b3c55;
+  --navy:#8fb4ff; --navy-soft:#22355a; --live:#ff6b6b; --live-soft:#3b1d22;
+  --sun:#ffd25a; --sun-soft:#3a3218; --ok:#5cd08d; --ok-soft:#173a28; --chip:#1b2a40; color-scheme:dark}
+*{box-sizing:border-box}
+html{scroll-padding-top:120px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:18px;line-height:1.75}
+.wrap{max-width:900px;margin:0 auto;padding:20px 16px 60px}
+h1,h2,h3,h4{font-family:var(--f-display);font-weight:400;margin:0;text-wrap:balance}
+a{color:var(--navy)}
+:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+p{margin:.3em 0}
+
+/* hero */
+.hero{background:var(--navy);color:#fff;border-radius:22px;padding:24px;display:grid;gap:12px;position:relative;overflow:hidden}
+:root[data-theme="dark"] .hero{color:#0e1622}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .hero{color:#0e1622}}
+.hero::after{content:"";position:absolute;right:-50px;top:-50px;width:190px;height:190px;border-radius:50%;border:12px solid rgba(255,255,255,.15)}
+.onair{display:inline-flex;align-items:center;gap:8px;background:var(--live);color:#fff;font-weight:700;font-size:14px;letter-spacing:.1em;border-radius:6px;padding:2px 10px;width:max-content}
+.onair::before{content:"";width:9px;height:9px;border-radius:50%;background:#fff;animation:blink 1.4s infinite}
+@keyframes blink{50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.onair::before{animation:none}}
+.hero h1{font-size:clamp(34px,6vw,50px);line-height:1.2}
+.hero p{max-width:36em}
+.flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:15px;position:relative;z-index:1}
+.flow span{background:rgba(255,255,255,.16);border:1.5px solid rgba(255,255,255,.45);border-radius:999px;padding:2px 12px}
+.flow i{font-style:normal;opacity:.75}
+
+/* progress + nav */
+.progress{position:sticky;top:0;z-index:5;background:var(--bg);padding:10px 0 8px;display:grid;gap:8px}
+.prow{display:flex;align-items:center;gap:12px}
+.bar{flex:1;height:14px;background:var(--line);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--ok);border-radius:99px;transition:width .4s}
+.count{font-family:var(--f-num);font-weight:800;font-size:20px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.stepnav{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:thin}
+.stepnav a{flex:none;display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:var(--ink);background:var(--paper);border:2px solid var(--line);border-radius:999px;padding:2px 12px 2px 4px;font-size:15px;white-space:nowrap}
+.stepnav b{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--navy-soft);color:var(--navy);font-family:var(--f-num);font-size:14px}
+.stepnav a.done b{background:var(--ok);color:#fff}
+.stepnav a.here{border-color:var(--navy)}
+
+/* steps */
+.steps{list-style:none;margin:16px 0 0;padding:0;display:grid;gap:16px}
+.step{background:var(--paper);border:2px solid var(--line);border-radius:18px;padding:18px 20px 16px;position:relative}
+.step.done{border-color:var(--ok)}
+.shead{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.num{flex:none;width:44px;height:44px;border-radius:12px;background:var(--navy);color:var(--paper);display:grid;place-items:center;font-family:var(--f-num);font-weight:800;font-size:24px}
+.step.done .num{background:var(--ok)}
+.shead h3{font-size:24px;flex:1}
+.seal{flex:none;border:2px solid var(--line);color:var(--muted);border-radius:8px;padding:0 8px;font-size:13px;font-weight:700;letter-spacing:.08em}
+.step.done .seal{border-color:var(--live);color:var(--live);background:var(--live-soft)}
+.donebtn{display:inline-flex;align-items:center;gap:8px;margin-top:12px;border:2px solid var(--ok);background:transparent;color:var(--ok);border-radius:999px;padding:6px 16px;font:inherit;font-size:16px;font-weight:700;cursor:pointer}
+.step.done .donebtn{background:var(--ok);color:#fff}
+ol.do{margin:.4em 0;padding-left:1.4em}
+ol.do li{margin:.25em 0}
+.key{display:inline-block;border:1.5px solid var(--muted);border-bottom-width:3px;border-radius:6px;padding:0 6px;font-size:15px;line-height:1.5;font-family:var(--f-body)}
+.ui{background:var(--navy-soft);color:var(--navy);border-radius:6px;padding:0 6px;font-weight:700;white-space:nowrap}
+.tip{background:var(--sun-soft);border-radius:12px;padding:10px 14px;margin:10px 0;font-size:16px}
+.warn{background:var(--live-soft);border-radius:12px;padding:10px 14px;margin:10px 0;font-size:16px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:2px solid var(--navy);background:var(--navy);color:var(--paper);border-radius:999px;padding:8px 18px;font:inherit;font-size:16px;font-weight:700;cursor:pointer;text-decoration:none}
+.btn.ghost{background:var(--paper);color:var(--navy)}
+.btn.sun{background:var(--sun);border-color:var(--sun);color:#3b2c00}
+.btnrow{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+
+/* generator */
+.gen{border:2px dashed var(--navy);border-radius:16px;padding:14px;margin:12px 0;display:grid;gap:12px;background:var(--bg)}
+.q{display:grid;gap:6px}
+.qh{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.qh b{font-size:17px}
+.qh small{color:var(--muted);font-size:14px}
+.txt{width:100%;border:2px solid var(--line);border-radius:10px;padding:8px 10px;font:inherit;font-size:17px;background:var(--paper);color:var(--ink)}
+.txt:focus{border-color:var(--navy)}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips.scroll{max-height:132px;overflow:auto;padding:2px}
+.chip{border:2px solid var(--line);background:var(--paper);color:var(--ink);border-radius:10px;padding:2px 10px;font:inherit;font-size:15px;cursor:pointer;line-height:1.6}
+.chip:hover{border-color:var(--navy)}
+.chip[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:var(--paper);font-weight:700}
+.prompt{background:var(--sun-soft);border-radius:12px;padding:12px 14px;white-space:pre-wrap;word-break:break-word;font-size:16px;line-height:1.75}
+.need{color:var(--live);font-weight:700;font-size:15px;min-height:1.2em}
+.helpers{display:grid;gap:8px}
+.helper{display:flex;gap:10px;align-items:center;background:var(--paper);border:2px solid var(--line);border-radius:12px;padding:8px 12px}
+.helper span{flex:1;font-size:16px}
+
+/* timer */
+.timer{display:flex;flex-wrap:wrap;align-items:center;gap:12px;background:var(--navy-soft);border-radius:14px;padding:12px 14px;margin:10px 0}
+.clock{font-family:var(--f-num);font-weight:800;font-size:40px;font-variant-numeric:tabular-nums;min-width:4.2ch;color:var(--navy);line-height:1}
+.clock.over{color:var(--live)}
+.tmsg{flex:1;min-width:12em;font-size:16px}
+
+/* routes */
+.routes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
+.route{border:3px solid var(--line);background:var(--paper);border-radius:16px;padding:12px 14px;text-align:left;font:inherit;color:var(--ink);cursor:pointer;display:grid;gap:2px}
+.route b{font-family:var(--f-display);font-weight:400;font-size:21px}
+.route small{color:var(--muted);font-size:15px;line-height:1.5}
+.route[aria-pressed="true"]{border-color:var(--navy);background:var(--navy-soft)}
+.route[aria-pressed="true"] b::before{content:"✓ ";color:var(--navy)}
+.rpanel[hidden]{display:none}
+.rtag{display:inline-block;font-size:13px;font-weight:700;border-radius:6px;padding:0 8px;background:var(--navy);color:var(--paper);margin-right:6px;vertical-align:2px}
+
+/* teacher */
+details.teacher{margin-top:20px;background:var(--paper);border:2px solid var(--line);border-radius:16px;padding:12px 16px;font-size:16px}
+details.teacher summary{cursor:pointer;font-weight:700}
+footer{margin-top:20px;text-align:center;color:var(--muted);font-size:13px}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--paper);padding:8px 18px;border-radius:999px;font-weight:700;opacity:0;transition:.25s;pointer-events:none;z-index:9}
+.toast.on{opacity:1;transform:translateX(-50%)}
+@media (max-width:640px){
+  body{font-size:17px}
+  .two,.routes{grid-template-columns:1fr}
+  .shead h3{font-size:21px}
+  .helper{flex-wrap:wrap}
+}
+</style>
+
+<div class="wrap">
+  <header class="hero">
+    <span class="onair">ON AIR</span>
+    <h1>我是虛擬主播</h1>
+    <p>寫好自己的報導台詞，做出一個卡通主播，讓他開口說話，做成一支主播影片。</p>
+    <div class="flow" aria-label="流程"><span>寫台詞</span><i>→</i><span>做主播</span><i>→</i><span>讓他說話</span><i>→</i><span>配音</span><i>→</i><span>合成影片</span></div>
+  </header>
+
+  <div class="progress">
+    <div class="prow"><div class="bar" aria-hidden="true"><i id="barFill"></i></div><span class="count" id="count">0 / 8</span></div>
+    <nav class="stepnav" id="stepnav" aria-label="步驟快速連結"></nav>
+  </div>
+
+  <ol class="steps">
+    <!-- 1 -->
+    <li class="step" id="step1" data-t="台詞稿">
+      <div class="shead"><span class="num">1</span><h3>建立我的台詞稿</h3><span class="seal">ON AIR</span></div>
+      <p>每個人都要有一份自己的台詞稿，放在你的 Google 雲端硬碟。</p>
+      <ol class="do">
+        <li>按下面的按鈕，會出現「建立副本」的畫面。</li>
+        <li>檔名改成「<b>座號 姓名 主播台詞稿</b>」，例如「05 王小明 主播台詞稿」，再按藍色的 <span class="ui">建立副本</span>。</li>
+        <li>打開後只有一個標題「我的主播台詞稿」，等一下 AI 寫好的台詞就貼在標題下面。</li>
+      </ol>
+      <div class="btnrow"><a class="btn sun" id="copyDoc" href="https://docs.google.com/document/d/1xVYRzr5T2W3XEtZojBGU1stI1WTPaP5z3FdO9R2vsM0/copy" target="_blank" rel="noopener">開啟台詞稿範本（建立副本）</a></div>
+      <div class="tip">這個分頁先不要關，等一下 AI 寫好的台詞要貼進去。</div>
+      <button class="donebtn" type="button">✓ 這一步完成了</button>
+    </li>
+
+    <!-- 2 -->
+    <li class="step" id="step2" data-t="AI 寫台詞">
+      <div class="shead"><span class="num">2</span><h3>用 Google AI 模式寫台詞</h3><span class="seal">ON AIR</span></div>
+      <p>先選好你要報導什麼，下面會自動組出一句問 AI 的話。</p>
+      <div class="gen" id="gen">
+        <div class="q">
+          <div class="qh"><b>① 主題是哪一類？</b><small>可以用「我的主題大探索」做過的主題</small></div>
+          <select class="txt" id="cat" aria-label="主題類別"></select>
+        </div>
+        <div class="q">
+          <div class="qh"><b>② 報導的主題是什麼？</b><small>點一個，或自己打</small></div>
+          <div class="chips scroll" id="topicChips"></div>
+          <input class="txt" id="topic" maxlength="30" autocomplete="off" placeholder="例如：大谷翔平、臺南牛肉湯、黑面琵鷺">
+        </div>
+        <div class="q">
+          <div class="qh"><b>③ 你的節目是哪一種？</b></div>
+          <div class="chips" id="showChips"></div>
+        </div>
+        <div class="two">
+          <div class="q"><div class="qh"><b>④ 節目名稱</b><span class="req" style="color:var(--live);font-size:14px;font-weight:700">必填</span></div><input class="txt" id="show" maxlength="12" autocomplete="off" placeholder="例如：大橋新聞台"></div>
+          <div class="q"><div class="qh"><b>⑤ 主播名字</b><span class="req" style="color:var(--live);font-size:14px;font-weight:700">必填</span><small>可以用綽號</small></div><input class="txt" id="anchor" maxlength="10" autocomplete="off" placeholder="例如：小橋"></div>
+        </div>
+        <div class="two">
+          <div class="q"><div class="qh"><b>⑥ 要講多久？</b></div><div class="chips" id="lenChips"></div></div>
+          <div class="q"><div class="qh"><b>⑦ 說話的感覺</b></div><div class="chips" id="toneChips"></div></div>
+        </div>
+        <div class="q">
+          <div class="qh"><b>問 AI 的話</b><small>按「複製這句」</small></div>
+          <div class="prompt" id="prompt" aria-live="polite"></div>
+          <div class="need" id="need"></div>
+          <div class="btnrow"><button class="btn" type="button" id="copyPrompt">複製這句</button><a class="btn ghost" href="https://www.google.com/" target="_blank" rel="noopener">打開 Google</a></div>
+        </div>
+      </div>
+      <ol class="do">
+        <li>打開 Google，點上方的 <span class="ui">AI 模式</span>。</li>
+        <li>把剛剛複製的話貼進框框（<span class="key">Ctrl</span>＋<span class="key">V</span>），按 <span class="key">Enter</span>。</li>
+        <li>AI 寫好後，選取整段台詞，按 <span class="key">Ctrl</span>＋<span class="key">C</span> 複製。</li>
+        <li>回到台詞稿，點在標題下面，按 <span class="key">Ctrl</span>＋<span class="key">Shift</span>＋<span class="key">V</span> 貼上（純文字，字才不會亂掉）。</li>
+      </ol>
+      <h4 style="font-size:19px;margin-top:12px">不滿意？用修改小幫手</h4>
+      <p style="font-size:16px;color:var(--muted)">在同一個 AI 模式對話裡，接著貼上這幾句。改好的台詞會整段重給一次，開場和結尾都會保留，直接換掉台詞稿裡舊的那段。</p>
+      <div class="helpers" id="helpers"></div>
+      <div class="warn"><b>AI 也會出錯！</b>人名、數字、日期要自己再看一次。不確定的地方，用 Google 搜尋查查看。</div>
+      <button class="donebtn" type="button">✓ 這一步完成了</button>
+    </li>
+
+    <!-- 3 -->
+    <li class="step" id="step3" data-t="改成我的話">
+      <div class="shead"><span class="num">3</span><h3>改成我的話，唸唸看</h3><span class="seal">ON AIR</span></div>
+      <ol class="do">
+        <li>直接在台詞稿裡改。<b>保持一句一行</b>，等一下配音時一行就是一段聲音。</li>
+        <li>在「謝謝收看」前面，<b>加一句自己的感想</b>，例如「我最喜歡他的⋯⋯，因為⋯⋯」。</li>
+        <li>唸起來卡卡的地方，改成你平常說話的方式；看不懂的字換掉。</li>
+        <li>用下面的碼表，照著台詞稿唸一次，看看有沒有超過時間。</li>
+      </ol>
+      <div class="timer">
+        <span class="clock" id="clock">0.0</span>
+        <div class="btnrow" style="margin:0"><button class="btn" type="button" id="tStart">開始</button><button class="btn ghost" type="button" id="tReset">歸零</button></div>
+        <span class="tmsg" id="tmsg">目標：30 秒以內</span>
+      </div>
+      <div class="tip">太長的話，刪掉一個重點，或回去用修改小幫手的「太長了」。</div>
+      <button class="donebtn" type="button">✓ 這一步完成了</button>
+    </li>
+
+    <!-- 4 -->
+    <li class="step" id="step4" data-t="做主播">
+      <div class="shead"><span class="num">4</span><h3>做出我的主播</h3><span class="seal">ON AIR</span></div>
+      <p>選一種做法（第 5 步會跟著你選的做法走）：</p>
+      <div class="routes" role="group" aria-label="主播做法">
+        <button class="route" type="button" data-route="a" aria-pressed="true"><b>A 紙娃娃</b><small>自己一件一件搭配。會下載「說話 GIF」，嘴巴會跟著動。</small></button>
+        <button class="route" type="button" data-route="b" aria-pressed="false"><b>B AI 生圖</b><small>用 Canva 夢想實驗室生成主播，再用「圖片轉影片」讓他說話。</small></button>
+      </div>
+      <div class="rpanel" data-for="a">
+        <ol class="do">
+          <li>打開紙娃娃角色產生器，選畫風、半身或全身，搭配出你的主播。</li>
+          <li>在名字欄填上主播名字（第 2 步取的名字）。</li>
+          <li>按紫色的 <span class="ui">下載主播包（zip）</span>。</li>
+          <li>在下載的檔案上按右鍵 → <span class="ui">全部解壓縮</span>。裡面有閉嘴、張嘴、眨眼的圖，還有說話 GIF。</li>
+        </ol>
+        <div class="btnrow"><a class="btn" href="../avatar-maker/" target="_blank" rel="noopener">打開紙娃娃角色產生器</a></div>
+        <div class="tip">「角色代碼.txt」要留著，下次貼回紙娃娃網站，就能繼續改同一個主播。</div>
+      </div>
+      <div class="rpanel" data-for="b" hidden>
+        <ol class="do">
+          <li>打開主播描述詞產生器，在 <span class="ui">① 生成主播圖片</span> 勾好風格、男生女生、飾品、服裝，按 <span class="ui">複製描述詞</span>。</li>
+          <li>到 Canva 首頁，在「你今天要設計些什麼呢？」的框框貼上描述詞，下面的比例選 <span class="ui">16:9</span>，送出。</li>
+          <li>從生成的圖裡點一張最喜歡的，按右上角 <span class="ui">在編輯器中開啟</span>。</li>
+          <li>不滿意可以在「你想要變更什麼？」打一個小地方請它改，一次只改一項。</li>
+        </ol>
+        <div class="btnrow"><a class="btn" href="../anchor-prompt/" target="_blank" rel="noopener">打開主播描述詞產生器</a></div>
+        <div class="tip">描述詞裡記得勾「嘴巴閉著」：主播沒說話時就是閉嘴的樣子，第 5 步的影片會讓嘴巴動起來。</div>
+      </div>
+      <button class="donebtn" type="button">✓ 這一步完成了</button>
+    </li>
+
+    <!-- 5 -->
+    <li class="step" id="step5" data-t="讓他說話">
+      <div class="shead"><span class="num">5</span><h3>讓主播開口說話</h3><span class="seal">ON AIR</span></div>
+      <div class="rpanel" data-for="a">
+        <p><span class="rtag">A 紙娃娃</span>說話 GIF 已經做好了，嘴巴會一開一合。</p>
+        <ol class="do">
+          <li>Canva 首頁 → 建立設計 → <span class="ui">影片</span>（16:9）。</li>
+          <li>左邊 <span class="ui">上傳</span> → <span class="ui">上傳檔案</span> → 到解壓縮的資料夾，<span class="key">Ctrl</span>＋<span class="key">A</span> 全選 → 開啟。</li>
+          <li>先把 <b>閉嘴.png</b> 拖到畫面上，調好大小和位置。</li>
+        </ol>
+        <p>說話 GIF 要等第 6 步配好音，在第 7 步對著聲音放。</p>
+        <div class="btnrow"><a class="btn ghost" href="../avatar-maker/guide.html" target="_blank" rel="noopener">看詳細圖解：主播包放進 Canva</a></div>
+      </div>
+      <div class="rpanel" data-for="b" hidden>
+        <p><span class="rtag">B AI 生圖</span>用 Canva 把主播圖片變成 5 秒的說話影片。</p>
+        <ol class="do">
+          <li>在主播描述詞產生器按 <span class="ui">② 讓主播說話</span>，選好說話的樣子，按 <span class="ui">複製描述詞</span>。</li>
+          <li>回到 Canva，點一下主播圖片，上方按 <span class="ui">動畫</span>。</li>
+          <li>左邊切到 <span class="ui">照片</span>，點 <span class="ui">圖片轉影片</span>。</li>
+          <li>選 <span class="ui">自訂</span>，把描述詞貼進「描述你理想中的動態效果」，按 <span class="ui">生成 5 秒影片</span>。</li>
+          <li>等它「努力轉換影像中⋯」，出現「產生完成」後按 <span class="ui">播放</span> 看看。嘴巴有動就按 <span class="ui">完成</span>；沒動就按 <span class="ui">重新產生</span>。</li>
+          <li>想換背景：點影片，上方按 <span class="ui">背景移除工具</span>，再把它放到新聞台背景前面。</li>
+        </ol>
+        <div class="tip">做好的影片沒有聲音，大約 5 秒。講比較久的話，第 7 步會把它複製幾份接起來。每按一次生成都會用掉 AI 次數，不要一直按。</div>
+      </div>
+      <button class="donebtn" type="button">✓ 這一步完成了</button>
+    </li>
+
+    <!-- 6 -->
+    <li class="step" id="step6" data-t="配音">
+      <div class="shead"><span class="num">6</span><h3>幫主播配音</h3><span class="seal">ON AIR</span></div>
+      <ol class="do">
+        <li>左邊點 <span class="ui">應用程式</span>，找 <span class="ui">文字轉語音</span>。</li>
+        <li>從台詞稿<b>一次複製一行</b>貼上去，加到設計裡；再做下一行。一行一段聲音，之後比較好對嘴，也好剪掉停頓。</li>
+        <li>選一個適合你的主播的聲音，按加到設計。</li>
+      </ol>
+      <p>想用自己的聲音：左邊 <span class="ui">上傳</span> → <span class="ui">錄製自己</span>，照著台詞稿唸。</p>
+      <div class="tip">「我的感想」用自己的聲音錄，會更有你的感覺。</div>
+      <button class="donebtn" type="button">✓ 這一步完成了</button>
+    </li>
+
+    <!-- 7 -->
+    <li class="step" id="step7" data-t="合成影片">
+      <div class="shead"><span class="num">7</span><h3>合成主播影片</h3><span class="seal">ON AIR</span></div>
+      <div class="rpanel" data-for="a">
+        <p><span class="rtag">A 紙娃娃</span></p>
+        <ol class="do">
+          <li>時間軸上，把 <b>閉嘴.png</b> 拉到和整段影片一樣長，墊在最底下。</li>
+          <li>把 <b>說話.gif</b> 疊上去，到 <span class="ui">位置</span> → <span class="ui">進階</span> 填上和閉嘴圖一樣的寬、高、X、Y。</li>
+          <li>GIF 只放在有聲音的地方：聲音開始時開始，聲音停時結束。停頓的地方用 <span class="key">S</span> 分割，刪掉中間那段。</li>
+          <li>加分：停頓時疊一張 <b>眨眼.png</b>，長度 0.2 秒。</li>
+        </ol>
+      </div>
+      <div class="rpanel" data-for="b" hidden>
+        <p><span class="rtag">B AI 生圖</span></p>
+        <ol class="do">
+          <li>把說話影片放在有聲音的地方。聲音比 5 秒長，就把影片複製（<span class="key">Ctrl</span>＋<span class="key">D</span>）幾份接在後面。</li>
+          <li>沒有聲音的地方，放原本那張閉嘴的主播圖片，大小位置要和影片一樣。</li>
+          <li>影片太長就用 <span class="key">S</span> 分割，刪掉多出來的部分，讓嘴巴跟著聲音停。</li>
+        </ol>
+      </div>
+      <p>兩種做法都可以再加：</p>
+      <ol class="do">
+        <li>背景：新聞攝影棚，或「我的主題大探索」做的圖片。</li>
+        <li>節目名稱字卡、主播名字條、報導主題的標題。</li>
+        <li>講到重點時，旁邊放一張主題的照片。</li>
+      </ol>
+      <button class="donebtn" type="button">✓ 這一步完成了</button>
+    </li>
+
+    <!-- 8 -->
+    <li class="step" id="step8" data-t="檢查繳交">
+      <div class="shead"><span class="num">8</span><h3>播放檢查，繳交作品</h3><span class="seal">ON AIR</span></div>
+      <p>從頭播放一次，檢查：</p>
+      <div class="chips" id="checks" role="group" aria-label="檢查項目"></div>
+      <ol class="do" style="margin-top:10px">
+        <li>都沒問題，按右上角 <span class="ui">分享</span> → <span class="ui">下載</span> → 檔案類型選 <span class="ui">MP4 影片</span>。</li>
+        <li>照老師說的方式繳交（上傳影片，或分享公開檢視連結）。</li>
+      </ol>
+      <button class="donebtn" type="button">✓ 這一步完成了</button>
+    </li>
+  </ol>
+
+  <details class="teacher">
+    <summary>老師注意（上課前）</summary>
+    <ol class="do">
+      <li>台詞稿範本（擁有者 cona0815@gmail.com）要先在 Google 文件右上角 <span class="ui">共用</span> 改成「知道連結的任何人．檢視者」，學生（和你的學校帳號）才能建立副本。</li>
+      <li>Canva 教育版的學生帳號，「圖片轉影片」預設是關閉的，要由學校的 Canva 管理員開啟。上課前先用學生帳號試一次。</li>
+      <li>夢想實驗室和圖片轉影片都會用掉每月的 AI 額度，提醒學生不要一直重按。</li>
+      <li>圖片轉影片沒有聲音；Canva 說明臉部的動作不一定穩定，嘴巴沒動就重新產生一次。</li>
+    </ol>
+  </details>
+  <footer><a href="../">← 回 Canva 課程首頁</a>　·　Cona 老師的資訊教室 · 我是虛擬主播 v1.3 · 2026-11-24</footer>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(()=>{
+const TOPICS={"ORDER":["足球明星","籃球明星","棒球明星","臺灣運動選手","韓團（男團／女團）","華語歌手","直播主／YouTuber","動畫","漫畫","電影","超級英雄","可愛角色","爆笑圖片","玩具","車子","交通工具","臺灣火車","日本火車電車","動物","海洋生物","恐龍","昆蟲","鳥類","植物花朵","太空","世界景點","日本景點","臺灣景點","臺南古蹟","美食","臺灣美食","臺灣小吃","臺南美食","臺南小吃","節日","樂器","職業","科學家與發明家","運動項目","其他"],"T":{"足球明星":["世界足球明星","阿根廷國家隊","皇家馬德里","巴塞隆納","巴黎聖日耳曼","曼城","利物浦","梅西","C羅","姆巴佩","哈蘭德","亞馬爾","維尼修斯","貝林厄姆","凱恩","登貝萊","薩拉赫","奧利塞","羅德里","佩德里","萊斯","哈基米","維蒂尼亞","勞塔羅","克瓦拉茨赫利亞","B費","孫興慜","帕爾默","薩卡","穆西亞拉","維爾茨","福登","內馬爾","莫德里奇","范戴克","德布勞內","阿爾瓦雷斯","拜仁慕尼黑","曼聯","阿森納","巴西國家隊","法國國家隊","日本國家隊","萊萬多夫斯基","格列茲曼","本澤馬","拉菲尼亞","庫巴西","若昂・內維斯","努諾・門德斯","庫爾圖瓦","久保建英","三笘薰","貝克漢","席丹","小羅納度","巴西羅納度","比利","馬拉度納","切爾西","尤文圖斯","AC 米蘭","國際米蘭","多特蒙德","葡萄牙國家隊","西班牙國家隊","英格蘭國家隊"],"籃球明星":["NBA 球星大集合","勇士隊","湖人隊","詹姆斯","柯瑞","杜蘭特","約基奇","唐西奇","文班亞馬","亞歷山大","字母哥","愛德華茲","塔圖姆","喬丹","柯比","歐尼爾","林書豪","哈登","莫蘭特","布倫森","塞爾提克隊","雷霆隊","魔術強森","鄧肯","諾威斯基","姚明","八村塁","河村勇輝","布克","米契爾","哈利伯頓","班切羅","公鹿隊","金塊隊","獨行俠隊","馬刺隊","尼克隊","熱火隊"],"棒球明星":["中華隊","道奇隊","大谷翔平","山本由伸","賈吉","陳傑憲","林家正","林昱珉","古林睿煬","張奕","林安可","江坤宇","潘傑楷","曾頌恩","鈴木一朗","達比修有","村上宗隆","佐佐木朗希","王建民","陳偉殷","林子偉","鄧愷威","鄭宗哲","日本武士隊","統一獅","中信兄弟","樂天桃猿","鈴木誠也","菊池雄星","今永昇太","索托","貝茲","弗里曼","小葛雷諾","斯基恩斯","王柏融","張育成","吳念庭","李灝宇","徐若熙","孫易磊","郭泓志","彭政閔","林智勝","洋基隊","富邦悍將","味全龍","台鋼雄鷹"],"臺灣運動選手":["臺灣奧運選手大集合","羽球雙打 麟洋配","林郁婷","李洋","王齊麟","戴資穎","郭婞淳","楊勇緯","李智凱","林昀儒","周天成","鄭怡靜","莊智淵","楊俊瀚","盧彥勳","謝淑薇","曾雅妮","潘政琮","唐嘉鴻","羅嘉翎","黃筱雯","雷千瑩","湯智鈞","紀政","楊傳廣","陳詩欣","朱木炎"],"韓團（男團／女團）":["BABYMONSTER","BLACKPINK","IVE","aespa","LE SSERAFIM","TWICE","RESCENE","ILLIT","Hearts2Hearts","KiiiKiii","(G)I-DLE","BTS","Stray Kids","SEVENTEEN","TXT","ATEEZ","CORTIS","ENHYPEN","RIIZE","BOYNEXTDOOR","TWS","Red Velvet","NewJeans","ITZY","NMIXX","KISS OF LIFE","Kep1er","BIGBANG","EXO","NCT 127","ZEROBASEONE","TREASURE","IU","少女時代","Super Junior","SHINee","2NE1","MAMAMOO","Apink","OH MY GIRL","STAYC","NCT DREAM","THE BOYZ","MONSTA X","izna","MEOVV","ALLDAY PROJECT","Jennie","Lisa","Rosé"],"華語歌手":["華語歌手大集合","周杰倫","蔡依林","林俊傑","鄧紫棋","張惠妹","田馥甄","盧廣仲","告五人","五月天","艾薇","孫燕姿","王心凌","韋禮安","周興哲","李榮浩","楊丞琳","八三夭","茄子蛋","美秀集團","魏如萱","蕭敬騰","林宥嘉","吳青峰","徐佳瑩","A-Lin","蔡健雅","張學友","伍佰","陶喆","宇宙人","理想混蛋","動力火車","范瑋琪"],"直播主／YouTuber":["有感筆電"],"動畫":["鬼滅之刃","小魔女 DoReMi","擅長捉弄的高木同學","天竺鼠車車","迷宮飯","美少女戰士","鋼之鍊金術師","庫洛魔法使","妖怪手錶","汪汪隊立大功","烏龍派出所","櫻桃小丸子","我們這一家","獵人","七龍珠","名偵探柯南","寶可夢","間諜家家酒","航海王（海賊王）","咒術迴戰","蠟筆小新","哆啦A夢","葬送的芙莉蓮","排球少年","我的英雄學院","藍色監獄","鏈鋸人","膽大黨","怪獸8號","坂本日常","藥師少女的獨語","Kpop 獵魔女團","動物方城市","火影忍者","進擊的巨人","灌籃高手"],"漫畫":["航海王（海賊王）","老夫子","烏龍院","棋靈王","鬼滅之刃","咒術迴戰","間諜家家酒","名偵探柯南","哆啦A夢","膽大黨","藍色監獄","排球少年","鏈鋸人","葬送的芙莉蓮","坂本日常","怪獸8號","我的英雄學院","火影忍者","進擊的巨人","藥師少女的獨語","七龍珠","獵人","灌籃高手","烏龍派出所","櫻桃小丸子","我們這一家","鋼之鍊金術師","美少女戰士","迷宮飯","擅長捉弄的高木同學","科學實驗王","尋寶記"],"電影":["玩具總動員","瓦力","料理鼠王","天外奇蹟","阿拉丁","小美人魚","星際寶貝","荒野機器人","冰原歷險記","史瑞克","蜘蛛人：新宇宙","天空之城","霍爾的移動城堡","魔女宅急便","馴龍高手","魔法滿屋","可可夜總會","超人特攻隊","海底總動員","汽車總動員","怪獸電力公司","獅子王","神隱少女","龍貓","冰雪奇緣","哈利波特","腦筋急轉彎","小小兵","功夫熊貓","海洋奇緣","侏儸紀世界","星際大戰","動物方城市"],"超級英雄":["復仇者聯盟","驚奇四超人","X戰警","星際異攻隊","正義聯盟","蜘蛛人","鋼鐵人","美國隊長","雷神索爾","黑豹","綠巨人浩克","黑寡婦","奇異博士","蝙蝠俠","超人","神力女超人","閃電俠","驚奇隊長","蟻人","星爵","格魯特","水行俠","超人力霸王","假面騎士","金鋼狼","鷹眼","尚氣","原子小金剛","無敵鐵金剛"],"可愛角色":["三麗鷗","企鵝家族","麵包超人","佩佩豬","卡娜赫拉的小動物","LINE FRIENDS","THE MONSTERS","米飛兔","嚕嚕米","海綿寶寶","小熊維尼","吉伊卡哇","迪士尼角色","角落小夥伴","史努比與好朋友","蛋黃哥","拉拉熊"],"爆笑圖片":["爆笑動物大集合","爆笑圖片大集合","搞笑貓咪","搞笑狗狗","動物鬼臉","寵物變裝","爆笑表情包","錯位照片","神奇巧合照片","有趣的路標","長得像別的東西","搞笑運動瞬間","睡姿超奇怪","偷吃被抓到"],"玩具":["我的玩具收藏","樂高","Labubu","寶可夢卡牌","戰鬥陀螺 X","魔術方塊","鋼彈模型","芭比娃娃","遙控車","Tomica 小汽車","扭蛋","角落小夥伴","三麗鷗","拼豆","史萊姆","黏土","積木","磁力片","拼圖","變形金剛","溜溜球","無人機","機器人","毛絨娃娃","森林家族","泡泡瑪特盲盒","水槍","遙控飛機"],"車子":["超跑大集合","法拉利 SF90","法拉利 F80","藍寶堅尼 Revuelto","藍寶堅尼 Temerario","保時捷 911","布加迪 Chiron","布加迪 Tourbillon","麥拉倫 W1","柯尼塞格 Jesko","帕加尼 Utopia","Rimac Nevera","奧斯頓馬丁 Valkyrie","福特 GT","小米 SU7 Ultra","法拉利 296","保時捷 Taycan","藍寶堅尼 Urus","賓士 G-Class","BMW M4","特斯拉 Cybertruck","特斯拉 Model Y","Toyota GR Supra","日產 GT-R","福特野馬","雪佛蘭 Corvette","勞斯萊斯 Spectre","吉普牧馬人","電動車大集合","越野車大集合","特斯拉 Model 3","小米 SU7","比亞迪 海豹","現代 IONIQ 5","起亞 EV9","BMW i4","賓士 EQS","福特 Mustang Mach-E","奧迪 e-tron GT","Lucid Air","Rivian R1T","納智捷 n7","Gogoro 電動機車"],"交通工具":["交通工具大集合","高鐵","台鐵","捷運","新幹線","飛機","熱氣球","潛水艇","火箭","消防車","救護車","怪手","郵輪","直升機","磁浮列車","雙層巴士","帆船","腳踏車","垃圾車","太空梭","阿里山小火車","纜車","摩托車"],"臺灣火車":["臺灣火車大集合","台鐵觀光列車","支線小火車","普悠瑪號","太魯閣號","EMU3000 新自強號","自強號","莒光號","區間車","藍皮解憂號","鳴日號","阿里山小火車","高鐵","台北捷運","高雄輕軌","平溪線","集集線","內灣線","蒸汽火車 CK124"],"日本火車電車":["日本列車大集合","新幹線家族","可愛的電車","新幹線 N700S","新幹線 E5 隼","新幹線 E6 小町","新幹線 E7","黃色醫生","山手線","江之電","箱根登山電車","嵐電","都電荒川線","小田急浪漫特快","近鐵 ひのとり","阪急電車","東京地鐵","SL 蒸汽火車","磁浮新幹線"],"動物":["可愛的狗狗","非洲草原動物","爬蟲類","臺灣特有動物","可愛的貓咪","蛇","烏龜","我喜歡的寵物","動物園明星","柴犬","柯基","黃金獵犬","拉布拉多","博美","貴賓狗","哈士奇","法國鬥牛犬","臘腸狗","邊境牧羊犬","橘貓","布偶貓","英國短毛貓","美國短毛貓","曼赤肯貓","蘇格蘭摺耳貓","無毛貓","黑貓","三花貓","球蟒","玉米蛇","王蛇","眼鏡蛇","綠樹蟒","網紋蟒","巴西龜","蘇卡達象龜","綠蠵龜","豹紋陸龜","赫曼陸龜","鱷龜","加拉巴哥象龜","兔子","倉鼠","鸚鵡","刺蝟","貓熊","無尾熊","水豚","長頸鹿","獅子","北極熊","老虎","大象","狐狸","浣熊","小貓熊","樹懶","台灣黑熊","石虎","穿山甲","狐獴","袋鼠","斑馬","狼","河馬","犀牛","猩猩","獵豹","駱駝","羊駝","松鼠","天竺鼠","守宮","變色龍","鱷魚","青蛙","雪納瑞","吉娃娃","台灣犬","薩摩耶","秋田犬","比熊犬","德國牧羊犬","暹羅貓","波斯貓","緬因貓","俄羅斯藍貓","可愛小貓"],"海洋生物":["海洋生物大集合","海豚","虎鯨","藍鯨","鯨鯊","大白鯊","海龜","章魚","小丑魚","水母","海馬","企鵝","海獺","魟魚","海星","寄居蟹","抹香鯨","翻車魚","儒艮","河豚","螃蟹","海葵","珊瑚"],"恐龍":["恐龍大集合","暴龍","三角龍","劍龍","腕龍","迅猛龍","甲龍","棘龍","翼龍","蛇頸龍","異特龍","梁龍","厚頭龍","副櫛龍","禽龍","偷蛋龍","南方巨獸龍","滄龍"],"昆蟲":["昆蟲大集合","獨角仙","鍬形蟲","螳螂","蝴蝶","螢火蟲","蜜蜂","瓢蟲","蜻蜓","蟬","螞蟻","蟋蟀","竹節蟲","金龜子","蠶寶寶","枯葉蝶","皇蛾","鳳蝶"],"鳥類":["鳥類大集合","臺灣的鳥","黑面琵鷺","臺灣藍鵲","帝雉","綠繡眼","白鷺鷥","貓頭鷹","老鷹","鸚鵡","孔雀","企鵝","蜂鳥","啄木鳥"],"植物花朵":["植物大集合","向日葵","玫瑰","櫻花","鬱金香","蓮花","油桐花","仙人掌","捕蠅草","竹子","蒲公英","含羞草","猴麵包樹"],"太空":["太陽系行星","太空探險","太陽","月球","地球","火星","木星","土星","黑洞","國際太空站","水星","金星","天王星","海王星","冥王星","銀河系","彗星","流星雨","太空人","韋伯太空望遠鏡","火星探測車"],"世界景點":["世界景點大集合","日本景點","艾菲爾鐵塔","埃及金字塔","萬里長城","自由女神像","雪梨歌劇院","富士山","羅馬競技場","比薩斜塔","泰姬瑪哈陵","東京迪士尼","大峽谷","聖母峰","尼加拉瀑布","馬丘比丘","吳哥窟","大笨鐘","聖家堂","哈里發塔","東京晴空塔","首爾景福宮","環球影城"],"日本景點":["日本景點大集合","東京景點","京都景點","大阪景點","富士山","東京晴空塔","東京鐵塔","淺草寺","清水寺","伏見稻荷大社","金閣寺","奈良公園","大阪城","道頓堀","日本環球影城","東京迪士尼","小樽運河","沖繩美麗海水族館","姬路城","嚴島神社","白川鄉合掌村","函館夜景"],"臺灣景點":["臺灣景點大集合","臺北景點","臺南景點","台北101","日月潭","阿里山","墾丁","太魯閣","九份","高美濕地","赤崁樓","安平古堡","奇美博物館","故宮博物院","野柳女王頭","清境農場","綠島","蘭嶼","合歡山","駁二藝術特區","澎湖跨海大橋","鹿港老街","安平樹屋"],"臺南古蹟":["臺南古蹟大集合","安平古蹟","中西區古蹟","赤崁樓","安平古堡","億載金城","臺南孔廟","大天后宮","祀典武廟","延平郡王祠","安平樹屋","德記洋行","四草砲臺","林百貨","國立臺灣文學館","大南門","兌悅門","五妃廟"],"美食":["臺灣美食","臺南小吃","夜市小吃","日本料理","珍珠奶茶","牛肉麵","小籠包","雞排","臭豆腐","蚵仔煎","鹽酥雞","芒果冰","壽司","拉麵","披薩","漢堡","甜點大集合","鬆餅","蛋糕","冰淇淋","布丁","雞蛋糕","滷肉飯","擔仔麵","碗粿","肉圓","虱目魚粥","牛肉湯","刈包","豆花","鳳梨酥","咖哩飯","韓式炸雞","義大利麵"],"臺灣美食":["臺灣美食大集合","夜市小吃","臺灣伴手禮","滷肉飯","牛肉麵","小籠包","珍珠奶茶","鹽酥雞","臭豆腐","蚵仔煎","雞排","刈包","豆花","芒果冰","鳳梨酥","太陽餅","肉圓","大腸包小腸","胡椒餅","蔥油餅","甜不辣","米粉湯","粽子"],"臺灣小吃":["臺灣小吃大集合","夜市必吃","臭豆腐","蚵仔煎","大腸包小腸","鹽酥雞","雞排","肉圓","碗粿","刈包","胡椒餅","蔥抓餅","地瓜球","甜不辣","豬血糕","滷味","蚵仔麵線","筒仔米糕","車輪餅","雞蛋糕","潤餅","豆花"],"臺南美食":["臺南美食大集合","臺南早餐","牛肉湯","虱目魚粥","鱔魚意麵","擔仔麵","蝦仁飯","鹹粥","菜粽","肉燥飯","碗粿","土魠魚羹","鍋燒意麵","香腸熟肉"],"臺南小吃":["府城小吃大集合","棺材板","蝦捲","碗粿","肉圓","豆花","椪餅","米糕","杏仁豆腐","冬瓜茶","安平蝦餅","蜜餞","豆菜麵","蚵捲","鱔魚意麵","土魠魚羹","虱目魚丸湯","肉粽","古早味紅茶","芒果冰","鍋燒意麵"],"節日":["節日大集合","臺灣傳統節日","春節","元宵節","清明節","端午節","中秋節","兒童節","母親節","父親節","教師節","萬聖節","聖誕節"],"樂器":["樂器大集合","鋼琴","小提琴","吉他","爵士鼓","直笛","長笛","薩克斯風","烏克麗麗","二胡","古箏","豎琴","小號"],"職業":["職業大集合","醫生","護理師","警察","消防員","老師","太空人","廚師","工程師","機師","獸醫","運動員","設計師","科學家"],"科學家與發明家":["科學家大集合","愛迪生","愛因斯坦","牛頓","居禮夫人","萊特兄弟","達文西","伽利略","尼古拉・特斯拉","霍金","貝爾","諾貝爾","賈伯斯"],"運動項目":["我喜歡的運動","棒球","籃球","足球","羽球","桌球","游泳","跆拳道","滑板","體操","排球","網球","高爾夫","田徑","舉重","拳擊","柔道","攀岩","衝浪","直排輪","跳繩","扯鈴"],"其他":[]}}; /* 來自「我的主題大探索」v4.0 的 40 類主題清單 */
+const SHOWS=[['新聞快報','新聞'],['體育新聞','體育新聞'],['娛樂新聞','娛樂新聞'],['美食節目','美食節目'],['旅遊節目','旅遊節目'],
+  ['科學小教室','科學節目'],['動物頻道','動物頻道'],['校園新聞','校園新聞']];
+const SHOW_OF=c=>/足球|籃球|棒球|運動/.test(c)?'體育新聞':/韓團|歌手|直播|動畫|漫畫|電影|英雄|可愛角色|爆笑|玩具/.test(c)?'娛樂新聞':
+  /美食|小吃/.test(c)?'美食節目':/景點|古蹟|火車|交通/.test(c)?'旅遊節目':/太空|恐龍|科學|植物|昆蟲|職業|樂器|車子/.test(c)?'科學小教室':
+  /動物|海洋|鳥類/.test(c)?'動物頻道':'新聞快報';
+const LENS=[['30 秒',30,130],['60 秒',60,250]];
+const TONES=[['專業穩重','專業又穩重'],['活潑熱情','活潑又熱情'],['溫柔親切','溫柔又親切'],['幽默有趣','幽默有趣']];
+const CHECKS=['嘴巴有跟著聲音動','沒講話時主播閉嘴','聲音聽得清楚','人名數字都正確','有節目名稱和主播名字','影片不超過規定時間'];
+const STEPS=8, KEY='dq-vtuber-v1';
+const $=id=>document.getElementById(id);
+let st={done:[],route:'a',cat:'',topic:'',showType:'',showTouched:false,show:'',anchor:'',len:30,tone:'活潑熱情',checks:[]};
+try{const s=JSON.parse(localStorage.getItem(KEY)||'null');if(s)st=Object.assign(st,s);}catch(e){}
+if(st.len!==30&&st.len!==60)st.len=30;
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(st));}catch(e){}};
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('on'),1800);}
+async function copyText(t,ok){
+  try{await navigator.clipboard.writeText(t);toast(ok);}
+  catch(e){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();
+    try{document.execCommand('copy');toast(ok);}catch(_){toast('請自己選取文字，按 Ctrl＋C');}a.remove();}
+}
+
+/* ---- 步驟完成與進度 ---- */
+const steps=[...document.querySelectorAll('.step')];
+const nav=$('stepnav');
+steps.forEach((s,i)=>{
+  const a=document.createElement('a');a.href='#'+s.id;a.innerHTML=`<b>${i+1}</b>${s.dataset.t}`;nav.appendChild(a);
+  s.querySelector('.donebtn').addEventListener('click',()=>{
+    const k=i+1,j=st.done.indexOf(k);
+    if(j>=0)st.done.splice(j,1);else{st.done.push(k);toast(k===STEPS?'全部完成！你是今天的主播！':'完成第 '+k+' 步！');
+      const n=steps[i+1];if(n)setTimeout(()=>n.scrollIntoView({behavior:'smooth',block:'start'}),350);}
+    paint();
+  });
+});
+function paint(){
+  steps.forEach((s,i)=>{const d=st.done.includes(i+1);s.classList.toggle('done',d);
+    s.querySelector('.donebtn').textContent=d?'✓ 完成了（再按一次取消）':'✓ 這一步完成了';
+    nav.children[i].classList.toggle('done',d);});
+  $('barFill').style.width=(st.done.length/STEPS*100)+'%';$('count').textContent=`${st.done.length} / ${STEPS}`;
+  document.querySelectorAll('.route').forEach(b=>b.setAttribute('aria-pressed',b.dataset.route===st.route));
+  document.querySelectorAll('.rpanel').forEach(p=>p.hidden=p.dataset.for!==st.route);
+  save();
+}
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){const i=steps.indexOf(e.target);
+  [...nav.children].forEach((a,j)=>a.classList.toggle('here',j===i));navTo(nav.children[i]);}}),{rootMargin:'-40% 0px -55% 0px'});
+/* v1.3：只橫向捲動快速連結列，不能用 scrollIntoView（會拉動整頁，滾輪往下時頁面會抖、跳回去） */
+function navTo(a){const nr=nav.getBoundingClientRect(),ar=a.getBoundingClientRect();
+  const x=nav.scrollLeft+(ar.left-nr.left)-(nr.width-ar.width)/2;if(Math.abs(x-nav.scrollLeft)>4)nav.scrollTo({left:x,behavior:'smooth'});}
+steps.forEach(s=>io.observe(s));
+document.querySelectorAll('.route').forEach(b=>b.addEventListener('click',()=>{st.route=b.dataset.route;paint();}));
+
+/* ---- 台詞提示詞產生器 ---- */
+function chipRow(box,items,isOn,onClick){
+  box.innerHTML='';items.forEach(it=>{const b=document.createElement('button');b.type='button';b.className='chip';
+    b.textContent=it.label;b.setAttribute('aria-pressed',isOn(it)?'true':'false');b.addEventListener('click',()=>onClick(it));box.appendChild(b);});
+}
+const catSel=$('cat');
+catSel.innerHTML='<option value="">— 選一類（沒有的選「其他」）—</option>'+TOPICS.ORDER.map(c=>`<option>${c}</option>`).join('');
+catSel.value=st.cat;
+catSel.addEventListener('change',()=>{st.cat=catSel.value;if(!st.showTouched&&st.cat)st.showType=SHOW_OF(st.cat);renderGen();});
+$('topic').addEventListener('input',e=>{st.topic=e.target.value;renderGen(false);});
+$('show').addEventListener('input',e=>{st.show=e.target.value;renderGen(false);});
+$('anchor').addEventListener('input',e=>{st.anchor=e.target.value;renderGen(false);});
+$('topic').value=st.topic;$('show').value=st.show;$('anchor').value=st.anchor;
+
+function prompt(){
+  const L=LENS.find(l=>l[1]===st.len)||LENS[0];
+  const show=st.show.trim()||'（節目名稱）',anc=st.anchor.trim()||'（主播名字）';
+  const type=(SHOWS.find(s=>s[0]===st.showType)||SHOWS[0])[1];
+  const tone=(TONES.find(t=>t[0]===st.tone)||TONES[1])[1];
+  const topic=st.topic.trim()||'（報導主題）';
+  return `請上網查最新、最正確的資料，名字、數字、日期都要正確。幫我寫一段${type}的主播台詞，報導的主題是「${topic}」${st.cat&&st.cat!=='其他'?`（${st.cat}）`:''}。節目名稱是「${show}」，主播是「${anc}」。`+
+    `台詞要給國小五年級學生自己唸，長度大約 ${L[1]} 秒、${L[2]} 字左右，語氣${tone}。`+
+    `內容照這個順序：開場、三個重點、結尾。開場一定要打招呼，並說出節目名稱「${show}」和主播名字「${anc}」；結尾要說謝謝收看、我們下次見。`+
+    `每一句單獨一行，一句不超過 20 個字，不要寫「開場」「重點一」這些段落名稱。`+
+    `數字和年份用國字寫（例如：二零二六年、三十九歲），配音才唸得對。用五年級看得懂的話，不要用難字和英文縮寫。如果主題是一種動物、食物或東西，就介紹它本身的特點。`+
+    `只要台詞文字，不要附連結、不要表情符號、不要加註解。`;
+}
+function helpers(){
+  const L=LENS.find(l=>l[1]===st.len)||LENS[0];
+  const show=st.show.trim()||'（節目名稱）',anc=st.anchor.trim()||'（主播名字）';
+  /* AI 模式接著改的時候常常把開場和結尾弄丟，所以每一句都把規則重說一次 */
+  const keep=`第一句一定要是主播開場：打招呼，說出節目名稱「${show}」和主播名字「${anc}」；最後一句要說謝謝收看、我們下次見。改好後把整段台詞完整再給我一次，每一句單獨一行，數字用國字寫，不要段落名稱，不要附連結。`;
+  return [
+    ['太長了',`請把剛剛的主播台詞縮短到 ${Math.round(L[2]*0.75)} 字左右，保留最重要的內容。${keep}`],
+    ['太難唸',`請把剛剛的主播台詞改得更口語、更好唸，換掉難的字和長句子，讓國小五年級學生唸起來很順。${keep}`],
+    ['開場想更吸引人',`請幫我把剛剛主播台詞的開場改得更吸引人，讓觀眾想繼續看，開場一樣要說出節目名稱「${show}」和主播名字「${anc}」，不超過 40 字。其他句子不要改。改好後把整段台詞完整再給我一次，每一句單獨一行，不要附連結。`],
+    ['幫我查證',`請檢查剛剛主播台詞裡的人名、數字、日期是不是最新、正確的，有錯的幫我改好，先用一句話說明改了哪裡。${keep}`]
+  ];
+}
+function renderHelpers(){
+  const hb=$('helpers');hb.innerHTML='';
+  helpers().forEach(([t,p])=>{const d=document.createElement('div');d.className='helper';d.innerHTML=`<span><b>${t}</b>：${p}</span>`;
+    const b=document.createElement('button');b.type='button';b.className='btn ghost';b.textContent='複製';
+    b.addEventListener('click',()=>{const m=missing();if(m.length){toast('先在上面填：'+m.join('、'));return;}copyText(helpers().find(h=>h[0]===t)[1],'複製好了！貼到 AI 模式');});
+    d.appendChild(b);hb.appendChild(d);});
+}
+function renderGen(full=true){
+  if(full){
+    const list=(TOPICS.T[st.cat]||[]);
+    chipRow($('topicChips'),list.map(x=>({label:x})),it=>it.label===st.topic.trim(),it=>{st.topic=it.label;$('topic').value=it.label;renderGen();});
+    $('topicChips').hidden=!list.length;
+    chipRow($('showChips'),SHOWS.map(s=>({label:s[0]})),it=>it.label===st.showType,it=>{st.showType=it.label;st.showTouched=true;renderGen();});
+    chipRow($('lenChips'),LENS.map(l=>({label:l[0],v:l[1]})),it=>it.v===st.len,it=>{st.len=it.v;renderGen();renderTimer();});
+    chipRow($('toneChips'),TONES.map(t=>({label:t[0]})),it=>it.label===st.tone,it=>{st.tone=it.label;renderGen();});
+  }else{
+    [...$('topicChips').children].forEach(b=>b.setAttribute('aria-pressed',b.textContent===st.topic.trim()?'true':'false'));
+  }
+  if(!st.showType)st.showType='新聞快報';
+  $('prompt').textContent=prompt();renderHelpers();
+  const miss=missing();
+  $('need').textContent=miss.length?'還沒填：'+miss.join('、'):'';
+  save();
+}
+function missing(){const m=[];if(!st.topic.trim())m.push('報導的主題');if(!st.show.trim())m.push('節目名稱');if(!st.anchor.trim())m.push('主播名字');return m;}
+$('copyPrompt').addEventListener('click',()=>{
+  const m=missing();if(m.length){toast('先填：'+m.join('、'));$({'報導的主題':'topic','節目名稱':'show','主播名字':'anchor'}[m[0]]).focus();return;}
+  copyText(prompt(),'複製好了！到 Google AI 模式貼上');
+});
+
+/* ---- 碼表 ---- */
+let t0=0,run=false,acc=0,raf=0;
+function renderTimer(){
+  const s=(acc+(run?(performance.now()-t0):0))/1000;
+  $('clock').textContent=s.toFixed(1);$('clock').classList.toggle('over',s>st.len);
+  $('tmsg').textContent=s===0?`目標：${st.len} 秒以內`:s>st.len?`超過 ${(s-st.len).toFixed(1)} 秒，台詞要再短一點`:run?`唸吧！目標 ${st.len} 秒`:`剛好！還有 ${(st.len-s).toFixed(1)} 秒`;
+  if(run)raf=requestAnimationFrame(renderTimer);
+}
+$('tStart').addEventListener('click',()=>{
+  if(run){acc+=performance.now()-t0;run=false;cancelAnimationFrame(raf);$('tStart').textContent='繼續';}
+  else{t0=performance.now();run=true;$('tStart').textContent='停止';}
+  renderTimer();
+});
+$('tReset').addEventListener('click',()=>{run=false;acc=0;cancelAnimationFrame(raf);$('tStart').textContent='開始';renderTimer();});
+
+/* ---- 檢查清單 ---- */
+function renderChecks(){chipRow($('checks'),CHECKS.map(c=>({label:c})),it=>st.checks.includes(it.label),it=>{
+  const j=st.checks.indexOf(it.label);if(j>=0)st.checks.splice(j,1);else st.checks.push(it.label);renderChecks();save();});
+  [...$('checks').children].forEach(b=>{if(b.getAttribute('aria-pressed')==='true'&&!b.textContent.startsWith('✓'))b.textContent='✓ '+b.textContent;});}
+
+renderGen();renderTimer();renderChecks();paint();
+window.__vt={get st(){return st;},prompt};
+})();
+</script>
