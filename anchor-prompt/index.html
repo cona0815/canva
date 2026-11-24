@@ -5,8 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
-<!-- 主播描述詞產生器 v1.3 2026-11-23 · Cona 老師的資訊教室
+<!-- 主播描述詞產生器 v1.4 2026-11-24 · Cona 老師的資訊教室
      五年級 Canva 虛擬主播課：學生用勾選的方式組出描述詞，貼到 Canva 生成自己的主播，再讓主播動起來說話。
+     v1.4：風格改成有樣張的卡片（老師在 Canva 夢想實驗室實際生成，styles/NN.webp 縮圖、NN_l.webp 大圖），點 🔍 看大圖；先放 01～06，其他顯示「樣張準備中」
      v1.3：② 讓主播說話：嘴巴開合的速度要和一般人說話一樣，不要太快也不要太慢（一定會加在描述詞裡）
      v1.2：更豐富——
            ① 生成主播圖片：8 個快速範本；分成「角色、穿搭、臉和頭髮、動作和夥伴、場景」五區；新增膚色、眼睛、眼睛顏色、衣服圖案、
@@ -113,6 +114,19 @@ details.favs summary{cursor:pointer;color:var(--navy);font-weight:700}
 .fav span{flex:1;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .fav button{border:1.5px solid var(--navy);background:var(--paper);color:var(--navy);border-radius:8px;font-size:13px;padding:0 8px;cursor:pointer}
 @media (max-width:1000px){.modes{margin-left:0;width:100%}.mode{flex:1}}
+.chips.scards{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:8px}
+.swrap{position:relative}
+.chip.scard{width:100%;display:flex;flex-direction:column;align-items:stretch;gap:4px;padding:4px 4px 6px;border-radius:12px}
+.scard .thumb{aspect-ratio:16/9;border-radius:8px;overflow:hidden;background:var(--navy-soft);display:grid;place-items:center;color:var(--muted);font-size:12px}
+.scard .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.scard .lbl{display:flex;align-items:center;gap:6px;padding:0 4px;font-size:14px}
+.zoom{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;background:rgba(10,18,30,.6);color:#fff;border:0;display:grid;place-items:center;cursor:zoom-in;font-size:13px}
+.zoom:focus-visible{outline:3px solid var(--sun)}
+.lightbox{position:fixed;inset:0;background:rgba(10,18,30,.8);display:grid;place-items:center;z-index:20;padding:16px}
+.lightbox[hidden]{display:none}
+.lightbox figure{margin:0;width:min(1100px,96vw);background:var(--paper);border-radius:14px;overflow:hidden}
+.lightbox img{width:100%;display:block;aspect-ratio:2399/1355;background:var(--navy-soft)}
+.lightbox figcaption{padding:8px 14px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px}
 </style>
 
 <div class="app">
@@ -181,16 +195,19 @@ details.favs summary{cursor:pointer;color:var(--navy);font-weight:700}
       </div>
     </aside>
   </div>
-  <footer>Cona 老師的資訊教室 · 主播描述詞產生器 v1.3 · 2026-11-23</footer>
+  <footer>Cona 老師的資訊教室 · 主播描述詞產生器 v1.4 · 2026-11-24</footer>
 </div>
 <div class="toast" id="toast"></div>
+<div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="風格大圖">
+  <figure><img id="lbImg" alt=""><figcaption><b id="lbCap"></b><span style="color:var(--muted);font-size:14px">老師在 Canva 夢想實驗室實際生成的樣子，每次生成都會有一點不一樣</span><button class="btn" id="lbClose" type="button">關閉</button></figcaption></figure>
+</div>
 
 <script>
 (()=>{
 /* ===== ① 生成主播圖片 =====
    每個選項：[按鈕上的字, 英文描述, (中文描述，沒寫就用按鈕上的字)]；single=單選，max=最多勾幾個，sec=這一區的標題 */
 const G_IMG=[
- {id:'style',sec:'角色',t:'風格',hint:'整張圖的畫法',single:true,req:true,wide:true,o:[
+ {id:'style',sec:'角色',t:'風格',hint:'整張圖的畫法，點 🔍 看大圖',single:true,req:true,wide:true,cards:true,o:[
   ['可愛 Q 版','cute chibi style, big head, small body, big round eyes','可愛Q版風格，大頭小身體、圓圓的大眼睛'],
   ['帥氣寫實','realistic photo style, handsome and polished','帥氣的寫實照片風格'],
   ['日系動漫','Japanese anime illustration style','日系動漫插畫風格'],
@@ -285,6 +302,8 @@ const G_IMG=[
   ['角色在畫面中間','character centered'],['高畫質細節','high quality, detailed'],['線條乾淨','clean lines']]}
 ];
 const MOUTH='嘴巴閉著（好做說話動畫）';
+/* 風格樣張：老師用「風格樣張描述詞」在夢想實驗室生成，檔名是風格的編號（01＝第一個風格）。有圖的編號列在這裡 */
+const STYLE_IMG=['01','02','03','04','05','06'];
 const BG_OF={'新聞主播':'新聞攝影棚','體育主播':'體育攝影棚','氣象主播':'氣象台','美食節目主持人':'廚房攝影棚','旅遊節目主持人':'城市街景',
   '科學小主播':'科學實驗室','動物頻道主持人':'動物園','校園小記者':'教室','直播主':'直播房間','音樂節目主持人':'表演舞台',
   '太空特派員':'太空站','歷史故事主播':'古色古香的老街','益智問答主持人':'益智節目舞台'};
@@ -404,6 +423,16 @@ function clean(){
 /* 畫選項 */
 function chip(label,on,click){const b=document.createElement('button');b.className='chip';b.type='button';b.dataset.v=label;
   b.innerHTML=`<span class="box" aria-hidden="true"></span>${label}`;b.setAttribute('aria-pressed',on?'true':'false');b.addEventListener('click',click);return b;}
+function styleCard(label,no,click){
+  const w=document.createElement('div');w.className='swrap';const has=STYLE_IMG.includes(no);
+  const b=document.createElement('button');b.type='button';b.className='chip scard';b.dataset.v=label;b.setAttribute('aria-pressed','false');
+  b.innerHTML=`<span class="thumb">${has?`<img src="styles/${no}.webp" alt="${label}風格的樣張" loading="lazy">`:'樣張準備中'}</span><span class="lbl"><span class="box" aria-hidden="true"></span>${no} ${label}</span>`;
+  b.addEventListener('click',click);w.appendChild(b);
+  if(has){const z=document.createElement('button');z.type='button';z.className='zoom';z.textContent='🔍';z.setAttribute('aria-label',`看「${label}」大圖`);
+    z.addEventListener('click',e=>{e.stopPropagation();showBig(no,label);});w.appendChild(z);}
+  return w;
+}
+function showBig(no,label){const L=$('lightbox');$('lbImg').src=`styles/${no}_l.webp`;$('lbImg').alt=label+'風格的樣張';$('lbCap').textContent=`${no} ${label}`;L.hidden=false;$('lbClose').focus();}
 function build(){
   const box=$('opts');const keep=box.scrollTop;box.innerHTML='';
   if(mode==='img'){
@@ -420,7 +449,8 @@ function build(){
     const d=document.createElement('div');d.className='grp'+(g.wide?' wide':'')+(g.single?' single':'');d.id='g-'+g.id;
     d.innerHTML=`<div class="gh"><span class="num">${n}</span><h2>${g.t}</h2>${g.req?'<span class="req">必選</span>':''}<span class="hint">${g.single?'選一個':g.hint||'可以勾很多個'}${g.single&&g.hint?'・'+g.hint:''}</span></div><div class="chips" role="group" aria-label="${g.t}"></div>${g.note?`<p class="note">${g.note}</p>`:''}`;
     const c=d.querySelector('.chips');
-    g.o.forEach(o=>c.appendChild(chip(o[0],false,()=>toggle(g,o[0]))));
+    if(g.cards){c.classList.add('scards');g.o.forEach((o,i)=>c.appendChild(styleCard(o[0],String(i+1).padStart(2,'0'),()=>toggle(g,o[0]))));}
+    else g.o.forEach(o=>c.appendChild(chip(o[0],false,()=>toggle(g,o[0]))));
     box.appendChild(d);
   });
   const f=document.createElement('div');f.className='grp wide';
@@ -628,6 +658,9 @@ $('lzh').addEventListener('click',()=>{lang='zh';update();});
 $('len').addEventListener('click',()=>{lang='en';update();});
 document.querySelectorAll('.mode').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.m===mode)return;mode=b.dataset.m;$('opts').scrollTop=0;build();update();}));
 
+$('lbClose').addEventListener('click',()=>$('lightbox').hidden=true);
+$('lightbox').addEventListener('click',e=>{if(e.target.id==='lightbox')$('lightbox').hidden=true;});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')$('lightbox').hidden=true;});
 load();clean();build();update();
 window.__anchor={get mode(){return mode;},get sel(){return cur().sel;},compose,setMode:m=>{mode=m;build();update();},setLang:l=>{lang=l;update();},random,presets:PRESETS.map(p=>p[0])};
 })();
