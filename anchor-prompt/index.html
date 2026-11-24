@@ -5,8 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body>
-<!-- 主播描述詞產生器 v1.4.1 2026-11-24 · Cona 老師的資訊教室
+<!-- 主播描述詞產生器 v1.5 2026-11-24 · Cona 老師的資訊教室
      五年級 Canva 虛擬主播課：學生用勾選的方式組出描述詞，貼到 Canva 生成自己的主播，再讓主播動起來說話。
+     v1.5：新增「主角是誰」：人物／可愛動物；動物主播 24 種（和紙娃娃的動物主角一樣），選動物就不用選男生女生、年紀、膚色、頭髮；
+           新增風格 19「Q 版貼紙小人」（兩頭身全身小人＋白色貼紙描邊，選了自動改成全身）；快速範本加「動物主播」；③ 加「換成動物」
      v1.4.1：補上風格樣張 07～12、17、18（13～16 還沒有）
      v1.4：風格改成有樣張的卡片（老師在 Canva 夢想實驗室實際生成，styles/NN.webp 縮圖、NN_l.webp 大圖），點 🔍 看大圖；先放 01～06，其他顯示「樣張準備中」
      v1.3：② 讓主播說話：嘴巴開合的速度要和一般人說話一樣，不要太快也不要太慢（一定會加在描述詞裡）
@@ -196,7 +198,7 @@ details.favs summary{cursor:pointer;color:var(--navy);font-weight:700}
       </div>
     </aside>
   </div>
-  <footer>Cona 老師的資訊教室 · 主播描述詞產生器 v1.4.1 · 2026-11-24</footer>
+  <footer>Cona 老師的資訊教室 · 主播描述詞產生器 v1.5 · 2026-11-24</footer>
 </div>
 <div class="toast" id="toast"></div>
 <div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="風格大圖">
@@ -226,10 +228,19 @@ const G_IMG=[
   ['漫畫網點','black and white manga style with screentone','黑白漫畫網點風格'],
   ['普普藝術','pop art style with bold colors','普普藝術風格，顏色大膽'],
   ['油畫','oil painting style','油畫風格'],
-  ['未來霓虹','futuristic neon cyberpunk style','未來科技霓虹風格']]},
- {id:'gender',t:'男生、女生',single:true,req:true,o:[['男生','boy'],['女生','girl']]},
- {id:'age',t:'年紀',single:true,o:[['小學生','kid'],['國高中生','teen'],['大人','adult']]},
- {id:'skin',t:'膚色',single:true,wide:true,o:[['白皙','fair skin','皮膚白皙'],['自然膚色','natural skin tone','自然膚色'],['小麥色','tan skin','小麥色皮膚'],['深棕色','deep brown skin','深棕色皮膚']]},
+  ['未來霓虹','futuristic neon cyberpunk style','未來科技霓虹風格'],
+  ['Q 版貼紙小人','two-heads-tall chibi sticker style, full-body mini character with a thick white sticker outline','兩頭身Q版貼紙風格，大頭小身體的全身小人，外面有白色貼紙描邊']]},
+ {id:'who',t:'主角是誰',single:true,req:true,o:[['人物','a person'],['可愛動物','a cute animal']]},
+ {id:'animal',t:'動物主播',hint:'選一種動物來當主播',single:true,req:true,wide:true,animalOnly:true,o:[
+  ['橘白小貓','orange-and-white kitten'],['賓士貓','tuxedo cat'],['虎斑貓','tabby cat'],['三花貓','calico cat'],
+  ['柴犬','Shiba Inu puppy'],['柯基','corgi puppy'],['白色小狗','little white puppy'],['黃金獵犬','golden retriever puppy'],
+  ['小暴龍','baby T-rex'],['三角龍','baby triceratops'],['長頸龍','baby long-necked dinosaur'],['劍龍','baby stegosaurus'],
+  ['垂耳兔','lop-eared bunny'],['倉鼠','hamster'],['熊貓','panda'],['企鵝寶寶','baby penguin'],
+  ['小狐狸','little fox'],['海豹寶寶','baby seal'],['水獺','otter'],['小綿羊','little lamb'],
+  ['小豬','piglet'],['無尾熊','koala'],['翼龍','baby pterosaur'],['甲龍','baby ankylosaurus']]},
+ {id:'gender',t:'男生、女生',single:true,req:true,human:true,o:[['男生','boy'],['女生','girl']]},
+ {id:'age',t:'年紀',single:true,human:true,o:[['小學生','kid'],['國高中生','teen'],['大人','adult']]},
+ {id:'skin',t:'膚色',single:true,wide:true,human:true,o:[['白皙','fair skin','皮膚白皙'],['自然膚色','natural skin tone','自然膚色'],['小麥色','tan skin','小麥色皮膚'],['深棕色','deep brown skin','深棕色皮膚']]},
 
  {id:'outfit',sec:'穿搭',t:'服裝',hint:'最多 3 件',max:3,wide:true,o:[
   ['西裝外套','a blazer'],['白襯衫','a white shirt'],['套裝','a formal suit'],['西裝背心','a suit vest'],['背心','a vest'],
@@ -255,12 +266,12 @@ const G_IMG=[
   ['貓耳','cat ears'],['狐狸耳','fox ears'],['兔耳','bunny ears'],['天使光環','an angel halo'],['小翅膀','small wings'],
   ['小惡魔角','tiny devil horns'],['精靈尖耳','elf ears'],['機器人零件','small robot parts'],['閃亮星星特效','sparkle effects around'],['頭上一朵小花','a little flower on the head']]},
 
- {id:'hair',sec:'臉和頭髮',t:'髮型',single:true,wide:true,o:[
+ {id:'hair',sec:'臉和頭髮',t:'髮型',single:true,wide:true,human:true,o:[
   ['短髮','short hair'],['旁分短髮','side-parted short hair'],['刺刺短髮','spiky short hair'],['平頭','a buzz cut'],['蓬鬆捲短髮','fluffy curly short hair'],
   ['帥氣油頭','slicked-back hair'],['及肩短髮','a shoulder-length bob'],['長直髮','long straight hair'],['大波浪長髮','long wavy hair'],['捲髮','curly hair'],
   ['爆炸頭','an afro'],['馬尾','a ponytail'],['高馬尾','a high ponytail'],['雙馬尾','twin tails'],['丸子頭','a bun'],['雙丸子頭','double buns'],
   ['麻花辮','braids'],['齊瀏海','straight bangs'],['公主切','a hime cut']]},
- {id:'hairc',t:'髮色',single:true,wide:true,o:[
+ {id:'hairc',t:'髮色',single:true,wide:true,human:true,o:[
   ['黑色','black'],['咖啡色','brown'],['金色','blonde'],['紅色','red'],['橘色','orange'],['粉紅色','pink'],['藍色','blue'],
   ['綠色','green'],['紫色','purple'],['銀白色','silver'],['彩虹挑染','rainbow-highlighted']]},
  {id:'eyes',t:'眼睛',single:true,o:[
@@ -304,6 +315,10 @@ const G_IMG=[
 ];
 const MOUTH='嘴巴閉著（好做說話動畫）';
 /* 風格樣張：老師用「風格樣張描述詞」在夢想實驗室生成，檔名是風格的編號（01＝第一個風格）。有圖的編號列在這裡 */
+const STICKER='Q 版貼紙小人';
+const isAnimal=()=>one('who',data.img.sel)==='可愛動物';
+/* 人物才有的分類（男生女生、年紀、膚色、頭髮），動物主播時藏起來；動物種類只在選動物時出現 */
+const active=g=>mode!=='img'||!(g.human&&isAnimal())&&!(g.animalOnly&&!isAnimal());
 const STYLE_IMG=['01','02','03','04','05','06','07','08','09','10','11','12','17','18'];
 const BG_OF={'新聞主播':'新聞攝影棚','體育主播':'體育攝影棚','氣象主播':'氣象台','美食節目主持人':'廚房攝影棚','旅遊節目主持人':'城市街景',
   '科學小主播':'科學實驗室','動物頻道主持人':'動物園','校園小記者':'教室','直播主':'直播房間','音樂節目主持人':'表演舞台',
@@ -317,6 +332,7 @@ const PRESETS=[
  ['🔬 科學博士',{kind:'科學小主播',style:'3D 動畫電影',outfit:['實驗袍'],color:'白色',pattern:'素面',acc:['圓框眼鏡'],fantasy:[],face:'驚喜',pose:'雙手攤開介紹',buddy:'小機器人',light:'明亮攝影棚燈'}],
  ['🦁 動物探險家',{kind:'動物頻道主持人',style:'水彩繪本',outfit:['探險背心'],color:'綠色',pattern:'素面',acc:['探險帽','背包'],fantasy:[],face:'活力滿滿',pose:'揮手打招呼',buddy:'小狗',light:'溫暖陽光',bg:'森林'}],
  ['🎤 偶像直播主',{kind:'直播主',style:'日系動漫',outfit:['舞台表演服'],color:'粉彩色系',pattern:'星星',acc:['耳機麥克風','星星髮夾'],fantasy:['閃亮星星特效'],face:'開心微笑',pose:'雙手比愛心',buddy:'',light:'霓虹夜晚',bg:'表演舞台'}],
+ ['🐶 動物主播',{who:'可愛動物',animal:'柴犬',kind:'新聞主播',style:'可愛 Q 版',outfit:['西裝外套'],color:'深藍色',pattern:'素面',acc:['領結','耳機麥克風'],fantasy:[],face:'開心微笑',pose:'雙手放在主播台上',buddy:'',light:'明亮攝影棚燈'}],
  ['🚀 太空特派員',{kind:'太空特派員',style:'3D 動畫電影',outfit:['太空衣'],color:'白色',pattern:'素面',acc:['耳機麥克風'],fantasy:[],face:'自信',pose:'揮手打招呼',buddy:'小機器人',light:'夢幻粉彩'}]
 ];
 const PERSON={zh:{kid:'小學生年紀的',teen:'國高中生年紀的'},
@@ -377,6 +393,7 @@ const EDIT_T=[
  ['背景','bg','把背景換成{v}','Change the background to {v}'],
  ['燈光','light','把燈光改成{v}','Change the lighting to {v}'],
  ['畫風','style','把整張圖改成{v}','Change the whole image to {v}'],
+ ['換成動物','animal','把主播換成一隻可愛的{v}，像人一樣坐著','Change the anchor into a cute {v}, sitting like a person'],
  ['拿掉東西','','把{v}拿掉','Remove {v}']
 ];
 const IMG_BY=Object.fromEntries(G_IMG.map(g=>[g.id,g]));
@@ -390,7 +407,7 @@ function editGroups(){
 
 const MODES={
  img:{G:()=>G_IMG,sub:'勾一勾，組出你的主播，再貼到 Canva「夢想實驗室」生成圖片。',title:'你的描述詞',freeEx:'臉上有小雀斑、拿著一本書',
-   def:()=>{const d={kind:['新聞主播'],frame:['半身'],angle:['正面'],extra:['畫面不要出現文字',MOUTH,'角色在畫面中間']};d.bg=[BG_OF[d.kind[0]]];return d;}},
+   def:()=>{const d={who:['人物'],kind:['新聞主播'],frame:['半身'],angle:['正面'],extra:['畫面不要出現文字',MOUTH,'角色在畫面中間']};d.bg=[BG_OF[d.kind[0]]];return d;}},
  vid:{G:()=>G_VID,sub:'先用 ① 做好主播圖片，再用這組描述詞，在 Canva「圖片轉影片」讓主播開口說話。',title:'動態描述詞',freeEx:'說到一半眨一下眼睛',
    def:()=>({vtalk:['平穩播報'],vface:['自然眨眼'],vhead:['輕輕點頭'],vbody:['自然呼吸起伏'],vhand:['手不要動'],vcam:['鏡頭固定不動'],
      vlock:['臉和髮型不要變','衣服和飾品不要變',NOBG,'最後回到一開始的姿勢（好接下一段）','不要出現文字']})},
@@ -419,6 +436,7 @@ function clean(){
     if(!gs){d.sel.etarget=(d.sel.etarget||[]).filter(v=>EDIT_T.some(x=>x[0]===v)).slice(0,1);d.sel.evalue=(d.sel.evalue||[]).slice(0,1);continue;}
     for(const g of gs){const ok=new Set(g.o.map(o=>o[0]));let a=(d.sel[g.id]||[]).filter(v=>ok.has(v));
       if(g.single)a=a.slice(0,1);if(g.max)a=a.slice(0,g.max);d.sel[g.id]=a;}}
+  if(!(data.img.sel.who||[]).length)data.img.sel.who=['人物'];
 }
 
 /* 畫選項 */
@@ -468,6 +486,7 @@ function toggle(g,v){
   if(i>=0)a.splice(i,1);
   else if(g.single){a.length=0;a.push(v);}
   else{if(g.max&&a.length>=g.max){toast(`${g.t}最多選 ${g.max} 個，先取消一個`);return;}a.push(v);}
+  if(mode==='img'&&g.id==='style'&&v===STICKER&&a.includes(v)){s.frame=['全身'];toast('Q 版貼紙小人是全身的，構圖已改成全身');}
   if(mode==='img'){if(g.id==='bg')cur().bgTouched=true;if(g.id==='kind'&&!cur().bgTouched&&a.length)s.bg=[BG_OF[a[0]]];}
   if(mode==='vid'){
     if(g.id==='vbg'&&a.length&&(s.vlock||[]).includes(NOBG)){s.vlock=s.vlock.filter(x=>x!==NOBG);toast('有背景動態，已取消「背景不要動」');}
@@ -479,6 +498,7 @@ function toggle(g,v){
 function applyPreset(name,v){
   const s=data.img.sel;
   for(const k of ['kind','style','color','pattern','face','pose','buddy','light'])s[k]=v[k]?[v[k]]:[];
+  if(v.who){s.who=[v.who];s.animal=v.animal?[v.animal]:[];}
   for(const k of ['outfit','acc','fantasy'])s[k]=[...(v[k]||[])];
   s.bg=[v.bg||BG_OF[v.kind]];data.img.bgTouched=!!v.bg;
   update();toast(`套用「${name.replace(/^\S+\s/,'')}」！再選男生女生和頭髮`);
@@ -508,7 +528,8 @@ function composeImg(){
     const who=ak==='adult'?(gd?`年輕${gd==='男生'?'男性':'女性'}`:'年輕大人'):`${ak?PERSON.zh[ak]:''}${gd||(ak?'孩子':'')}`;
     const hair=v('hairc')&&v('hair')?`${v('hairc')}${v('hair')}`:v('hairc')?`${v('hairc')}頭髮`:v('hair')||'';
     const eyes=v('eyes')||v('eyec')?`${v('eyec')||''}${v('eyes')?Z('eyes'):'眼睛'}`:'';
-    const p1=[who?`是${who}`:'',Z('skin'),hair,eyes].filter(Boolean).join('，');if(p1)s.push(p1+'。');
+    const p1=isAnimal()?[v('animal')?`主播是一隻可愛的${v('animal')}，像人一樣坐著`:'主播是一隻可愛的動物',eyes].filter(Boolean).join('，')
+      :[who?`是${who}`:'',Z('skin'),hair,eyes].filter(Boolean).join('，');if(p1)s.push(p1+'。');
     const p2=[v('face')||'',closed?'嘴巴閉著':''].filter(Boolean).join('、');if(p2)s.push(`表情${p2}。`);
     const cl=[outfit.length?`穿著${joinZh(outfit)}`:'',v('color')?`衣服以${v('color')}為主`:'',v('pattern')?Z('pattern'):''].filter(Boolean);
     if(cl.length)s.push(cl.join('，')+'。');
@@ -529,7 +550,8 @@ function composeImg(){
   const hair=v('hairc')&&v('hair')?`${E('hairc')} ${strip(E('hair'))}`:v('hairc')?`${E('hairc')} hair`:v('hair')?strip(E('hair')):'';
   const eyes=v('eyes')||v('eyec')?`${v('eyec')?E('eyec')+' ':''}${v('eyes')?strip(E('eyes')):'eyes'}`:'';
   const feat=[E('skin'),hair,eyes].filter(Boolean);
-  if(who||feat.length)s.push(`${who?`The anchor is ${who}`:'The anchor has'}${feat.length?(who?' with ':' ')+joinEn(feat):''}.`);
+  if(isAnimal())s.push(`The anchor is a cute ${v('animal')?E('animal'):'animal'}, anthropomorphic, sitting like a person${eyes?' with '+eyes:''}.`);
+  else if(who||feat.length)s.push(`${who?`The anchor is ${who}`:'The anchor has'}${feat.length?(who?' with ':' ')+joinEn(feat):''}.`);
   const fc=[E('face'),closed?'mouth closed':''].filter(Boolean);if(fc.length)s.push(cap(fc.join(', '))+'.');
   if(outfit.length||v('color')||v('pattern'))s.push(`Wearing ${outfit.length?joinEn(outfit.map(x=>enOf('outfit',x))):'clothes'}${v('color')?`, mainly ${E('color')}`:''}${v('pattern')?`, with ${E('pattern')}`:''}.`);
   if(acc.length)s.push(`Accessories: ${acc.map(x=>enOf('acc',x)).join(', ')}.`);
@@ -584,16 +606,18 @@ function composeEdit(){
   if(val&&f)s+=' '+f;
   s+=t[1]==='style'?' Keep the same face, hairstyle and clothes.':` Keep everything else (${keep().map(x=>x[1]).join(', ')}) the same.`;
   return s;
-  function keep(){const skip={hair:'髮型',hairc:'髮型',face:'臉',eyes:'臉',outfit:'衣服',color:'衣服',pattern:'衣服',bg:'背景',light:'背景'}[t[1]];
-    return [['臉','face'],['髮型','hairstyle'],['衣服','clothes'],['背景','background']].filter(x=>x[0]!==skip);}
+  function keep(){const skip={hair:'髮型',hairc:'髮型',face:'臉',eyes:'臉',outfit:'衣服',color:'衣服',pattern:'衣服',bg:'背景',light:'背景',animal:'臉 髮型'}[t[1]]||'';
+    return [['臉','face'],['髮型','hairstyle'],['衣服','clothes'],['背景','background']].filter(x=>!skip.split(' ').includes(x[0]));}
 }
 const compose=()=>mode==='img'?composeImg():mode==='vid'?composeVid():composeEdit();
 
 /* 更新畫面 */
 function update(){
   const s=cur().sel;
+  let num=0;
   for(const g of G()){
     const el=$('g-'+g.id);if(!el)continue;const a=s[g.id]||[];
+    el.hidden=!active(g);if(!el.hidden){const n=el.querySelector('.num');if(n)n.textContent=++num;}
     el.querySelectorAll('.chip').forEach(b=>b.setAttribute('aria-pressed',a.includes(b.dataset.v)?'true':'false'));
     el.classList.toggle('need',!!g.req&&!a.length&&!(g.id==='evalue'&&freeTxt()));
   }
@@ -603,11 +627,12 @@ function update(){
   const txt=compose();
   $('out').textContent=txt;
   $('cnt').textContent=lang==='zh'?`${[...txt].length} 字`:`${txt.split(/\s+/).filter(Boolean).length} 個英文字`;
-  $('picked').textContent=`已選 ${G().reduce((n,g)=>n+(s[g.id]||[]).length,0)} 項`;
+  $('picked').textContent=`已選 ${G().filter(active).reduce((n,g)=>n+(s[g.id]||[]).length,0)} 項`;
+  const fn=document.querySelector('#opts > .grp:last-child .num');if(fn)fn.textContent=num+1;
   $('warn').textContent=miss.length?`還沒選：${miss.join('、')}`:'';
   renderFavs();save();
 }
-const missing=()=>G().filter(g=>g.req&&!(cur().sel[g.id]||[]).length&&!(g.id==='evalue'&&freeTxt()));
+const missing=()=>G().filter(g=>active(g)&&g.req&&!(cur().sel[g.id]||[]).length&&!(g.id==='evalue'&&freeTxt()));
 
 /* 收藏 */
 function renderFavs(){
@@ -639,6 +664,8 @@ function random(){
       outfit:pickN(v('outfit'),1+Math.floor(Math.random()*2)),color:[pick(v('color'))],pattern:maybe(v('pattern'),.5),
       acc:pickN(v('acc'),1+Math.floor(Math.random()*3)),fantasy:Math.random()<.3?pickN(v('fantasy'),1):[],
       pose:[pick(v('pose'))],buddy:maybe(v('buddy'),.35),light:[pick(v('light'))],frame:['半身'],angle:['正面'],extra:[...MODES.img.def().extra]};
+    if(Math.random()<.25){s.who=['可愛動物'];s.animal=[pick(v('animal'))];for(const k of ['gender','age','skin','hair','hairc'])s[k]=[];}else s.who=['人物'];
+    if(s.style[0]===STICKER)s.frame=['全身'];
     s.bg=[BG_OF[s.kind[0]]];data.img.sel=s;data.img.bgTouched=false;toast('換了一個新主播！不喜歡的地方再改');
   }else if(mode==='vid'){
     data.vid.sel={vtalk:[pick(v('vtalk'))],vface:pickN(v('vface'),2),vhead:pickN(v('vhead'),1),vbody:pickN(v('vbody'),1),
