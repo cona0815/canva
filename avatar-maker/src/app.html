@@ -46,6 +46,11 @@ h1 small{font-family:var(--f-b);font-size:12px;color:var(--muted);margin-left:6p
 .btn:hover{border-color:var(--accent)}
 .btn.pri{background:var(--accent);border-color:var(--accent);color:#fff}
 .btn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+/* v1.9.1：「產生連結」特別標示——黃底＋紅色「換電腦必按」小標，提醒學生換電腦前一定要按 */
+.btn.link-hot{position:relative;background:var(--sun);border-color:#e0a400;color:#3b2c00;box-shadow:0 0 0 3px rgba(255,197,49,.35)}
+.btn.link-hot:hover{border-color:var(--warn)}
+.btn.link-hot::after{content:"換電腦必按";position:absolute;top:-11px;right:-6px;background:var(--warn);color:#fff;font-size:10px;line-height:1;padding:3px 5px;border-radius:999px;font-weight:700;pointer-events:none}
+.hint b.hot{background:var(--sun);color:#3b2c00;border-radius:4px;padding:0 3px}
 .btn:disabled{opacity:.5;cursor:wait}
 .stagecard{flex:1;display:flex;flex-direction:column;min-height:0;gap:8px}
 .stagebox{flex:1;min-height:0;display:grid;place-items:center}
@@ -152,7 +157,7 @@ h1 small{font-family:var(--f-b);font-size:12px;color:var(--muted);margin-left:6p
       <section class="card">
         <h2>名字和角色代碼</h2>
         <div class="row"><label for="nameInput" class="lbl">名字</label><input class="txt" id="nameInput" maxlength="10" style="flex:1" autocomplete="off" placeholder="10 個字以內"></div>
-        <div class="row" style="margin-top:6px;gap:6px"><button class="btn" type="button" id="bCopyCode">複製角色代碼</button><button class="btn" type="button" id="bMakeLink">產生連結</button></div>
+        <div class="row" style="margin-top:6px;gap:6px"><button class="btn" type="button" id="bCopyCode">複製角色代碼</button><button class="btn link-hot" type="button" id="bMakeLink" title="換電腦一定要用：複製這個連結，之後點開就是你的角色">🔗 產生連結</button></div>
         <div class="row" id="linkRow" style="margin-top:6px" hidden>
           <input class="txt" id="linkInput" readonly style="flex:1;min-width:0" aria-label="角色連結">
           <button class="btn" type="button" id="bCopyLink">複製</button>
@@ -161,7 +166,7 @@ h1 small{font-family:var(--f-b);font-size:12px;color:var(--muted);margin-left:6p
           <input class="txt" id="codeInput" placeholder="貼上角色代碼" style="flex:1" autocomplete="off" aria-label="貼上角色代碼">
           <button class="btn" type="button" id="bLoadCode">還原</button>
         </div>
-        <p class="hint">角色會自動存在這台電腦。換電腦時：按「產生連結」複製起來，之後點連結就會打開這個角色；或貼上代碼再按「還原」。</p>
+        <p class="hint">角色會自動存在這台電腦。換電腦時：按<b class="hot">🔗 產生連結</b>複製起來，之後點連結就會打開這個角色；或貼上代碼再按「還原」。</p>
       </section>
       <section class="card">
         <h2>下載，帶去 Canva</h2>
