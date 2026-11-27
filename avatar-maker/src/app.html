@@ -53,6 +53,9 @@ h1 small{font-family:var(--f-b);font-size:12px;color:var(--muted);margin-left:6p
 .micbar .meter b{position:absolute;top:-2px;bottom:-2px;width:2px;background:#222;left:40%}
 .micbar input[type=range]{width:90px}
 .micbar .hint{flex-basis:100%;margin:0}
+.micbar select{flex-basis:100%;max-width:100%;font:inherit;font-size:13px;padding:3px 4px;border:1px solid var(--line);border-radius:6px;background:var(--card,#fff);color:inherit}
+.micbar select[hidden]{display:none}
+.micbar .hint.warn{color:#c0392b;font-weight:700}
 /* v1.9.1：「產生連結」特別標示——黃底＋紅色「換電腦必按」小標，提醒學生換電腦前一定要按 */
 .btn.link-hot{position:relative;background:var(--sun);border-color:#e0a400;color:#3b2c00;box-shadow:0 0 0 3px rgba(255,197,49,.35)}
 .btn.link-hot:hover{border-color:var(--warn)}
@@ -105,7 +108,7 @@ h1 small{font-family:var(--f-b);font-size:12px;color:var(--muted);margin-left:6p
 #results img{width:48px;height:48px;object-fit:contain;border-radius:8px;border:2px solid var(--line);background:repeating-conic-gradient(var(--chk1) 0 25%,var(--chk2) 0 50%) 0 0/12px 12px}
 .toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:6px 18px;border-radius:99px;font-weight:700;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9;max-width:90vw;text-align:center}
 .toast.show{opacity:1}
-.loading{position:fixed;inset:0;display:grid;place-items:center;background:var(--bg);font-family:var(--f-d);font-size:22px;z-index:20}
+.loading{position:fixed;inset:0;display:grid;place-items:center;white-space:pre-line;text-align:center;line-height:1.8;background:var(--bg);font-family:var(--f-d);font-size:22px;z-index:20}
 .foot{color:var(--muted);font-size:11px;text-align:center}
 @media (max-width:980px),(max-height:540px){
   .app{height:auto;min-height:100vh}
@@ -145,6 +148,7 @@ h1 small{font-family:var(--f-b);font-size:12px;color:var(--muted);margin-left:6p
           <button class="btn" type="button" id="bReset">重設</button>
         </div>
         <div class="micbar" id="micBar" hidden>
+          <select id="micDev" aria-label="選麥克風" hidden></select>
           <span class="meter" aria-hidden="true"><i id="micLv"></i><b id="micTh"></b></span>
           <label for="micSens">靈敏度</label><input type="range" id="micSens" min="1" max="10" value="5" aria-label="麥克風靈敏度">
           <span class="hint" id="micTip">講話時，聲音條超過黑線嘴巴就會打開。可以錄螢幕，或用 Canva 的「錄製」錄下來。</span>
@@ -235,7 +239,12 @@ let STYLES=[],PACKS={},IMGS={},PACK,style,state,history=[],tab='face',talking=nu
 const TALK=[['o',150],['c',110],['o',170],['c',100],['o',140],['c',130],['o',160],['c',100],['o',150],['c',300],['o',150],['c',110],['o',170],['b',140],['c',120],['o',150],['c',110],['o',160],['c',350]];
 
 /* ================= 載入 ================= */
-function loadImg(src){return new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=src;});}
+/* 載入一張圖：網路卡住（20 秒沒回應）或失敗就自動重試，最多 3 次（v1.10.1：教室網路慢時不會一直卡在「載入圖片中」） */
+function loadImg(src,tries=3){return new Promise((res,rej)=>{const i=new Image();let done=false;
+  const fail=e=>{if(done)return;done=true;clearTimeout(t);i.onload=i.onerror=null;
+    if(tries>1&&!/^data:/.test(src))setTimeout(()=>loadImg(src.replace(/[?#].*$/,'')+'?retry='+(4-tries)+'_'+Date.now(),tries-1).then(res,rej),800);else rej(e);};
+  const t=setTimeout(()=>fail(new Error('timeout '+src)),20000);
+  i.onload=()=>{if(done)return;done=true;clearTimeout(t);res(i);};i.onerror=fail;i.src=src;});}
 async function loadPack(id){
   if(PACKS[id])return;
   let p,src;
@@ -243,7 +252,10 @@ async function loadPack(id){
   else{p=await (await fetch(`packs/${id}/parts.json`,{cache:'no-cache'})).json();src=n=>`packs/${id}/${n}.webp`;}
   const names=['base'];
   Object.entries(p.cats).forEach(([c,C])=>C.opts.forEach(o=>{if(c==='face')['closed','open','blink'].forEach(s=>names.push(`face_${o.id}_${s}`));else if(c==='pet')['closed','open','blink'].forEach(s=>names.push(`${o.id}_${s}`));else{names.push(o.id);if(o.erase)names.push(o.id+'_erase');}}));
-  const im={};await Promise.all(names.map(n=>loadImg(src(n)).then(i=>{im[n]=i;})));
+  const im={},L=$('loading'),t0=Date.now();let got=0;
+  const show=()=>{L.textContent=`載入圖片中… ${got} / ${names.length}`+(Date.now()-t0>15000?'\n網路比較慢，請再等一下；等很久都不動就按 F5 重新整理':'');};
+  show();const tk=setInterval(show,1000);
+  try{await Promise.all(names.map(n=>loadImg(src(n)).then(i=>{im[n]=i;got++;})));}finally{clearInterval(tk);}
   PACKS[id]=p;IMGS[id]=im;
 }
 function defaults(p){const d={};CAT_ORDER.forEach(c=>{const C=p.cats[c];d[c]=C?(C.none?'':C.opts[0].id):'';});
@@ -569,26 +581,45 @@ try{const v=+localStorage.getItem(MIC_KEY);if(v>=1&&v<=10)$('micSens').value=v;}
 $('micSens').oninput=()=>{try{localStorage.setItem(MIC_KEY,$('micSens').value);}catch(e){}};
 function stopMic(){if(!mic)return;cancelAnimationFrame(mic.raf);mic.stream.getTracks().forEach(t=>t.stop());try{mic.ctx.close();}catch(e){}mic=null;
   talkOpen=false;$('micBar').hidden=true;$('bMic').setAttribute('aria-pressed','false');$('bMic').textContent='🎤 麥克風說話';renderStage();}
-async function startMic(){
+const DEV_KEY='avatar-mic-dev',MIC_TIP=$('micTip').textContent;
+/* v1.10.1：電腦插了兩支耳麥時 Chrome 可能挑到沒在用的那支（聲音條完全不動）→ 預設用 Windows 預設麥克風，也可以自己選，會記住 */
+async function fillMics(cur){const sel=$('micDev');let ds=[];
+  try{ds=(await navigator.mediaDevices.enumerateDevices()).filter(d=>d.kind==='audioinput'&&d.deviceId!=='communications');}catch(e){}
+  sel.textContent='';ds.forEach((d,i)=>{const o=document.createElement('option');o.value=d.deviceId;
+    o.textContent='🎙 '+(d.deviceId==='default'?'Windows 預設：'+((d.label||'').replace(/^(預設|Default)\s*-\s*/i,'')||'麥克風'):(d.label||'麥克風 '+(i+1)));sel.appendChild(o);});
+  sel.value=cur;if(sel.value!==cur&&ds.length)sel.value=ds.some(d=>d.deviceId==='default')?'default':ds[0].deviceId;sel.hidden=ds.length<2;}
+$('micDev').onchange=()=>{const v=$('micDev').value;try{localStorage.setItem(DEV_KEY,v);}catch(e){}stopMic();startMic(v);};
+async function startMic(devId){
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){flash('這個瀏覽器不能用麥克風，請用 Chrome 或 Edge 打開');return;}
-  let stream;try{stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});}
-  catch(e){flash(e&&e.name==='NotFoundError'?'找不到麥克風，請插上耳麥再試一次':'麥克風沒有打開：請按網址列左邊的圖示，允許使用麥克風');return;}
+  /* v1.10.1：聲音處理要在「按下按鈕的當下」就開好，否則 Chrome 會讓它停著（聲音條不動、嘴巴沒反應） */
+  const AC=window.AudioContext||window.webkitAudioContext,ctx=new AC();ctx.resume().catch(()=>{});
+  let want=devId;if(!want)try{want=localStorage.getItem(DEV_KEY);}catch(e){}want=want||'default';
+  const opt={echoCancellation:true,noiseSuppression:true,autoGainControl:true},gum=a=>navigator.mediaDevices.getUserMedia({audio:a});
+  let stream;try{try{stream=await gum(Object.assign({deviceId:{exact:want}},opt));}catch(e){if(e&&(e.name==='OverconstrainedError'||e.name==='NotFoundError'))stream=await gum(opt);else throw e;}}
+  catch(e){ctx.close().catch(()=>{});flash(e&&e.name==='NotFoundError'?'找不到麥克風，請插上耳麥再試一次':'麥克風沒有打開：請按網址列左邊的圖示，允許使用麥克風');return;}
   stopTalk();
-  const AC=window.AudioContext||window.webkitAudioContext,ctx=new AC(),src=ctx.createMediaStreamSource(stream),an=ctx.createAnalyser();an.fftSize=1024;src.connect(an);
+  const src=ctx.createMediaStreamSource(stream),an=ctx.createAnalyser(),mute=ctx.createGain();an.fftSize=1024;mute.gain.value=0;
+  src.connect(an);an.connect(mute);mute.connect(ctx.destination);   /* 接到靜音的喇叭：有些電腦不接出去就不處理聲音；音量 0 所以不會回音 */
   const buf=new Float32Array(an.fftSize);
-  mic={stream,ctx,raf:0,lv:0,noise:.004,open:false,since:performance.now()};
+  mic={stream,ctx,raf:0,lv:0,noise:.004,open:false,since:performance.now(),t0:performance.now(),peak:0,warned:false};
+  {const tr=stream.getAudioTracks()[0],st=tr&&tr.getSettings?tr.getSettings():{};fillMics(want==='default'||!st.deviceId?want:st.deviceId);}
+  $('micTip').textContent=MIC_TIP;$('micTip').classList.remove('warn');
   $('micBar').hidden=false;$('bMic').setAttribute('aria-pressed','true');$('bMic').textContent='🎤 停止麥克風';
   flash('對著麥克風說說看！');
   const loop=()=>{if(!mic)return;an.getFloatTimeDomainData(buf);let sum=0;for(let i=0;i<buf.length;i++)sum+=buf[i]*buf[i];const rms=Math.sqrt(sum/buf.length);
-    mic.lv+=(rms-mic.lv)*(rms>mic.lv?.6:.35);   /* 聲音變大馬上跟、變小慢一點，嘴巴不會一直抖 */
+    mic.lv+=(rms-mic.lv)*(rms>mic.lv?.6:.35);
+    if(rms>mic.peak)mic.peak=rms;   /* 4 秒都沒聲音：多半是選到沒在用的麥克風，提醒換一支 */
+    if(!mic.warned&&performance.now()-mic.t0>4000&&mic.peak<.008){mic.warned=true;$('micTip').textContent='聽不到聲音？請在上面的選單換一支麥克風試試，也看看耳麥有沒有按到靜音。';$('micTip').classList.add('warn');}
+    else if(mic.warned&&rms>.01){mic.warned=false;mic.t0=Infinity;$('micTip').textContent=MIC_TIP;$('micTip').classList.remove('warn');}   /* 聲音變大馬上跟、變小慢一點，嘴巴不會一直抖 */
     mic.noise=mic.lv<mic.noise?mic.lv:mic.noise+(mic.lv-mic.noise)*.002;   /* 背景噪音（教室吵）慢慢學起來，門檻跟著抬高 */
     const sens=+$('micSens').value,openTh=Math.max(mic.noise*2.4,.06/(1+(sens-1)*.45)),closeTh=openTh*.6,now=performance.now();
     let open=mic.open;if(!open&&mic.lv>openTh&&now-mic.since>60)open=true;else if(open&&mic.lv<closeTh&&now-mic.since>90)open=false;
     const full=openTh*2.5;$('micLv').style.width=Math.min(100,mic.lv/full*100)+'%';$('micTh').style.left=(openTh/full*100)+'%';
     if(open!==mic.open){mic.open=open;mic.since=now;talkOpen=open;renderStage();}
     mic.raf=requestAnimationFrame(loop);};
-  if(ctx.state==='suspended')await ctx.resume();
   loop();
+  if(ctx.state!=='running')ctx.resume().catch(()=>{});
+  document.addEventListener('pointerdown',()=>{if(mic&&mic.ctx.state!=='running')mic.ctx.resume().catch(()=>{});},{once:true});
 }
 $('bMic').onclick=()=>{if(mic)stopMic();else startMic();};
 setInterval(()=>{if(talking||document.hidden||!PACK)return;blinkNow=true;renderStage();setTimeout(()=>{blinkNow=false;renderStage();},150);},4200);
@@ -688,7 +719,7 @@ $('bPack').onclick=()=>busy($('bPack'),async()=>{const n=fname(),files=[],shown=
 /* ================= 畫風 ================= */
 async function setStyle(id,parts){
   stopTalk();$('loading').hidden=false;
-  try{await loadPack(id);}catch(e){console.error(e);$('loading').hidden=true;flash('這個畫風載入失敗');return;}
+  try{await loadPack(id);}catch(e){console.error(e);if(!PACK){$('loading').textContent='有圖片沒載到，請按 F5 重新整理';return;}$('loading').hidden=true;flash('這個畫風載入失敗，請再按一次');return;}
   style=id;PACK=PACKS[id];
   state=sanitize(Object.assign({},parts||state||{},{style:id}),PACK);save();$('loading').hidden=true;renderAll();
 }
