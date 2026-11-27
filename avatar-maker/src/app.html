@@ -46,6 +46,13 @@ h1 small{font-family:var(--f-b);font-size:12px;color:var(--muted);margin-left:6p
 .btn:hover{border-color:var(--accent)}
 .btn.pri{background:var(--accent);border-color:var(--accent);color:#fff}
 .btn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.micbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-top:8px;font-size:13px}
+.micbar[hidden]{display:none}
+.micbar .meter{position:relative;width:120px;height:12px;border-radius:6px;background:var(--line);overflow:hidden;flex:none}
+.micbar .meter i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--accent);border-radius:6px}
+.micbar .meter b{position:absolute;top:-2px;bottom:-2px;width:2px;background:#222;left:40%}
+.micbar input[type=range]{width:90px}
+.micbar .hint{flex-basis:100%;margin:0}
 /* v1.9.1：「產生連結」特別標示——黃底＋紅色「換電腦必按」小標，提醒學生換電腦前一定要按 */
 .btn.link-hot{position:relative;background:var(--sun);border-color:#e0a400;color:#3b2c00;box-shadow:0 0 0 3px rgba(255,197,49,.35)}
 .btn.link-hot:hover{border-color:var(--warn)}
@@ -132,9 +139,15 @@ h1 small{font-family:var(--f-b);font-size:12px;color:var(--muted);margin-left:6p
         <div class="tools">
           <button class="btn pri" type="button" id="bRandom">隨機搭配</button>
           <button class="btn" type="button" id="bTalk" aria-pressed="false">說話預覽</button>
+          <button class="btn" type="button" id="bMic" aria-pressed="false" title="對著麥克風講話，角色的嘴巴會跟著動">🎤 麥克風說話</button>
           <button class="btn" type="button" id="bFlip" aria-pressed="false">翻轉</button>
           <button class="btn" type="button" id="bUndo">復原</button>
           <button class="btn" type="button" id="bReset">重設</button>
+        </div>
+        <div class="micbar" id="micBar" hidden>
+          <span class="meter" aria-hidden="true"><i id="micLv"></i><b id="micTh"></b></span>
+          <label for="micSens">靈敏度</label><input type="range" id="micSens" min="1" max="10" value="5" aria-label="麥克風靈敏度">
+          <span class="hint" id="micTip">講話時，聲音條超過黑線嘴巴就會打開。可以錄螢幕，或用 Canva 的「錄製」錄下來。</span>
         </div>
       </section>
     </div>
@@ -548,7 +561,36 @@ function randomize(){const p={};CAT_ORDER.forEach(c=>{const C=PACK.cats[c];if(!C
 $('bRandom').onclick=()=>{randomize();flash('換一個新造型！');};
 $('bCatRandom').onclick=()=>{const p={[tab]:pick(optsOf(tab)).id};(COLORS[tab]||[]).forEach(([k,,l])=>p[k]=pick(l));commit(p);};
 function stopTalk(){if(talking){clearTimeout(talking);talking=null;talkOpen=false;talkBlink=false;}$('bTalk').setAttribute('aria-pressed','false');$('bTalk').textContent='說話預覽';}
-$('bTalk').onclick=()=>{if(talking){stopTalk();renderStage();return;}let i=0;const step=()=>{const [k,ms]=TALK[i++%TALK.length];talkOpen=k==='o';talkBlink=k==='b';renderStage();talking=setTimeout(step,ms);};step();$('bTalk').setAttribute('aria-pressed','true');$('bTalk').textContent='停止說話';};
+$('bTalk').onclick=()=>{if(talking){stopTalk();renderStage();return;}stopMic();let i=0;const step=()=>{const [k,ms]=TALK[i++%TALK.length];talkOpen=k==='o';talkBlink=k==='b';renderStage();talking=setTimeout(step,ms);};step();$('bTalk').setAttribute('aria-pressed','true');$('bTalk').textContent='停止說話';};
+/* ================= 麥克風說話（11-27 老師：學生對著麥克風講話，角色嘴巴即時跟著開合；用現有的閉嘴／張嘴／眨眼三張） ================= */
+let mic=null;
+const MIC_KEY='avatar-mic-sens';
+try{const v=+localStorage.getItem(MIC_KEY);if(v>=1&&v<=10)$('micSens').value=v;}catch(e){}
+$('micSens').oninput=()=>{try{localStorage.setItem(MIC_KEY,$('micSens').value);}catch(e){}};
+function stopMic(){if(!mic)return;cancelAnimationFrame(mic.raf);mic.stream.getTracks().forEach(t=>t.stop());try{mic.ctx.close();}catch(e){}mic=null;
+  talkOpen=false;$('micBar').hidden=true;$('bMic').setAttribute('aria-pressed','false');$('bMic').textContent='🎤 麥克風說話';renderStage();}
+async function startMic(){
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){flash('這個瀏覽器不能用麥克風，請用 Chrome 或 Edge 打開');return;}
+  let stream;try{stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});}
+  catch(e){flash(e&&e.name==='NotFoundError'?'找不到麥克風，請插上耳麥再試一次':'麥克風沒有打開：請按網址列左邊的圖示，允許使用麥克風');return;}
+  stopTalk();
+  const AC=window.AudioContext||window.webkitAudioContext,ctx=new AC(),src=ctx.createMediaStreamSource(stream),an=ctx.createAnalyser();an.fftSize=1024;src.connect(an);
+  const buf=new Float32Array(an.fftSize);
+  mic={stream,ctx,raf:0,lv:0,noise:.004,open:false,since:performance.now()};
+  $('micBar').hidden=false;$('bMic').setAttribute('aria-pressed','true');$('bMic').textContent='🎤 停止麥克風';
+  flash('對著麥克風說說看！');
+  const loop=()=>{if(!mic)return;an.getFloatTimeDomainData(buf);let sum=0;for(let i=0;i<buf.length;i++)sum+=buf[i]*buf[i];const rms=Math.sqrt(sum/buf.length);
+    mic.lv+=(rms-mic.lv)*(rms>mic.lv?.6:.35);   /* 聲音變大馬上跟、變小慢一點，嘴巴不會一直抖 */
+    mic.noise=mic.lv<mic.noise?mic.lv:mic.noise+(mic.lv-mic.noise)*.002;   /* 背景噪音（教室吵）慢慢學起來，門檻跟著抬高 */
+    const sens=+$('micSens').value,openTh=Math.max(mic.noise*2.4,.06/(1+(sens-1)*.45)),closeTh=openTh*.6,now=performance.now();
+    let open=mic.open;if(!open&&mic.lv>openTh&&now-mic.since>60)open=true;else if(open&&mic.lv<closeTh&&now-mic.since>90)open=false;
+    const full=openTh*2.5;$('micLv').style.width=Math.min(100,mic.lv/full*100)+'%';$('micTh').style.left=(openTh/full*100)+'%';
+    if(open!==mic.open){mic.open=open;mic.since=now;talkOpen=open;renderStage();}
+    mic.raf=requestAnimationFrame(loop);};
+  if(ctx.state==='suspended')await ctx.resume();
+  loop();
+}
+$('bMic').onclick=()=>{if(mic)stopMic();else startMic();};
 setInterval(()=>{if(talking||document.hidden||!PACK)return;blinkNow=true;renderStage();setTimeout(()=>{blinkNow=false;renderStage();},150);},4200);
 $('bFlip').onclick=()=>commit({flip:!state.flip});
 $('heroPet').onclick=()=>{if(isHero(state))return;const p={hero:'pet'};if(!state.pet)p.pet=PACK.cats.pet.opts[0].id;commit(p);flash('主角換成動物了！選一隻當你的主播');};
